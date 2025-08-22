@@ -1,3 +1,4 @@
 export declare class VerifyPaymentDto {
-    transactionId: string;
+    paymentId: string;
+    transactionCode: string;
 }

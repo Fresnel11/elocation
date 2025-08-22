@@ -10,52 +10,84 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateAdDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const class_transformer_1 = require("class-transformer");
 class CreateAdDto {
 }
 exports.CreateAdDto = CreateAdDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Titre de l\'annonce',
+        example: 'Appartement 3 pièces à vendre',
+        minLength: 10,
+        maxLength: 100
+    }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(255),
+    (0, class_validator_1.MinLength)(10),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], CreateAdDto.prototype, "title", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Description détaillée de l\'annonce',
+        example: 'Bel appartement avec balcon, cuisine équipée, 2 chambres, salon, salle de bain complète. Idéalement situé près des commerces et transports.',
+        minLength: 20,
+        maxLength: 1000
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(20),
+    (0, class_validator_1.MaxLength)(1000),
     __metadata("design:type", String)
 ], CreateAdDto.prototype, "description", void 0);
 __decorate([
-    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
+    (0, swagger_1.ApiProperty)({
+        description: 'Prix en FCFA',
+        example: 25000000,
+        minimum: 1000
+    }),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1000),
     __metadata("design:type", Number)
 ], CreateAdDto.prototype, "price", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Localisation de l\'annonce',
+        example: 'Lomé, Togo - Quartier Akodessewa',
+        minLength: 5,
+        maxLength: 200
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(5),
+    (0, class_validator_1.MaxLength)(200),
     __metadata("design:type", String)
 ], CreateAdDto.prototype, "location", void 0);
 __decorate([
-    (0, class_validator_1.IsUUID)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Numéro WhatsApp pour contact (format international)',
+        example: '+22999154678',
+        pattern: '^\\+[1-9]\\d{1,14}$'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(10),
+    (0, class_validator_1.MaxLength)(15),
+    __metadata("design:type", String)
+], CreateAdDto.prototype, "whatsappNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID de la catégorie',
+        example: 'uuid-category-id'
+    }),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateAdDto.prototype, "categoryId", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Annonce disponible à la vente/location',
+        default: true,
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateAdDto.prototype, "isAvailable", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], CreateAdDto.prototype, "isActive", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.MaxLength)(5, { each: true }),
-    __metadata("design:type", Array)
-], CreateAdDto.prototype, "photos", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateAdDto.prototype, "whatsappNumber", void 0);
 //# sourceMappingURL=create-ad.dto.js.map

@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreatePaymentDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const payment_provider_enum_1 = require("../../common/enums/payment-provider.enum");
 const class_transformer_1 = require("class-transformer");
@@ -17,21 +18,52 @@ class CreatePaymentDto {
 }
 exports.CreatePaymentDto = CreatePaymentDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Montant du paiement en FCFA',
+        example: 5000,
+        minimum: 100
+    }),
     (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(100),
     __metadata("design:type", Number)
 ], CreatePaymentDto.prototype, "amount", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Fournisseur de paiement',
+        example: 'MTN',
+        enum: payment_provider_enum_1.PaymentProvider
+    }),
     (0, class_validator_1.IsEnum)(payment_provider_enum_1.PaymentProvider),
     __metadata("design:type", String)
 ], CreatePaymentDto.prototype, "provider", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Numéro de téléphone pour le paiement Mobile Money',
+        example: '+22999154678',
+        pattern: '^\\+[1-9]\\d{1,14}$'
+    }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePaymentDto.prototype, "phoneNumber", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Description du paiement',
+        example: 'Accès aux contacts immobiliers',
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePaymentDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Type de service payé',
+        example: 'real-estate-access',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePaymentDto.prototype, "serviceType", void 0);
 //# sourceMappingURL=create-payment.dto.js.map

@@ -10,22 +10,55 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateCategoryDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateCategoryDto {
 }
 exports.CreateCategoryDto = CreateCategoryDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Nom de la catégorie',
+        example: 'Immobilier',
+        minLength: 2,
+        maxLength: 50
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], CreateCategoryDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Description de la catégorie',
+        example: 'Annonces immobilières : appartements, maisons, terrains à vendre ou à louer',
+        minLength: 10,
+        maxLength: 200,
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(10),
+    (0, class_validator_1.MaxLength)(200),
     __metadata("design:type", String)
 ], CreateCategoryDto.prototype, "description", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Icône de la catégorie (emoji ou nom d\'icône)',
+        example: '🏠',
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], CreateCategoryDto.prototype, "isActive", void 0);
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateCategoryDto.prototype, "icon", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Couleur de la catégorie (code hexadécimal)',
+        example: '#3B82F6',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateCategoryDto.prototype, "color", void 0);
 //# sourceMappingURL=create-category.dto.js.map

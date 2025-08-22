@@ -10,12 +10,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RequestOtpDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class RequestOtpDto {
 }
 exports.RequestOtpDto = RequestOtpDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Numéro de téléphone pour recevoir le code OTP',
+        example: '+22999154678',
+        pattern: '^\\+[1-9]\\d{1,14}$'
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\+[1-9]\d{1,14}$/, {
+        message: 'Le numéro de téléphone doit être au format international (+22999154678)'
+    }),
     __metadata("design:type", String)
 ], RequestOtpDto.prototype, "phone", void 0);
 //# sourceMappingURL=request-otp.dto.js.map

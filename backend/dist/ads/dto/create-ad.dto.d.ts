@@ -3,9 +3,7 @@ export declare class CreateAdDto {
     description: string;
     price: number;
     location: string;
+    whatsappNumber: string;
     categoryId: string;
     isAvailable?: boolean;
-    isActive?: boolean;
-    photos?: string[];
-    whatsappNumber?: string;
 }

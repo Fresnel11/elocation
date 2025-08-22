@@ -27,13 +27,45 @@ async function bootstrap() {
   // Swagger configuration
   const swaggerConfig = new DocumentBuilder()
     .setTitle('eLocation API')
-    .setDescription('API documentation for eLocation')
+    .setDescription(`
+      ## 🏠 Plateforme de mise en relation pour annonces
+    `)
     .setVersion('1.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT-auth')
+    .addTag('Authentication', 'Endpoints d\'authentification et gestion des utilisateurs')
+    .addTag('Annonces', 'Gestion des annonces (création, modification, suppression, recherche)')
+    .addTag('Catégories', 'Gestion des catégories d\'annonces')
+    .addTag('Paiements', 'Gestion des paiements MTN/Moov Mobile Money')
+    .addTag('Administration', 'Fonctionnalités d\'administration et modération')
+    .addTag('Utilisateurs', 'Gestion des profils utilisateurs')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Entrez votre token JWT',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .build();
+
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api-docs', app, swaggerDocument, {
-    swaggerOptions: { persistAuthorization: true },
+    swaggerOptions: {
+      persistAuthorization: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+      docExpansion: 'none',
+      filter: true,
+      showRequestDuration: true,
+    },
+    customSiteTitle: 'eLocation API Documentation',
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info .title { font-size: 2.5em; color: #2563eb; }
+      .swagger-ui .info .description { font-size: 1.1em; line-height: 1.6; }
+    `,
   });
 
   const port = configService.get<number>('PORT') || 3000;

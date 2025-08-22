@@ -10,12 +10,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VerifyPaymentDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class VerifyPaymentDto {
 }
 exports.VerifyPaymentDto = VerifyPaymentDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID du paiement à vérifier',
+        example: 'uuid-payment-id'
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], VerifyPaymentDto.prototype, "transactionId", void 0);
+], VerifyPaymentDto.prototype, "paymentId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Code de transaction Mobile Money',
+        example: 'TX123456789'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], VerifyPaymentDto.prototype, "transactionCode", void 0);
 //# sourceMappingURL=verify-payment.dto.js.map

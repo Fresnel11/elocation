@@ -4,4 +4,5 @@ export declare class CreatePaymentDto {
     provider: PaymentProvider;
     phoneNumber: string;
     description?: string;
+    serviceType?: string;
 }

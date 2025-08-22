@@ -6,6 +6,8 @@ export declare class SearchAdsDto extends PaginationDto {
     maxPrice?: number;
     location?: string;
     isAvailable?: boolean;
-    sortBy?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: 'createdAt' | 'price' | 'title' | 'location';
     sortOrder?: 'ASC' | 'DESC';
 }

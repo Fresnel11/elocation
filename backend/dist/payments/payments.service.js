@@ -34,7 +34,7 @@ let PaymentsService = class PaymentsService {
     async verifyPayment(verifyPaymentDto, user) {
         const payment = await this.paymentRepository.findOne({
             where: {
-                transactionId: verifyPaymentDto.transactionId,
+                transactionId: verifyPaymentDto.transactionCode,
                 userId: user.id
             },
             relations: ['user'],
