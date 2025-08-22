@@ -1,226 +1,253 @@
-# eLocation Backend - Rental Matching Platform API
+# eLocation Backend (NestJS + TypeORM)
 
-A comprehensive NestJS backend for a rental matching platform with user management, ads, payments, and admin features.
+Plateforme de mise en relation pour annonces (immobilier, véhicules, etc.). Backend API construite avec NestJS et MySQL, incluant auth JWT, OTP par SMS (mock), gestion d’annonces, paiements simulés et panneau admin, avec documentation Swagger.
 
-## Features
+## Sommaire
+- Présentation générale
+- Architecture & Tech Stack
+- Arborescence du projet
+- Installation & Configuration
+- Lancer l’application
+- Documentation API (Swagger)
+- Modèles de données (entités)
+- Authentification, OTP & rôles
+- Annonces (Ads)
+- Catégories
+- Paiements
+- Administration
+- Uploads de fichiers
+- Sécurité & bonnes pratiques
+- Scripts NPM utiles
+- Roadmap (évolutions possibles)
 
-### 🔐 Authentication & Authorization
-- JWT-based authentication
-- User registration and login
-- Role-based access control (Admin/User)
-- Protected routes with guards
+## Présentation générale
+eLocation est une API permettant:
+- l’enregistrement et la connexion d’utilisateurs
+- la vérification d’un compte via OTP (code SMS simulé) avant la connexion
+- la création et la gestion d’annonces avec photos
+- la catégorisation des annonces
+- la simulation de paiements mobile money (MTN/Moov)
+- des fonctionnalités d’administration: modération, statistiques, listings
 
-### 👥 User Management
-- User CRUD operations
-- Profile management (name, email, phone)
-- Admin and regular user roles
-- User status management
+## Architecture & Tech Stack
+- Framework: NestJS (v10)
+- Base de données: MySQL (TypeORM)
+- Authentification: JWT (Passport)
+- Validation: class-validator + class-transformer
+- Fichiers: Multer (stockage local `uploads/`)
+- Configuration: @nestjs/config (.env)
+- Documentation: @nestjs/swagger (UI sur `/api-docs`)
 
-### 📝 Ads Management
-- Create, read, update, delete ads
-- Photo upload (max 5 images)
-- Search and filtering by category, price, location
-- Pagination support
-- WhatsApp integration for contact
-- Active/inactive status management
+## Arborescence du projet
+```
+project/
+  src/
+    auth/
+    users/
+    ads/
+    categories/
+    payments/
+    admin/
+    common/
+    app.module.ts
+    main.ts
+  uploads/
+  package.json
+  tsconfig.json
+  README.md
+```
 
-### 🏷️ Categories
-- Predefined categories: Real Estate, Vehicles, Household Appliances, Events, Others
-- Category management for admins
-- Seeding functionality
+## Installation & Configuration
+### Prérequis
+- Node.js >= 16
+- MySQL (base dédiée)
 
-### 💳 Payment System
-- Simulated MTN/Moov Mobile Money integration
-- Payment initiation and verification
-- Payment history tracking
-- Mandatory payment for real estate contacts
-- Payment status management
-
-### 🛠️ Admin Dashboard
-- User management and moderation
-- Ad moderation (approve/reject)
-- Statistics dashboard
-- Payment monitoring
-- Recent activity tracking
-
-## Tech Stack
-
-- **Framework**: NestJS
-- **Database**: MySQL with TypeORM
-- **Authentication**: JWT with Passport
-- **Validation**: class-validator & class-transformer
-- **File Upload**: Multer
-- **Configuration**: @nestjs/config with .env
-
-## Installation & Setup
-
-### Prerequisites
-- Node.js (v16 or higher)
-- MySQL database
-- npm or yarn
-
-### 1. Install Dependencies
+### Dépendances
 ```bash
 npm install
 ```
 
-### 2. Database Setup
-Create a MySQL database and update the `.env` file with your database credentials:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` file:
+### Variables d’environnement (.env)
+Créez un fichier `.env` à la racine de `project/`:
 ```env
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=your_mysql_username
-DB_PASSWORD=your_mysql_password
-DB_NAME=elocation_db
-
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRES_IN=7d
-
-# Application Configuration
+# App
 PORT=3000
 NODE_ENV=development
+
+# DB (MySQL)
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=
+DB_PASSWORD=secret
+DB_NAME=elocation_db
+
+# JWT
+JWT_SECRET=change-me
+JWT_EXPIRES_IN=7d
+
+# Uploads
+MAX_FILE_SIZE=5242880
 ```
 
-### 3. Run the Application
+Note: En développement, le schéma est synchronisé automatiquement (cf. `app.module.ts`). Pour la production, utilisez des migrations et désactivez la synchronisation automatique.
+
+## Lancer l’application
 ```bash
-# Development mode
+# Développement (watch)
 npm run start:dev
 
-# Production mode
+# Production
 npm run build
 npm run start:prod
 ```
+API: `http://localhost:3000`
 
-The API will be available at `http://localhost:3000`
+## Documentation API (Swagger)
+- UI: `http://localhost:3000/api-docs`
+- Auth Bearer: activez l’icône Authorize et collez votre JWT pour tester les routes protégées.
 
-## API Endpoints
+## Modèles de données (entités)
+### User
+Champs principaux:
+- id (uuid)
+- email (optionnel, unique)
+- firstName, lastName
+- phone (unique)
+- password (haché, exclu de la sérialisation)
+- profilePicture (optionnel)
+- birthDate (optionnel)
+- lastLogin (MAJ au login)
+- role (enum: USER, ADMIN)
+- isActive (bool, par défaut `false` – activé après OTP)
+- otpCode (6 chiffres, temporaire)
+- otpExpiresAt (expiration OTP)
+- createdAt, updatedAt
 
-### Authentication
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `GET /auth/profile` - Get user profile (protected)
+Relations:
+- 1:N avec `ads`
+- 1:N avec `payments`
 
-### Users
-- `GET /users` - Get all users (admin only)
-- `GET /users/:id` - Get user by ID
-- `PATCH /users/:id` - Update user
-- `DELETE /users/:id` - Delete user (admin only)
-- `PATCH /users/:id/toggle-status` - Toggle user status (admin only)
+### Category
+- id, name, description, isActive, createdAt, updatedAt
+- Relation: 1:N avec `ads`
 
-### Categories
-- `GET /categories` - Get all categories
-- `POST /categories` - Create category (admin only)
-- `PATCH /categories/:id` - Update category (admin only)
-- `DELETE /categories/:id` - Delete category (admin only)
-- `POST /categories/seed` - Seed default categories (admin only)
+### Ad
+- id, title, description, price, location, isAvailable, isActive
+- photos (array JSON), whatsappLink, whatsappNumber
+- userId, categoryId
+- createdAt, updatedAt
 
-### Ads
-- `GET /ads` - Search and filter ads (with pagination)
-- `POST /ads` - Create new ad (protected)
-- `GET /ads/my-ads` - Get user's ads (protected)
-- `GET /ads/:id` - Get ad by ID
-- `PATCH /ads/:id` - Update ad (protected)
-- `DELETE /ads/:id` - Delete ad (protected)
-- `POST /ads/:id/upload-photos` - Upload ad photos (protected)
-- `GET /ads/:id/whatsapp` - Get WhatsApp redirect link
+### Payment
+- id, amount, provider (MTN/MOOV), status (PENDING, COMPLETED, FAILED, CANCELLED)
+- phoneNumber, transactionId, externalTransactionId, description
+- userId
+- createdAt, updatedAt
 
-### Payments
-- `POST /payments/initiate` - Initiate payment (protected)
-- `POST /payments/verify` - Verify payment (protected)
-- `GET /payments/my-payments` - Get user's payments (protected)
-- `GET /payments/all` - Get all payments (admin only)
+## Authentification, OTP & rôles
+### Flux d’inscription / activation
+1) `POST /auth/register`: crée un utilisateur inactif (`isActive=false`), génère un OTP (6 chiffres, 5 min) et le stocke.
+   - En dev, le code est renvoyé dans la réponse (`otpPreview`) pour faciliter les tests.
+   - En prod, intégrer un provider SMS (ex: Twilio, vonage, MTN/Moov API) pour l’envoi.
+2) `POST /auth/verify-otp`: vérifie le code pour `phone`. Si valide => active le compte (`isActive=true`).
+3) `POST /auth/login`: connexion possible uniquement si `isActive=true`.
 
-### Admin
-- `GET /admin/stats` - Get dashboard statistics (admin only)
-- `GET /admin/pending-ads` - Get ads pending moderation (admin only)
-- `PATCH /admin/ads/:id/moderate` - Moderate ad (admin only)
-- `GET /admin/recent-users` - Get recent users (admin only)
-- `GET /admin/recent-payments` - Get recent payments (admin only)
+### Endpoints Auth
+- `POST /auth/register` (public): firstName, lastName, phone, password, email (optionnel)
+- `POST /auth/request-otp` (public): renvoie un nouvel OTP pour un téléphone
+- `POST /auth/verify-otp` (public): vérifie l’OTP (phone + code)
+- `POST /auth/login` (public): login via email OU phone + password
+- `GET /auth/profile` (JWT): profil courant
 
-## Search & Filtering
+### Rôles & Accès
+- USER: accès aux opérations standards (création d’annonces, etc.)
+- ADMIN: gestion des utilisateurs, catégories, modération, stats
 
-The ads endpoint supports advanced search and filtering:
+## Annonces (Ads)
+- Création, édition, suppression (JWT requis)
+- Recherche/filtre/pagination: `GET /ads?search=&categoryId=&minPrice=&maxPrice=&location=&isAvailable=&page=&limit=&sortBy=&sortOrder=`
+- WhatsApp: génération d’un lien de contact basé sur `whatsappNumber`
+- Upload des photos: `POST /ads/:id/upload-photos` (max 5, taille configurable via `MAX_FILE_SIZE`)
 
-```
-GET /ads?search=house&categoryId=uuid&minPrice=100&maxPrice=1000&location=Dakar&isAvailable=true&page=1&limit=10&sortBy=price&sortOrder=ASC
-```
+### Endpoints Ads
+- `POST /ads` (JWT)
+- `GET /ads` (public)
+- `GET /ads/my-ads` (JWT)
+- `GET /ads/:id` (public)
+- `GET /ads/:id/whatsapp` (public)
+- `PATCH /ads/:id` (JWT)
+- `DELETE /ads/:id` (JWT)
+- `PATCH /ads/:id/toggle-status` (JWT)
+- `POST /ads/:id/upload-photos` (JWT)
 
-Query parameters:
-- `search` - Search in title, description, location
-- `categoryId` - Filter by category
-- `minPrice/maxPrice` - Price range filtering
-- `location` - Location search
-- `isAvailable` - Availability filter
-- `page/limit` - Pagination
-- `sortBy/sortOrder` - Sorting (createdAt, price, title)
+## Catégories
+- CRUD côté admin + seed initial
+- `GET /categories` (public)
+- `POST /categories` (ADMIN)
+- `PATCH /categories/:id` (ADMIN)
+- `DELETE /categories/:id` (ADMIN)
+- `POST /categories/seed` (ADMIN)
 
-## File Upload
+## Paiements (simulation MTN/Moov)
+- `POST /payments/initiate` (JWT): crée un paiement PENDING
+- `POST /payments/verify` (JWT): simule la vérification (succès 80%)
+- `GET /payments/my-payments` (JWT)
+- `GET /payments/all` (ADMIN)
+- `GET /payments/:id` (JWT)
+- `GET /payments/real-estate-access/:userId` (ADMIN): exemple de contrôle d’accès aux contacts immo
 
-Photos are uploaded to the `/uploads` directory and served statically. Maximum 5 photos per ad, with size limit of 5MB per file.
+## Administration
+- Préfixe `/admin` (JWT + ADMIN):
+  - `GET /admin/stats`: statistiques dashboard
+  - `GET /admin/pending-ads`: annonces en attente
+  - `PATCH /admin/ads/:id/moderate`: modération (approve/reject)
+  - `GET /admin/recent-users`: derniers utilisateurs
+  - `GET /admin/recent-payments`: derniers paiements
 
-## Payment Integration
+## Uploads de fichiers
+- Répertoire local `uploads/` (créé au démarrage)
+- Servi statiquement via `/uploads`
+- Intercepteur Multer côté `AdsController`
 
-The payment system simulates MTN and Moov Mobile Money integration:
+## Sécurité & bonnes pratiques
+- Mots de passe hachés (bcrypt)
+- JWT + rôles (guards + décorateur `@Roles`)
+- Validation forte des DTO (whitelist, forbidNonWhitelisted, transform)
+- CORS activé
+- Limites d’upload (type/poids)
+- Emails stockés en lowercase (côté service)
+- Unicité sur `phone`, `email` (si fourni)
 
-1. **Initiate Payment**: Creates a pending payment record
-2. **Verify Payment**: Simulates verification (80% success rate for demo)
-3. **Payment Status**: Tracks pending, completed, failed, cancelled statuses
-
-## Security Features
-
-- Password hashing with bcrypt
-- JWT token-based authentication
-- Role-based access control
-- Input validation and sanitization
-- File upload restrictions
-- CORS enabled
-
-## Development
-
-### Running Tests
+## Scripts NPM utiles
 ```bash
-# Unit tests
+# Lancer en dev
+yarn start:dev || npm run start:dev
+
+# Build & prod
+npm run build
+npm run start:prod
+
+# Lint & format
+npm run lint
+npm run format
+
+# Tests
 npm run test
-
-# E2E tests
 npm run test:e2e
-
-# Test coverage
 npm run test:cov
 ```
 
-### Code Formatting
-```bash
-npm run format
-npm run lint
-```
+## Roadmap (évolutions possibles)
+- Intégration réelle SMS (MTN/Moov/Twilio) pour l’OTP
+- Migrations TypeORM pour prod
+- Stockage d’images sur S3/Cloud Storage
+- Webhooks de paiement réels
+- Logs & observabilité (Winston, OpenTelemetry)
+- Rate limiting & protection brute-force
 
-## Production Deployment
-
-1. Set `NODE_ENV=production` in your environment
-2. Update JWT_SECRET to a secure value
-3. Configure your production database
-4. Build the application: `npm run build`
-5. Start with: `npm run start:prod`
-
-## Database Schema
-
-The application creates the following main tables:
-- `users` - User accounts and profiles
-- `categories` - Ad categories
-- `ads` - Advertisement listings
-- `payments` - Payment records and history
-
-All tables include proper relationships, indexes, and constraints for optimal performance.
-
-## Support
-
-For issues and questions, please check the documentation or create an issue in the project repository.
+---
+Pour tester rapidement:
+1) `POST /auth/register` → récupérer `otpPreview`
+2) `POST /auth/verify-otp` (phone + code)
+3) `POST /auth/login` → copier le JWT
+4) Ouvrir `http://localhost:3000/api-docs`, cliquer sur Authorize, coller le JWT
+5) Appeler les routes protégées (users/ads/payments/admin)
