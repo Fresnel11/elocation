@@ -12,9 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const class_transformer_1 = require("class-transformer");
-const user_role_enum_1 = require("../../common/enums/user-role.enum");
 const ad_entity_1 = require("../../ads/entities/ad.entity");
 const payment_entity_1 = require("../../payments/entities/payment.entity");
+const role_entity_1 = require("../../roles/entities/role.entity");
 let User = class User {
 };
 exports.User = User;
@@ -28,23 +28,28 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "email", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)('varchar', { length: 100 }),
     __metadata("design:type", String)
 ], User.prototype, "firstName", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)('varchar', { length: 100 }),
     __metadata("design:type", String)
 ], User.prototype, "lastName", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true }),
+    (0, typeorm_1.Column)('varchar', { length: 20, unique: true, nullable: true }),
     (0, typeorm_1.Index)({ unique: true }),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], User.prototype, "phone", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)('varchar', { length: 255, nullable: true }),
     (0, class_transformer_1.Exclude)(),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], User.prototype, "password", void 0);
+__decorate([
+    (0, typeorm_1.Column)('varchar', { length: 255, nullable: true, unique: true }),
+    (0, typeorm_1.Index)({ unique: true }),
+    __metadata("design:type", Object)
+], User.prototype, "googleId", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 512, nullable: true }),
     __metadata("design:type", Object)
@@ -66,13 +71,14 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "otpExpiresAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        type: 'enum',
-        enum: user_role_enum_1.UserRole,
-        default: user_role_enum_1.UserRole.USER,
-    }),
-    __metadata("design:type", String)
+    (0, typeorm_1.ManyToOne)(() => role_entity_1.Role, (role) => role.users),
+    (0, typeorm_1.JoinColumn)({ name: 'roleId' }),
+    __metadata("design:type", role_entity_1.Role)
 ], User.prototype, "role", void 0);
+__decorate([
+    (0, typeorm_1.Column)('varchar', { length: 36, nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "roleId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)

@@ -1,8 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { UserRole } from '../../common/enums/user-role.enum';
 import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
+import { Role } from '../../roles/entities/role.entity';
 
 @Entity('users')
 export class User {
@@ -13,19 +13,23 @@ export class User {
   @Index({ unique: true })
   email: string | null;
 
-  @Column()
+  @Column('varchar', { length: 100 })
   firstName: string;
 
-  @Column()
+  @Column('varchar', { length: 100 })
   lastName: string;
 
-  @Column({ unique: true })
+  @Column('varchar', { length: 20, unique: true, nullable: true })
   @Index({ unique: true })
-  phone: string;
+  phone: string | null;
 
-  @Column()
+  @Column('varchar', { length: 255, nullable: true })
   @Exclude()
-  password: string;
+  password: string | null;
+
+  @Column('varchar', { length: 255, nullable: true, unique: true })
+  @Index({ unique: true })
+  googleId: string | null;
 
   @Column('varchar', { length: 512, nullable: true })
   profilePicture: string | null;
@@ -42,12 +46,12 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   otpExpiresAt: Date | null;
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
-  })
-  role: UserRole;
+  @ManyToOne(() => Role, (role) => role.users)
+  @JoinColumn({ name: 'roleId' })
+  role: Role;
+
+  @Column('varchar', { length: 36, nullable: true })
+  roleId: string;
 
   @Column({ default: false })
   isActive: boolean;

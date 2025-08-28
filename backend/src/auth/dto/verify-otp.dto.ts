@@ -1,20 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Matches, Length } from 'class-validator';
+import { IsString, IsEmail, Length, Matches } from 'class-validator';
 
 export class VerifyOtpDto {
   @ApiProperty({
-    description: 'Numéro de téléphone associé au code OTP',
-    example: '+22999154678',
-    pattern: '^\\+[1-9]\\d{1,14}$'
+    description: 'Email associé au code OTP',
+    example: 'user@example.com'
   })
-  @IsString()
-  @Matches(/^\+[1-9]\d{1,14}$/, {
-    message: 'Le numéro de téléphone doit être au format international (+22999154678)'
-  })
-  phone: string;
+  @IsEmail()
+  email: string;
 
   @ApiProperty({
-    description: 'Code OTP à 6 chiffres reçu par SMS',
+    description: 'Code OTP à 6 chiffres reçu par email',
     example: '123456',
     minLength: 6,
     maxLength: 6,

@@ -3,9 +3,11 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { Role } from '../roles/entities/role.entity';
 export declare class UsersService {
     private readonly userRepository;
-    constructor(userRepository: Repository<User>);
+    private readonly roleRepository;
+    constructor(userRepository: Repository<User>, roleRepository: Repository<Role>);
     create(createUserDto: CreateUserDto): Promise<User>;
     findAll(paginationDto: PaginationDto): Promise<{
         users: User[];
@@ -25,4 +27,7 @@ export declare class UsersService {
     setLastLogin(id: string): Promise<void>;
     setOtpForPhone(phone: string, code: string, expiresAt: Date): Promise<void>;
     verifyOtpForPhone(phone: string, code: string): Promise<boolean>;
+    setOtpForEmail(email: string, code: string, expiresAt: Date): Promise<void>;
+    verifyOtpForEmail(email: string, code: string): Promise<boolean>;
+    createGoogleUser(googleData: any): Promise<User>;
 }

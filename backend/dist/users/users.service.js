@@ -18,9 +18,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = require("bcrypt");
 const user_entity_1 = require("./entities/user.entity");
+const role_entity_1 = require("../roles/entities/role.entity");
+const user_role_enum_1 = require("../common/enums/user-role.enum");
 let UsersService = class UsersService {
-    constructor(userRepository) {
+    constructor(userRepository, roleRepository) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
     async create(createUserDto) {
         var _a;
@@ -38,6 +41,11 @@ let UsersService = class UsersService {
         if (existingByPhone) {
             throw new common_1.ConflictException('User with this phone already exists');
         }
+        const roleEnum = createUserDto.role || user_role_enum_1.UserRole.TENANT;
+        const role = await this.roleRepository.findOne({ where: { name: roleEnum } });
+        if (!role) {
+            throw new common_1.NotFoundException(`Role ${roleEnum} not found`);
+        }
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
         const user = this.userRepository.create({
             email: createUserDto.email ? createUserDto.email.toLowerCase() : null,
@@ -47,7 +55,7 @@ let UsersService = class UsersService {
             password: hashedPassword,
             profilePicture: (_a = createUserDto.profilePicture) !== null && _a !== void 0 ? _a : null,
             birthDate: createUserDto.birthDate ? new Date(createUserDto.birthDate) : null,
-            role: createUserDto.role,
+            role: role,
             isActive: false,
         });
         return this.userRepository.save(user);
@@ -91,7 +99,7 @@ let UsersService = class UsersService {
         return this.userRepository.findOne({ where: { phone } });
     }
     async update(id, updateUserDto) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d;
         const user = await this.findOne(id);
         if (updateUserDto.email && updateUserDto.email.toLowerCase() !== user.email) {
             const exists = await this.userRepository.findOne({ where: { email: updateUserDto.email.toLowerCase() } });
@@ -105,6 +113,14 @@ let UsersService = class UsersService {
                 throw new common_1.ConflictException('Phone already in use');
             }
         }
+        let role = user.role;
+        if (updateUserDto.role) {
+            const foundRole = await this.roleRepository.findOne({ where: { name: updateUserDto.role } });
+            if (!foundRole) {
+                throw new common_1.NotFoundException(`Role ${updateUserDto.role} not found`);
+            }
+            role = foundRole;
+        }
         Object.assign(user, {
             email: updateUserDto.email ? updateUserDto.email.toLowerCase() : user.email,
             firstName: (_a = updateUserDto.firstName) !== null && _a !== void 0 ? _a : user.firstName,
@@ -112,7 +128,7 @@ let UsersService = class UsersService {
             phone: (_c = updateUserDto.phone) !== null && _c !== void 0 ? _c : user.phone,
             profilePicture: (_d = updateUserDto.profilePicture) !== null && _d !== void 0 ? _d : user.profilePicture,
             birthDate: updateUserDto.birthDate ? new Date(updateUserDto.birthDate) : user.birthDate,
-            role: (_e = updateUserDto.role) !== null && _e !== void 0 ? _e : user.role,
+            role: role,
         });
         return this.userRepository.save(user);
     }
@@ -146,11 +162,49 @@ let UsersService = class UsersService {
         }
         return isValid;
     }
+    async setOtpForEmail(email, code, expiresAt) {
+        const user = await this.findByEmail(email);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        await this.userRepository.update({ id: user.id }, { otpCode: code, otpExpiresAt: expiresAt });
+    }
+    async verifyOtpForEmail(email, code) {
+        const user = await this.findByEmail(email);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        if (!user.otpCode || !user.otpExpiresAt)
+            return false;
+        const isValid = user.otpCode === code && user.otpExpiresAt > new Date();
+        if (isValid) {
+            await this.userRepository.update({ id: user.id }, { isActive: true, otpCode: null, otpExpiresAt: null });
+        }
+        return isValid;
+    }
+    async createGoogleUser(googleData) {
+        const role = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.TENANT } });
+        if (!role) {
+            throw new common_1.NotFoundException('Default role not found');
+        }
+        const user = this.userRepository.create({
+            email: googleData.email.toLowerCase(),
+            firstName: googleData.firstName,
+            lastName: googleData.lastName,
+            profilePicture: googleData.profilePicture,
+            phone: null,
+            password: null,
+            role: role,
+            isActive: true,
+            googleId: googleData.googleId,
+        });
+        return this.userRepository.save(user);
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

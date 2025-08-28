@@ -16,6 +16,7 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const google_auth_guard_1 = require("./guards/google-auth.guard");
 const auth_service_1 = require("./auth.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
@@ -29,16 +30,22 @@ let AuthController = class AuthController {
         return this.authService.register(registerDto);
     }
     requestOtp(body) {
-        return this.authService.requestOtp(body.phone);
+        return this.authService.requestOtp(body.email);
     }
     verifyOtp(body) {
-        return this.authService.verifyOtp(body.phone, body.code);
+        return this.authService.verifyOtp(body.email, body.code);
     }
     login(loginDto) {
         return this.authService.login(loginDto);
     }
     getProfile(req) {
         return req.user;
+    }
+    async googleAuth(req) {
+    }
+    async googleAuthRedirect(req, res) {
+        const result = req.user;
+        res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${result.access_token}`);
     }
 };
 exports.AuthController = AuthController;
@@ -79,26 +86,26 @@ __decorate([
     (0, common_1.Post)('request-otp'),
     (0, swagger_1.ApiOperation)({
         summary: 'Demander un nouveau code OTP',
-        description: 'Envoie un nouveau code OTP par SMS au numéro de téléphone spécifié.'
+        description: 'Envoie un nouveau code OTP par email à l\'adresse spécifiée.'
     }),
     (0, swagger_1.ApiBody)({
         type: request_otp_dto_1.RequestOtpDto,
-        description: 'Numéro de téléphone pour recevoir le code OTP'
+        description: 'Email pour recevoir le code OTP'
     }),
     (0, swagger_1.ApiOkResponse)({
         description: 'Code OTP envoyé avec succès',
         schema: {
             type: 'object',
             properties: {
-                message: { type: 'string', example: 'OTP code sent successfully.' },
-                phone: { type: 'string', example: '+22999154678' },
+                message: { type: 'string', example: 'OTP sent to email' },
+                email: { type: 'string', example: 'user@example.com' },
                 otpPreview: { type: 'string', example: '123456' },
                 expiresAt: { type: 'string', format: 'date-time' }
             }
         }
     }),
     (0, swagger_1.ApiBadRequestResponse)({
-        description: 'Numéro de téléphone invalide'
+        description: 'Email invalide ou utilisateur non trouvé'
     }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -109,19 +116,18 @@ __decorate([
     (0, common_1.Post)('verify-otp'),
     (0, swagger_1.ApiOperation)({
         summary: 'Vérifier le code OTP',
-        description: 'Vérifie le code OTP reçu par SMS et active le compte utilisateur.'
+        description: 'Vérifie le code OTP reçu par email et active le compte utilisateur.'
     }),
     (0, swagger_1.ApiBody)({
         type: verify_otp_dto_1.VerifyOtpDto,
-        description: 'Code OTP et numéro de téléphone à vérifier'
+        description: 'Code OTP et email à vérifier'
     }),
     (0, swagger_1.ApiOkResponse)({
         description: 'OTP vérifié avec succès. Le compte est maintenant actif.',
         schema: {
             type: 'object',
             properties: {
-                message: { type: 'string', example: 'OTP verified successfully. Account activated.' },
-                user: { type: 'object' }
+                message: { type: 'string', example: 'Email verified. Account activated.' }
             }
         }
     }),
@@ -137,11 +143,11 @@ __decorate([
     (0, common_1.Post)('login'),
     (0, swagger_1.ApiOperation)({
         summary: 'Connexion utilisateur',
-        description: 'Authentifie un utilisateur avec email/phone et mot de passe. Retourne un token JWT.'
+        description: 'Authentifie un utilisateur avec email et mot de passe. Le compte doit être activé via OTP.'
     }),
     (0, swagger_1.ApiBody)({
         type: login_dto_1.LoginDto,
-        description: 'Identifiants de connexion (email OU phone + mot de passe)'
+        description: 'Identifiants de connexion (email + mot de passe)'
     }),
     (0, swagger_1.ApiOkResponse)({
         description: 'Connexion réussie',
@@ -167,7 +173,7 @@ __decorate([
         description: 'Données de connexion invalides'
     }),
     (0, swagger_1.ApiUnauthorizedResponse)({
-        description: 'Identifiants invalides ou compte non activé'
+        description: 'Identifiants invalides ou compte non activé. Activez votre compte avec le code OTP.'
     }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -206,6 +212,37 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Get)('google'),
+    (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Connexion avec Google',
+        description: 'Redirige vers Google pour l\'authentification OAuth2.'
+    }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Redirection vers Google réussie'
+    }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleAuth", null);
+__decorate([
+    (0, common_1.Get)('google/callback'),
+    (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Callback Google OAuth2',
+        description: 'Traite le retour de Google après authentification.'
+    }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Authentification Google réussie'
+    }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleAuthRedirect", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),

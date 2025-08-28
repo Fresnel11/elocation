@@ -17,14 +17,10 @@ class RequestOtpDto {
 exports.RequestOtpDto = RequestOtpDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Numéro de téléphone pour recevoir le code OTP',
-        example: '+22999154678',
-        pattern: '^\\+[1-9]\\d{1,14}$'
+        description: 'Email pour recevoir le code OTP',
+        example: 'user@example.com'
     }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^\+[1-9]\d{1,14}$/, {
-        message: 'Le numéro de téléphone doit être au format international (+22999154678)'
-    }),
+    (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], RequestOtpDto.prototype, "phone", void 0);
+], RequestOtpDto.prototype, "email", void 0);
 //# sourceMappingURL=request-otp.dto.js.map

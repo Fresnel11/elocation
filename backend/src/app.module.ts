@@ -9,6 +9,8 @@ import { AdsModule } from './ads/ads.module';
 import { CategoriesModule } from './categories/categories.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
+import { RolesModule } from './roles/roles.module';
+import { SeederModule } from './seeders/seeder.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { AdminModule } from './admin/admin.module';
     CategoriesModule,
     PaymentsModule,
     AdminModule,
+    RolesModule,
+    SeederModule,
   ],
 })
 export class AppModule {}

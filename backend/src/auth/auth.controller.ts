@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, UseInterceptors, ClassSerializerInterceptor, Res } from '@nestjs/common';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -12,11 +12,13 @@ import {
   ApiConflictResponse
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { Response } from 'express';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -58,47 +60,46 @@ export class AuthController {
   @Post('request-otp')
   @ApiOperation({ 
     summary: 'Demander un nouveau code OTP',
-    description: 'Envoie un nouveau code OTP par SMS au numéro de téléphone spécifié.'
+    description: 'Envoie un nouveau code OTP par email à l\'adresse spécifiée.'
   })
   @ApiBody({ 
     type: RequestOtpDto,
-    description: 'Numéro de téléphone pour recevoir le code OTP'
+    description: 'Email pour recevoir le code OTP'
   })
   @ApiOkResponse({ 
     description: 'Code OTP envoyé avec succès',
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: 'OTP code sent successfully.' },
-        phone: { type: 'string', example: '+22999154678' },
+        message: { type: 'string', example: 'OTP sent to email' },
+        email: { type: 'string', example: 'user@example.com' },
         otpPreview: { type: 'string', example: '123456' },
         expiresAt: { type: 'string', format: 'date-time' }
       }
     }
   })
   @ApiBadRequestResponse({ 
-    description: 'Numéro de téléphone invalide' 
+    description: 'Email invalide ou utilisateur non trouvé' 
   })
   requestOtp(@Body() body: RequestOtpDto) {
-    return this.authService.requestOtp(body.phone);
+    return this.authService.requestOtp(body.email);
   }
 
   @Post('verify-otp')
   @ApiOperation({ 
     summary: 'Vérifier le code OTP',
-    description: 'Vérifie le code OTP reçu par SMS et active le compte utilisateur.'
+    description: 'Vérifie le code OTP reçu par email et active le compte utilisateur.'
   })
   @ApiBody({ 
     type: VerifyOtpDto,
-    description: 'Code OTP et numéro de téléphone à vérifier'
+    description: 'Code OTP et email à vérifier'
   })
   @ApiOkResponse({ 
     description: 'OTP vérifié avec succès. Le compte est maintenant actif.',
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: 'OTP verified successfully. Account activated.' },
-        user: { type: 'object' }
+        message: { type: 'string', example: 'Email verified. Account activated.' }
       }
     }
   })
@@ -106,17 +107,17 @@ export class AuthController {
     description: 'Code OTP invalide ou expiré' 
   })
   verifyOtp(@Body() body: VerifyOtpDto) {
-    return this.authService.verifyOtp(body.phone, body.code);
+    return this.authService.verifyOtp(body.email, body.code);
   }
 
   @Post('login')
   @ApiOperation({ 
     summary: 'Connexion utilisateur',
-    description: 'Authentifie un utilisateur avec email/phone et mot de passe. Retourne un token JWT.'
+    description: 'Authentifie un utilisateur avec email et mot de passe. Le compte doit être activé via OTP.'
   })
   @ApiBody({ 
     type: LoginDto,
-    description: 'Identifiants de connexion (email OU phone + mot de passe)'
+    description: 'Identifiants de connexion (email + mot de passe)'
   })
   @ApiOkResponse({ 
     description: 'Connexion réussie',
@@ -142,7 +143,7 @@ export class AuthController {
     description: 'Données de connexion invalides' 
   })
   @ApiUnauthorizedResponse({ 
-    description: 'Identifiants invalides ou compte non activé' 
+    description: 'Identifiants invalides ou compte non activé. Activez votre compte avec le code OTP.' 
   })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -176,5 +177,33 @@ export class AuthController {
   })
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ 
+    summary: 'Connexion avec Google',
+    description: 'Redirige vers Google pour l\'authentification OAuth2.'
+  })
+  @ApiOkResponse({ 
+    description: 'Redirection vers Google réussie' 
+  })
+  async googleAuth(@Request() req) {
+    // Guard redirige automatiquement vers Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ 
+    summary: 'Callback Google OAuth2',
+    description: 'Traite le retour de Google après authentification.'
+  })
+  @ApiOkResponse({ 
+    description: 'Authentification Google réussie' 
+  })
+  async googleAuthRedirect(@Request() req, @Res() res: Response) {
+    const result = req.user;
+    // Rediriger vers le frontend avec le token
+    res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${result.access_token}`);
   }
 }

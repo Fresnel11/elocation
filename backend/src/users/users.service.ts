@@ -6,12 +6,16 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { Role } from '../roles/entities/role.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -31,6 +35,12 @@ export class UsersService {
       throw new ConflictException('User with this phone already exists');
     }
 
+    const roleEnum = createUserDto.role || UserRole.TENANT;
+    const role = await this.roleRepository.findOne({ where: { name: roleEnum } });
+    if (!role) {
+      throw new NotFoundException(`Role ${roleEnum} not found`);
+    }
+
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     const user = this.userRepository.create({
       email: createUserDto.email ? createUserDto.email.toLowerCase() : null,
@@ -40,7 +50,7 @@ export class UsersService {
       password: hashedPassword,
       profilePicture: createUserDto.profilePicture ?? null,
       birthDate: createUserDto.birthDate ? new Date(createUserDto.birthDate) : null,
-      role: createUserDto.role,
+      role: role,
       isActive: false,
     });
 
@@ -108,6 +118,15 @@ export class UsersService {
       }
     }
 
+    let role = user.role;
+    if (updateUserDto.role) {
+      const foundRole = await this.roleRepository.findOne({ where: { name: updateUserDto.role } });
+      if (!foundRole) {
+        throw new NotFoundException(`Role ${updateUserDto.role} not found`);
+      }
+      role = foundRole;
+    }
+
     Object.assign(user, {
       email: updateUserDto.email ? updateUserDto.email.toLowerCase() : user.email,
       firstName: updateUserDto.firstName ?? user.firstName,
@@ -115,7 +134,7 @@ export class UsersService {
       phone: updateUserDto.phone ?? user.phone,
       profilePicture: updateUserDto.profilePicture ?? user.profilePicture,
       birthDate: updateUserDto.birthDate ? new Date(updateUserDto.birthDate) : user.birthDate,
-      role: updateUserDto.role ?? user.role,
+      role: role,
     });
     return this.userRepository.save(user);
   }
@@ -150,5 +169,43 @@ export class UsersService {
       await this.userRepository.update({ id: user.id }, { isActive: true, otpCode: null, otpExpiresAt: null });
     }
     return isValid;
+  }
+
+  async setOtpForEmail(email: string, code: string, expiresAt: Date): Promise<void> {
+    const user = await this.findByEmail(email);
+    if (!user) throw new NotFoundException('User not found');
+    await this.userRepository.update({ id: user.id }, { otpCode: code, otpExpiresAt: expiresAt });
+  }
+
+  async verifyOtpForEmail(email: string, code: string): Promise<boolean> {
+    const user = await this.findByEmail(email);
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.otpCode || !user.otpExpiresAt) return false;
+    const isValid = user.otpCode === code && user.otpExpiresAt > new Date();
+    if (isValid) {
+      await this.userRepository.update({ id: user.id }, { isActive: true, otpCode: null, otpExpiresAt: null });
+    }
+    return isValid;
+  }
+
+  async createGoogleUser(googleData: any): Promise<User> {
+    const role = await this.roleRepository.findOne({ where: { name: UserRole.TENANT } });
+    if (!role) {
+      throw new NotFoundException('Default role not found');
+    }
+
+    const user = this.userRepository.create({
+      email: googleData.email.toLowerCase(),
+      firstName: googleData.firstName,
+      lastName: googleData.lastName,
+      profilePicture: googleData.profilePicture,
+      phone: null,
+      password: null, // Pas de mot de passe pour Google
+      role: role,
+      isActive: true, // Activé automatiquement avec Google
+      googleId: googleData.googleId,
+    });
+
+    return this.userRepository.save(user);
   }
 }

@@ -17,19 +17,15 @@ class VerifyOtpDto {
 exports.VerifyOtpDto = VerifyOtpDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Numéro de téléphone associé au code OTP',
-        example: '+22999154678',
-        pattern: '^\\+[1-9]\\d{1,14}$'
+        description: 'Email associé au code OTP',
+        example: 'user@example.com'
     }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^\+[1-9]\d{1,14}$/, {
-        message: 'Le numéro de téléphone doit être au format international (+22999154678)'
-    }),
+    (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], VerifyOtpDto.prototype, "phone", void 0);
+], VerifyOtpDto.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Code OTP à 6 chiffres reçu par SMS',
+        description: 'Code OTP à 6 chiffres reçu par email',
         example: '123456',
         minLength: 6,
         maxLength: 6,

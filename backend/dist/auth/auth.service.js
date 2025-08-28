@@ -14,10 +14,12 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcrypt");
 const users_service_1 = require("../users/users.service");
+const email_service_1 = require("../common/services/email.service");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService) {
+    constructor(usersService, jwtService, emailService) {
         this.usersService = usersService;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
     async register(registerDto) {
         if (!registerDto.email && !registerDto.phone) {
@@ -31,8 +33,13 @@ let AuthService = class AuthService {
         }
         const user = await this.usersService.create(registerDto);
         const code = (Math.floor(100000 + Math.random() * 900000)).toString();
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-        await this.usersService.setOtpForPhone(user.phone, code, expiresAt);
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        if (user.phone) {
+            await this.usersService.setOtpForPhone(user.phone, code, expiresAt);
+        }
+        if (user.email) {
+            await this.emailService.sendOtpEmail(user.email, code, user.firstName);
+        }
         return {
             message: 'Registration successful. Verify your phone with the OTP code.',
             phone: user.phone,
@@ -40,39 +47,62 @@ let AuthService = class AuthService {
             expiresAt,
         };
     }
-    async requestOtp(phone) {
-        const user = await this.usersService.findByPhone(phone);
+    async requestOtp(email) {
+        const user = await this.usersService.findByEmail(email);
         if (!user)
             throw new common_1.BadRequestException('User not found');
         const code = (Math.floor(100000 + Math.random() * 900000)).toString();
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-        await this.usersService.setOtpForPhone(phone, code, expiresAt);
-        return { message: 'OTP sent', phone, otpPreview: code, expiresAt };
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await this.usersService.setOtpForEmail(email, code, expiresAt);
+        await this.emailService.sendOtpEmail(email, code, user.firstName);
+        return { message: 'OTP sent to email', email, otpPreview: code, expiresAt };
     }
-    async verifyOtp(phone, code) {
-        const ok = await this.usersService.verifyOtpForPhone(phone, code);
+    async verifyOtp(email, code) {
+        const ok = await this.usersService.verifyOtpForEmail(email, code);
         if (!ok) {
             throw new common_1.BadRequestException('Invalid or expired OTP');
         }
-        return { message: 'Phone verified. You can now log in.' };
+        return { message: 'Email verified. Account activated.' };
     }
     async login(loginDto) {
-        var _a;
-        if (!loginDto.email && !loginDto.phone) {
-            throw new common_1.BadRequestException('Email or phone is required');
-        }
-        const user = loginDto.email
-            ? await this.usersService.findByEmail(loginDto.email)
-            : await this.usersService.findByPhone(loginDto.phone);
-        if (!user || !user.isActive) {
+        const user = await this.usersService.findByEmail(loginDto.email);
+        if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        if (!user.isActive) {
+            throw new common_1.UnauthorizedException('Account not activated. Please verify your email with the OTP code to activate your account.');
         }
         const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         await this.usersService.setLastLogin(user.id);
-        const payload = { sub: user.id, role: user.role, email: (_a = user.email) !== null && _a !== void 0 ? _a : undefined };
+        const payload = { sub: user.id, role: user.role, email: user.email };
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phone: user.phone,
+                role: user.role,
+            },
+        };
+    }
+    async validateGoogleUser(googleUser) {
+        let user = await this.usersService.findByEmail(googleUser.email);
+        if (!user) {
+            user = await this.usersService.createGoogleUser({
+                email: googleUser.email,
+                firstName: googleUser.firstName,
+                lastName: googleUser.lastName,
+                profilePicture: googleUser.profilePicture,
+                googleId: googleUser.googleId,
+            });
+        }
+        await this.usersService.setLastLogin(user.id);
+        const payload = { sub: user.id, role: user.role, email: user.email };
         return {
             access_token: this.jwtService.sign(payload),
             user: {
@@ -90,6 +120,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -52,10 +52,10 @@ __decorate([
 ], CreateUserDto.prototype, "phone", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Email de l\'utilisateur (optionnel)',
+        description: 'Email de l\'utilisateur',
         example: 'jean.cossou@example.com',
-        required: false,
-        maxLength: 100
+        maxLength: 100,
+        required: false
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
@@ -74,11 +74,9 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Rôle de l\'utilisateur',
-        example: 'USER',
-        enum: user_role_enum_1.UserRole,
-        default: 'USER'
+        example: 'tenant',
+        enum: user_role_enum_1.UserRole
     }),
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(user_role_enum_1.UserRole),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "role", void 0);

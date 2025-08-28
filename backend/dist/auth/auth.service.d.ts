@@ -1,24 +1,26 @@
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { EmailService } from '../common/services/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 export declare class AuthService {
     private usersService;
     private jwtService;
-    constructor(usersService: UsersService, jwtService: JwtService);
+    private emailService;
+    constructor(usersService: UsersService, jwtService: JwtService, emailService: EmailService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
-        phone: string;
+        phone: string | null;
         otpPreview: string;
         expiresAt: Date;
     }>;
-    requestOtp(phone: string): Promise<{
+    requestOtp(email: string): Promise<{
         message: string;
-        phone: string;
+        email: string;
         otpPreview: string;
         expiresAt: Date;
     }>;
-    verifyOtp(phone: string, code: string): Promise<{
+    verifyOtp(email: string, code: string): Promise<{
         message: string;
     }>;
     login(loginDto: LoginDto): Promise<{
@@ -28,8 +30,19 @@ export declare class AuthService {
             email: string | null;
             firstName: string;
             lastName: string;
-            phone: string;
-            role: import("../common/enums/user-role.enum").UserRole;
+            phone: string | null;
+            role: import("../roles/entities/role.entity").Role;
+        };
+    }>;
+    validateGoogleUser(googleUser: any): Promise<{
+        access_token: string;
+        user: {
+            id: string;
+            email: string | null;
+            firstName: string;
+            lastName: string;
+            phone: string | null;
+            role: import("../roles/entities/role.entity").Role;
         };
     }>;
 }

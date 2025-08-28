@@ -19,6 +19,8 @@ const ads_module_1 = require("./ads/ads.module");
 const categories_module_1 = require("./categories/categories.module");
 const payments_module_1 = require("./payments/payments.module");
 const admin_module_1 = require("./admin/admin.module");
+const roles_module_1 = require("./roles/roles.module");
+const seeder_module_1 = require("./seeders/seeder.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -48,6 +50,8 @@ exports.AppModule = AppModule = __decorate([
             categories_module_1.CategoriesModule,
             payments_module_1.PaymentsModule,
             admin_module_1.AdminModule,
+            roles_module_1.RolesModule,
+            seeder_module_1.SeederModule,
         ],
     })
 ], AppModule);

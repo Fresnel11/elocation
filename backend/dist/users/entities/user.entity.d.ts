@@ -1,19 +1,21 @@
-import { UserRole } from '../../common/enums/user-role.enum';
 import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
+import { Role } from '../../roles/entities/role.entity';
 export declare class User {
     id: string;
     email: string | null;
     firstName: string;
     lastName: string;
-    phone: string;
-    password: string;
+    phone: string | null;
+    password: string | null;
+    googleId: string | null;
     profilePicture: string | null;
     birthDate: Date | null;
     lastLogin: Date | null;
     otpCode: string | null;
     otpExpiresAt: Date | null;
-    role: UserRole;
+    role: Role;
+    roleId: string;
     isActive: boolean;
     ads: Ad[];
     payments: Payment[];

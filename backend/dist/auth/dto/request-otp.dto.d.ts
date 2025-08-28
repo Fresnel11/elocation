@@ -1,3 +1,3 @@
 export declare class RequestOtpDto {
-    phone: string;
+    email: string;
 }

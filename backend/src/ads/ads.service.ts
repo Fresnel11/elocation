@@ -138,7 +138,7 @@ export class AdsService {
   async update(id: string, updateAdDto: UpdateAdDto, user: User): Promise<Ad> {
     const ad = await this.findOne(id);
 
-    if (ad.userId !== user.id && user.role !== UserRole.ADMIN) {
+    if (ad.userId !== user.id && user.role.name !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only update your own ads');
     }
 
@@ -153,7 +153,7 @@ export class AdsService {
   async remove(id: string, user: User): Promise<void> {
     const ad = await this.findOne(id);
 
-    if (ad.userId !== user.id && user.role !== UserRole.ADMIN) {
+    if (ad.userId !== user.id && user.role.name !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only delete your own ads');
     }
 
@@ -163,7 +163,7 @@ export class AdsService {
   async toggleAdStatus(id: string, user: User): Promise<Ad> {
     const ad = await this.findOne(id);
 
-    if (ad.userId !== user.id && user.role !== UserRole.ADMIN) {
+    if (ad.userId !== user.id && user.role.name !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only toggle your own ads');
     }
 
@@ -184,7 +184,7 @@ export class AdsService {
   async uploadPhotos(id: string, photos: string[], user: User): Promise<Ad> {
     const ad = await this.findOne(id);
 
-    if (ad.userId !== user.id && user.role !== UserRole.ADMIN) {
+    if (ad.userId !== user.id && user.role.name !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only update photos for your own ads');
     }
 

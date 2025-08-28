@@ -17,26 +17,13 @@ class LoginDto {
 exports.LoginDto = LoginDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Email de l\'utilisateur (optionnel si phone fourni)',
+        description: 'Email de l\'utilisateur',
         example: 'user@example.com',
-        required: false,
         maxLength: 100
     }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], LoginDto.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Numéro de téléphone (optionnel si email fourni)',
-        example: '+22999154678',
-        required: false,
-        pattern: '^\\+[1-9]\\d{1,14}$'
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], LoginDto.prototype, "phone", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Mot de passe de l\'utilisateur',

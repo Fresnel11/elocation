@@ -35,10 +35,10 @@ export class CreateUserDto {
   phone: string;
 
   @ApiProperty({
-    description: 'Email de l\'utilisateur (optionnel)',
+    description: 'Email de l\'utilisateur',
     example: 'jean.cossou@example.com',
-    required: false,
-    maxLength: 100
+    maxLength: 100,
+    required: false
   })
   @IsOptional()
   @IsEmail()
@@ -55,13 +55,11 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'Rôle de l\'utilisateur',
-    example: 'USER',
-    enum: UserRole,
-    default: 'USER'
+    example: 'tenant',
+    enum: UserRole
   })
-  @IsOptional()
   @IsEnum(UserRole)
-  role?: UserRole;
+  role: UserRole;
 
   @ApiProperty({
     description: 'Photo de profil (URL)',

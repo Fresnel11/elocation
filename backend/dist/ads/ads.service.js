@@ -104,7 +104,7 @@ let AdsService = class AdsService {
     }
     async update(id, updateAdDto, user) {
         const ad = await this.findOne(id);
-        if (ad.userId !== user.id && user.role !== user_role_enum_1.UserRole.ADMIN) {
+        if (ad.userId !== user.id && user.role.name !== user_role_enum_1.UserRole.ADMIN) {
             throw new common_1.ForbiddenException('You can only update your own ads');
         }
         const whatsappLink = updateAdDto.whatsappNumber
@@ -115,14 +115,14 @@ let AdsService = class AdsService {
     }
     async remove(id, user) {
         const ad = await this.findOne(id);
-        if (ad.userId !== user.id && user.role !== user_role_enum_1.UserRole.ADMIN) {
+        if (ad.userId !== user.id && user.role.name !== user_role_enum_1.UserRole.ADMIN) {
             throw new common_1.ForbiddenException('You can only delete your own ads');
         }
         await this.adRepository.remove(ad);
     }
     async toggleAdStatus(id, user) {
         const ad = await this.findOne(id);
-        if (ad.userId !== user.id && user.role !== user_role_enum_1.UserRole.ADMIN) {
+        if (ad.userId !== user.id && user.role.name !== user_role_enum_1.UserRole.ADMIN) {
             throw new common_1.ForbiddenException('You can only toggle your own ads');
         }
         ad.isActive = !ad.isActive;
@@ -137,7 +137,7 @@ let AdsService = class AdsService {
     }
     async uploadPhotos(id, photos, user) {
         const ad = await this.findOne(id);
-        if (ad.userId !== user.id && user.role !== user_role_enum_1.UserRole.ADMIN) {
+        if (ad.userId !== user.id && user.role.name !== user_role_enum_1.UserRole.ADMIN) {
             throw new common_1.ForbiddenException('You can only update photos for your own ads');
         }
         if (photos.length > 5) {
