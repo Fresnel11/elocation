@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Home } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -13,6 +13,17 @@ export const LoginPage: React.FC = () => {
   const [errors, setErrors] = useState<{email?: string; password?: string}>({});
   const { login, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Nettoyer le message après 5 secondes
+      const timer = setTimeout(() => setSuccessMessage(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +49,7 @@ export const LoginPage: React.FC = () => {
     
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/ads');
     } catch (error) {
       setErrors({ email: 'Email ou mot de passe incorrect' });
     }
@@ -71,6 +82,11 @@ export const LoginPage: React.FC = () => {
             <CardTitle className="text-center">Connexion</CardTitle>
           </CardHeader>
           <CardContent>
+            {successMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">{successMessage}</p>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <Input
                 label="Email"

@@ -11,13 +11,11 @@ export declare class AuthService {
     register(registerDto: RegisterDto): Promise<{
         message: string;
         phone: string | null;
-        otpPreview: string;
         expiresAt: Date;
     }>;
     requestOtp(email: string): Promise<{
         message: string;
         email: string;
-        otpPreview: string;
         expiresAt: Date;
     }>;
     verifyOtp(email: string, code: string): Promise<{
@@ -44,5 +42,25 @@ export declare class AuthService {
             phone: string | null;
             role: import("../roles/entities/role.entity").Role;
         };
+    }>;
+    forgotPassword(email: string): Promise<{
+        message: string;
+        email: string;
+        user: {
+            id: string;
+            email: string | null;
+            firstName: string;
+            lastName: string;
+            phone: string | null;
+            role: import("../roles/entities/role.entity").Role;
+        };
+    }>;
+    sendPasswordResetCode(email: string): Promise<{
+        message: string;
+        email: string;
+        expiresAt: Date;
+    }>;
+    resetPassword(email: string, code: string, newPassword: string): Promise<{
+        message: string;
     }>;
 }

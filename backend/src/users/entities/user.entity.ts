@@ -46,6 +46,12 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   otpExpiresAt: Date | null;
 
+  @Column({ type: 'varchar', length: 6, nullable: true })
+  resetPasswordOtp: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetPasswordOtpExpiresAt: Date | null;
+
   @ManyToOne(() => Role, (role) => role.users)
   @JoinColumn({ name: 'roleId' })
   role: Role;

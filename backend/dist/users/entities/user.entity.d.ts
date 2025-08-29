@@ -14,6 +14,8 @@ export declare class User {
     lastLogin: Date | null;
     otpCode: string | null;
     otpExpiresAt: Date | null;
+    resetPasswordOtp: string | null;
+    resetPasswordOtpExpiresAt: Date | null;
     role: Role;
     roleId: string;
     isActive: boolean;

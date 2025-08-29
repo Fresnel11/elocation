@@ -76,8 +76,13 @@ export const RegisterPage: React.FC = () => {
     setErrors({});
     
     try {
-      await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.role, formData.email || undefined);
-      navigate('/dashboard');
+      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.role, formData.email || undefined);
+      navigate('/verify-otp', { 
+        state: { 
+          phone: result.phone, 
+          email: formData.email
+        } 
+      });
     } catch (error) {
       setErrors({ phone: 'Une erreur est survenue lors de l\'inscription' });
     }
