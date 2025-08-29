@@ -9,7 +9,9 @@ import { useAuth } from '../../context/AuthContext';
 
 export const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -38,13 +40,21 @@ export const RegisterPage: React.FC = () => {
     
     const newErrors: Record<string, string> = {};
     
-    if (!formData.name.trim()) {
-      newErrors.name = 'Le nom est requis';
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'Le prénom est requis';
     }
     
-    if (!formData.email) {
-      newErrors.email = 'L\'email est requis';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Le nom de famille est requis';
+    }
+    
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Le numéro de téléphone est requis';
+    } else if (!/^\+[1-9]\d{1,14}$/.test(formData.phone)) {
+      newErrors.phone = 'Le numéro doit être au format international (+22999154678)';
+    }
+    
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email invalide';
     }
     
@@ -66,10 +76,10 @@ export const RegisterPage: React.FC = () => {
     setErrors({});
     
     try {
-      await register(formData.email, formData.password, formData.name, formData.role);
+      await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.role, formData.email || undefined);
       navigate('/dashboard');
     } catch (error) {
-      setErrors({ email: 'Une erreur est survenue lors de l\'inscription' });
+      setErrors({ phone: 'Une erreur est survenue lors de l\'inscription' });
     }
   };
 
@@ -102,22 +112,41 @@ export const RegisterPage: React.FC = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <Input
-                label="Nom complet"
+                label="Prénom"
                 type="text"
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                error={errors.name}
+                value={formData.firstName}
+                onChange={(e) => handleChange('firstName', e.target.value)}
+                error={errors.firstName}
                 required
-                placeholder="Jean Dupont"
+                placeholder="Jean"
               />
 
               <Input
-                label="Email"
+                label="Nom de famille"
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => handleChange('lastName', e.target.value)}
+                error={errors.lastName}
+                required
+                placeholder="Dupont"
+              />
+
+              <Input
+                label="Numéro de téléphone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                error={errors.phone}
+                required
+                placeholder="+22999154678"
+              />
+
+              <Input
+                label="Email (optionnel)"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 error={errors.email}
-                required
                 placeholder="votre@email.com"
               />
 

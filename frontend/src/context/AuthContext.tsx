@@ -1,18 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'owner' | 'tenant';
-}
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useAuthStore } from '../store/authStore';
+import { User } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, role: 'owner' | 'tenant') => Promise<void>;
+  register: (firstName: string, lastName: string, phone: string, password: string, role: 'owner' | 'tenant', email?: string) => Promise<{ phone: string; otpPreview: string }>;
+  requestOtp: (email: string) => Promise<void>;
+  verifyOtp: (email: string, code: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  error: string | null;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,51 +29,53 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const {
+    user,
+    isLoading,
+    error,
+    login: storeLogin,
+    register: storeRegister,
+    requestOtp: storeRequestOtp,
+    verifyOtp: storeVerifyOtp,
+    logout: storeLogout,
+    clearError,
+    initializeAuth
+  } = useAuthStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      // Simulation d'une authentification
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setUser({
-        id: '1',
-        email,
-        name: 'Utilisateur Test',
-        role: 'tenant'
-      });
-    } finally {
-      setLoading(false);
-    }
+    await storeLogin({ email, password });
   };
 
-  const register = async (email: string, password: string, name: string, role: 'owner' | 'tenant') => {
-    setLoading(true);
-    try {
-      // Simulation d'une inscription
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setUser({
-        id: '1',
-        email,
-        name,
-        role
-      });
-    } finally {
-      setLoading(false);
-    }
+  const register = async (firstName: string, lastName: string, phone: string, password: string, role: 'owner' | 'tenant', email?: string) => {
+    return await storeRegister({ firstName, lastName, phone, password, role, email });
+  };
+
+  const requestOtp = async (email: string) => {
+    await storeRequestOtp(email);
+  };
+
+  const verifyOtp = async (email: string, code: string) => {
+    await storeVerifyOtp(email, code);
   };
 
   const logout = () => {
-    setUser(null);
+    storeLogout();
   };
 
   const value = {
     user,
     login,
     register,
+    requestOtp,
+    verifyOtp,
     logout,
-    loading
+    loading: isLoading,
+    error,
+    clearError
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
