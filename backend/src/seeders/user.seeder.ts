@@ -1,0 +1,88 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
+import { Role } from '../roles/entities/role.entity';
+import { UserRole } from '../common/enums/user-role.enum';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class UserSeeder {
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+  ) {}
+
+  async seed() {
+    // Vérifier si les utilisateurs de test existent déjà
+    const existingTestUser = await this.userRepository.findOne({ where: { email: 'marie.adjovi@example.com' } });
+    if (existingTestUser) {
+      console.log('Les utilisateurs de test existent déjà, seeding ignoré');
+      return;
+    }
+
+    const ownerRole = await this.roleRepository.findOne({ where: { name: UserRole.OWNER } });
+    const tenantRole = await this.roleRepository.findOne({ where: { name: UserRole.TENANT } });
+
+    if (!ownerRole || !tenantRole) {
+      console.log('Rôles non trouvés, seeding des utilisateurs ignoré');
+      return;
+    }
+
+    const usersData = [
+      {
+        firstName: 'Marie',
+        lastName: 'Adjovi',
+        email: 'marie.adjovi@example.com',
+        phone: '+22997123456',
+        password: await bcrypt.hash('password123', 10),
+        role: ownerRole,
+        isVerified: true,
+      },
+      {
+        firstName: 'Jean',
+        lastName: 'Koudjo',
+        email: 'jean.koudjo@example.com',
+        phone: '+22997234567',
+        password: await bcrypt.hash('password123', 10),
+        role: ownerRole,
+        isVerified: true,
+      },
+      {
+        firstName: 'Fatou',
+        lastName: 'Sanni',
+        email: 'fatou.sanni@example.com',
+        phone: '+22997345678',
+        password: await bcrypt.hash('password123', 10),
+        role: ownerRole,
+        isVerified: true,
+      },
+      {
+        firstName: 'Pierre',
+        lastName: 'Dossou',
+        email: 'pierre.dossou@example.com',
+        phone: '+22997456789',
+        password: await bcrypt.hash('password123', 10),
+        role: ownerRole,
+        isVerified: true,
+      },
+      {
+        firstName: 'Aminata',
+        lastName: 'Traore',
+        email: 'aminata.traore@example.com',
+        phone: '+22997567890',
+        password: await bcrypt.hash('password123', 10),
+        role: tenantRole,
+        isVerified: true,
+      },
+    ];
+
+    for (const userData of usersData) {
+      const user = this.userRepository.create(userData);
+      await this.userRepository.save(user);
+      console.log(`Utilisateur ${userData.firstName} ${userData.lastName} créé avec succès`);
+    }
+  }
+}

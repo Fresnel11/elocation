@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Home } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import logoImage from '../../assets/elocation-512.png';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,18 +14,29 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{email?: string; password?: string}>({});
   const { login, loading } = useAuth();
+  const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    if (location.state?.message) {
+    if (location.state?.verified) {
+      // Délai pour s'assurer que le composant est monté
+      const timer = setTimeout(() => {
+        success(
+          'Compte activé !',
+          'Votre compte a été vérifié avec succès. Connectez-vous pour accéder à votre espace.'
+        );
+        // Nettoyer le state pour éviter la répétition
+        navigate('/login', { replace: true });
+      }, 500);
+      return () => clearTimeout(timer);
+    } else if (location.state?.message) {
       setSuccessMessage(location.state.message);
-      // Nettoyer le message après 5 secondes
       const timer = setTimeout(() => setSuccessMessage(''), 5000);
       return () => clearTimeout(timer);
     }
-  }, [location.state]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +63,11 @@ export const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       navigate('/ads');
-    } catch (error) {
-      setErrors({ email: 'Email ou mot de passe incorrect' });
+    } catch (err: any) {
+      error(
+        'Erreur de connexion',
+        'Email ou mot de passe incorrect. Veuillez vérifier vos informations.'
+      );
     }
   };
 
@@ -59,10 +75,8 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <Home className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-800">eLocation</span>
-            <span className="text-sm text-blue-600 font-medium">Bénin</span>
+          <Link to="/">
+            <img src={logoImage} alt="eLocation Bénin" className="h-16 w-auto" />
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
@@ -98,7 +112,7 @@ export const LoginPage: React.FC = () => {
                 placeholder="votre@email.com"
               />
 
-              <div>
+              <div className="relative">
                 <Input
                   label="Mot de passe"
                   type={showPassword ? 'text' : 'password'}
@@ -110,7 +124,7 @@ export const LoginPage: React.FC = () => {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

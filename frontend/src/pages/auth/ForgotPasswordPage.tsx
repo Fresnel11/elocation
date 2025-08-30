@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, ArrowLeft, User, X } from 'lucide-react';
+import { ArrowLeft, User, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { authService, User as UserType } from '../../services/authService';
+import logoImage from '../../assets/elocation-512.png';
 
 export const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -70,10 +71,8 @@ export const ForgotPasswordPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="flex justify-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <Home className="h-8 w-8 text-blue-600" />
-              <span className="font-bold text-xl text-gray-800">eLocation</span>
-              <span className="text-sm text-blue-600 font-medium">Bénin</span>
+            <Link to="/">
+              <img src={logoImage} alt="eLocation Bénin" className="h-16 w-auto" />
             </Link>
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">

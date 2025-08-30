@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, User, Menu, X, PlusCircle } from 'lucide-react';
+import { User, Menu, X, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import logoImage from '../../assets/elocation-512.png';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,10 +20,8 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <Home className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-800">eLocation</span>
-            <span className="text-sm text-blue-600 font-medium">Bénin</span>
+          <Link to="/" className="flex items-center">
+            <img src={logoImage} alt="eLocation Bénin" className="h-40 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

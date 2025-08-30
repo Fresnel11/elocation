@@ -25,8 +25,8 @@ export const CTASection: React.FC = () => {
               className="bg-white text-blue-600 hover:bg-gray-50 hover:text-blue-700 px-8 py-3 font-semibold"
               asChild
             >
-              <Link to="/register">
-                <PlusCircle className="h-5 w-5 mr-2" />
+              <Link to="/register" className="flex items-center justify-center text-blue-600">
+                <PlusCircle className="h-5 w-5 mr-2 text-blue-600" />
                 Commencer maintenant
               </Link>
             </Button>
@@ -34,10 +34,10 @@ export const CTASection: React.FC = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3"
+              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 font-semibold"
               asChild
             >
-              <Link to="/annonces">
+              <Link to="/annonces" className="flex items-center justify-center">
                 Voir toutes les annonces
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Link>

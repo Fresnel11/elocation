@@ -3,94 +3,16 @@ import { Search, Filter, MapPin, Calendar, Users, Bed, Bath, Car, Wifi, Tv, AirV
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
+import { AdModal } from '../components/ui/AdModal';
+import { adsService, Ad } from '../services/adsService';
 
-interface Ad {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  images: string[];
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  type: 'apartment' | 'house' | 'studio' | 'villa';
-  amenities: string[];
+interface AdWithUI extends Ad {
+  isLiked: boolean;
   rating: number;
   reviews: number;
-  isLiked: boolean;
-  owner: {
-    name: string;
-    avatar: string;
-    verified: boolean;
-  };
 }
 
-const mockAds: Ad[] = [
-  {
-    id: '1',
-    title: 'Appartement moderne 2 chambres - Cotonou Centre',
-    description: 'Magnifique appartement entièrement meublé avec vue sur la ville',
-    price: 85000,
-    location: 'Cotonou, Littoral',
-    images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 65,
-    type: 'apartment',
-    amenities: ['wifi', 'tv', 'ac', 'kitchen'],
-    rating: 4.8,
-    reviews: 24,
-    isLiked: false,
-    owner: {
-      name: 'Marie Adjovi',
-      avatar: '/api/placeholder/40/40',
-      verified: true
-    }
-  },
-  {
-    id: '2',
-    title: 'Villa spacieuse 4 chambres avec jardin',
-    description: 'Belle villa familiale dans un quartier calme et sécurisé',
-    price: 150000,
-    location: 'Calavi, Atlantique',
-    images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 120,
-    type: 'villa',
-    amenities: ['wifi', 'tv', 'ac', 'kitchen', 'parking'],
-    rating: 4.9,
-    reviews: 18,
-    isLiked: true,
-    owner: {
-      name: 'Jean Koudjo',
-      avatar: '/api/placeholder/40/40',
-      verified: true
-    }
-  },
-  {
-    id: '3',
-    title: 'Studio moderne proche université',
-    description: 'Studio parfait pour étudiant, entièrement équipé',
-    price: 45000,
-    location: 'Abomey-Calavi, Atlantique',
-    images: ['/api/placeholder/400/300'],
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 25,
-    type: 'studio',
-    amenities: ['wifi', 'tv', 'kitchen'],
-    rating: 4.5,
-    reviews: 12,
-    isLiked: false,
-    owner: {
-      name: 'Fatou Sanni',
-      avatar: '/api/placeholder/40/40',
-      verified: false
-    }
-  }
-];
+
 
 const amenityIcons = {
   wifi: Wifi,
@@ -101,8 +23,11 @@ const amenityIcons = {
 };
 
 export const AdsPage: React.FC = () => {
-  const [ads, setAds] = useState<Ad[]>(mockAds);
-  const [filteredAds, setFilteredAds] = useState<Ad[]>(mockAds);
+  const [ads, setAds] = useState<AdWithUI[]>([]);
+  const [filteredAds, setFilteredAds] = useState<AdWithUI[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedAd, setSelectedAd] = useState<AdWithUI | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -117,12 +42,7 @@ export const AdsPage: React.FC = () => {
   });
 
   const locations = ['Cotonou', 'Calavi', 'Abomey-Calavi', 'Porto-Novo', 'Parakou'];
-  const propertyTypes = [
-    { value: 'apartment', label: 'Appartement' },
-    { value: 'house', label: 'Maison' },
-    { value: 'studio', label: 'Studio' },
-    { value: 'villa', label: 'Villa' }
-  ];
+  const [categories, setCategories] = useState<{value: string, label: string}[]>([]);
   const amenitiesList = [
     { value: 'wifi', label: 'WiFi' },
     { value: 'tv', label: 'Télévision' },
@@ -130,6 +50,43 @@ export const AdsPage: React.FC = () => {
     { value: 'kitchen', label: 'Cuisine équipée' },
     { value: 'parking', label: 'Parking' }
   ];
+
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        setLoading(true);
+        console.log('Début du chargement des annonces...');
+        const response = await adsService.getAds();
+        console.log('Données reçues:', response);
+        
+        // Extraire le tableau ads de la réponse
+        const adsArray = response.ads || [];
+        console.log('Nombre d\'annonces:', adsArray.length);
+        console.log('Premier élément:', adsArray[0]);
+        
+        const adsWithUI = adsArray.map(ad => ({
+          ...ad,
+          isLiked: false,
+          rating: 4.5 + Math.random() * 0.5,
+          reviews: Math.floor(Math.random() * 30) + 5
+        }));
+        
+        console.log('Annonces avec UI:', adsWithUI);
+        setAds(adsWithUI);
+        setFilteredAds(adsWithUI);
+        
+        // Extraire les catégories uniques
+        const uniqueCategories = [...new Set(adsArray.map(ad => ad.category.name))];
+        setCategories(uniqueCategories.map(cat => ({ value: cat.toLowerCase(), label: cat })));
+      } catch (error) {
+        console.error('Erreur lors du chargement des annonces:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAds();
+  }, []);
 
   useEffect(() => {
     let filtered = ads.filter(ad => {
@@ -141,7 +98,7 @@ export const AdsPage: React.FC = () => {
       
       const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
       
-      const matchesType = !filters.type || ad.type === filters.type;
+      const matchesType = !filters.type || ad.category.name.toLowerCase() === filters.type;
       
       const matchesBedrooms = !filters.bedrooms || ad.bedrooms >= parseInt(filters.bedrooms);
       
@@ -174,6 +131,16 @@ export const AdsPage: React.FC = () => {
     setAds(prev => prev.map(ad => 
       ad.id === adId ? { ...ad, isLiked: !ad.isLiked } : ad
     ));
+  };
+
+  const openModal = (ad: AdWithUI) => {
+    setSelectedAd(ad);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedAd(null);
   };
 
   const clearFilters = () => {
@@ -212,14 +179,14 @@ export const AdsPage: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
+                className="lg:hidden flex items-center gap-2"
               >
                 <Filter className="h-4 w-4" />
                 Filtres
                 <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </Button>
               
-              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
@@ -313,7 +280,7 @@ export const AdsPage: React.FC = () => {
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Tous les types</option>
-                      {propertyTypes.map(type => (
+                      {categories.map(type => (
                         <option key={type.value} value={type.value}>{type.label}</option>
                       ))}
                     </select>
@@ -380,101 +347,129 @@ export const AdsPage: React.FC = () => {
               </p>
             </div>
 
-            <div className={viewMode === 'grid' 
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' 
-              : 'space-y-4 sm:space-y-6'
-            }>
-              {filteredAds.map((ad, index) => (
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' 
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' 
+                : 'space-y-4 sm:space-y-6'
+              }>
+                {filteredAds.map((ad, index) => (
                 <Card 
                   key={ad.id} 
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer transform hover:-translate-y-1 animate-in fade-in-0 slide-in-from-bottom-4"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="relative overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative h-48 overflow-hidden">
                     <img
-                      src={ad.images[0]}
+                      src={ad.photos[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'}
                       alt={ad.title}
-                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    
+                    {/* Heart Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleLike(ad.id);
                       }}
-                      className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200 shadow-sm"
+                      className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all duration-200 shadow-sm"
                     >
-                      <Heart className={`h-4 w-4 transition-all duration-200 ${ad.isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-600 hover:text-red-400'}`} />
+                      <Heart className={`h-4 w-4 ${ad.isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-400'}`} />
                     </button>
-                    <div className="absolute bottom-3 left-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg backdrop-blur-sm">
-                      {ad.price.toLocaleString()} FCFA/mois
+                    
+                    {/* Category Badge */}
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md">
+                      <span className="text-xs font-medium text-gray-700">{ad.category.name}</span>
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Price Badge */}
+                    <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
+                      <span className="text-sm font-semibold">{parseInt(ad.price).toLocaleString()} FCFA</span>
+                      <span className="text-xs opacity-90">/mois</span>
+                    </div>
                   </div>
                   
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">{ad.title}</h3>
-                      <div className="flex items-center gap-1 ml-2">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">{ad.rating}</span>
-                      </div>
+                  {/* Content Section */}
+                  <div className="p-4">
+                    {/* Title */}
+                    <h3 className="font-semibold text-gray-900 text-base mb-2 line-clamp-1">
+                      {ad.title}
+                    </h3>
+                    
+                    {/* Location */}
+                    <div className="flex items-center text-gray-500 mb-3">
+                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm truncate">{ad.location}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600 mb-3">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{ad.location}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                      <div className="flex items-center gap-1">
-                        <Bed className="h-4 w-4" />
-                        <span>{ad.bedrooms}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
+                    {/* Property Details */}
+                    <div className="flex items-center gap-4 mb-3">
+                      {ad.bedrooms > 0 && (
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Bed className="h-4 w-4" />
+                          <span className="text-sm">{ad.bedrooms}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-gray-600">
                         <Bath className="h-4 w-4" />
-                        <span>{ad.bathrooms}</span>
+                        <span className="text-sm">{ad.bathrooms}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span>{ad.area}m²</span>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <span className="text-sm">{ad.area}m²</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-600 ml-auto">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium">{ad.rating.toFixed(1)}</span>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 mb-4">
-                      {ad.amenities.slice(0, 4).map(amenity => {
+                    {/* Amenities */}
+                    <div className="flex items-center gap-1 mb-4">
+                      {ad.amenities.slice(0, 3).map(amenity => {
                         const Icon = amenityIcons[amenity as keyof typeof amenityIcons];
                         return Icon ? (
-                          <div key={amenity} className="p-1.5 bg-gray-100 rounded">
-                            <Icon className="h-3 w-3 text-gray-600" />
+                          <div key={amenity} className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center">
+                            <Icon className="h-3.5 w-3.5 text-gray-600" />
                           </div>
                         ) : null;
                       })}
-                      {ad.amenities.length > 4 && (
-                        <span className="text-xs text-gray-500">+{ad.amenities.length - 4}</span>
+                      {ad.amenities.length > 3 && (
+                        <div className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center">
+                          <span className="text-xs font-medium text-gray-600">+{ad.amenities.length - 3}</span>
+                        </div>
                       )}
                     </div>
                     
-                    <div className="flex items-center justify-between">
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                       <div className="flex items-center gap-2">
-                        <img
-                          src={ad.owner.avatar}
-                          alt={ad.owner.name}
-                          className="w-6 h-6 rounded-full"
-                        />
-                        <span className="text-sm text-gray-600">{ad.owner.name}</span>
-                        {ad.owner.verified && (
-                          <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">✓</span>
-                          </div>
-                        )}
+                        <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-semibold">{ad.user.firstName[0]}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900 truncate max-w-[100px]">
+                            {ad.user.firstName}
+                          </span>
+                          <span className="text-xs text-gray-500">Propriétaire</span>
+                        </div>
                       </div>
-                      <Button size="sm" className="text-xs">
+                      <Button 
+                        size="sm" 
+                        onClick={() => openModal(ad)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
+                      >
                         Voir détails
                       </Button>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {filteredAds.length === 0 && (
               <div className="text-center py-12">
@@ -489,6 +484,13 @@ export const AdsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Modal */}
+      <AdModal 
+        ad={selectedAd}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </div>
   );
 };

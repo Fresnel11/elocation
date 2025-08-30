@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Search, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logoImage from '../../assets/elocation-512.png';
 
 const slides = [
   {
@@ -78,6 +79,10 @@ export const HeroSlider: React.FC = () => {
               </span>
             </div>
             
+            <div className="mb-6">
+              <img src={logoImage} alt="eLocation Bénin" className="h-16 w-auto mx-auto mb-4" />
+            </div>
+            
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
               {currentSlideData.title}
             </h1>
@@ -88,14 +93,14 @@ export const HeroSlider: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3" asChild>
-                <Link to="/annonces">
+                <Link to="/annonces" className="flex items-center justify-center">
                   <Search className="h-5 w-5 mr-2" />
                   Chercher une annonce
                 </Link>
               </Button>
               
               <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3" asChild>
-                <Link to="/register">
+                <Link to="/register" className="flex items-center justify-center">
                   <PlusCircle className="h-5 w-5 mr-2" />
                   Publier une annonce
                 </Link>

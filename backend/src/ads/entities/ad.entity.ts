@@ -36,6 +36,18 @@ export class Ad {
   @Column('json', { nullable: true })
   photos: string[];
 
+  @Column({ type: 'int', nullable: true })
+  bedrooms: number;
+
+  @Column({ type: 'int', nullable: true })
+  bathrooms: number;
+
+  @Column({ type: 'int', nullable: true })
+  area: number;
+
+  @Column('json', { nullable: true })
+  amenities: string[];
+
   @Column({ nullable: true })
   whatsappLink: string;
 

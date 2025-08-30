@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { OtpInput } from '../../components/ui/OtpInput';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import logoImage from '../../assets/elocation-512.png';
 
 export const VerifyOtpPage: React.FC = () => {
   const [otpCode, setOtpCode] = useState('');
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const { verifyOtp, requestOtp, loading } = useAuth();
+  const { success, error: showError } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,10 +45,14 @@ export const VerifyOtpPage: React.FC = () => {
       await verifyOtp(email || phone, otpCode);
       navigate('/login', { 
         state: { 
-          message: 'Compte vérifié avec succès ! Vous pouvez maintenant vous connecter.' 
+          verified: true
         } 
       });
-    } catch (error) {
+    } catch (err) {
+      showError(
+        'Code invalide',
+        'Le code OTP saisi est invalide ou expiré. Veuillez réessayer.'
+      );
       setError('Code OTP invalide ou expiré');
     }
   };
@@ -59,8 +66,10 @@ export const VerifyOtpPage: React.FC = () => {
     setResendLoading(true);
     try {
       await requestOtp(email);
+      success('Code renvoyé', 'Un nouveau code OTP a été envoyé à votre email.');
       setError('');
-    } catch (error) {
+    } catch (err) {
+      showError('Erreur', 'Impossible de renvoyer le code. Veuillez réessayer.');
       setError('Erreur lors du renvoi du code');
     } finally {
       setResendLoading(false);
@@ -71,10 +80,8 @@ export const VerifyOtpPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <Home className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-800">eLocation</span>
-            <span className="text-sm text-blue-600 font-medium">Bénin</span>
+          <Link to="/">
+            <img src={logoImage} alt="eLocation Bénin" className="h-16 w-auto" />
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">

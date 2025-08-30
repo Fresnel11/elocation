@@ -9,6 +9,10 @@ export declare class Ad {
     isAvailable: boolean;
     isActive: boolean;
     photos: string[];
+    bedrooms: number;
+    bathrooms: number;
+    area: number;
+    amenities: string[];
     whatsappLink: string;
     whatsappNumber: string;
     user: User;
