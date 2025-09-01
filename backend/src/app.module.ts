@@ -10,6 +10,8 @@ import { CategoriesModule } from './categories/categories.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { RolesModule } from './roles/roles.module';
+import { SubCategoriesModule } from './subcategories/subcategories.module';
+import { CommonModule } from './common/common.module';
 import { SeederModule } from './seeders/seeder.module';
 
 @Module({
@@ -38,6 +40,8 @@ import { SeederModule } from './seeders/seeder.module';
     PaymentsModule,
     AdminModule,
     RolesModule,
+    SubCategoriesModule,
+    CommonModule,
     SeederModule,
   ],
 })

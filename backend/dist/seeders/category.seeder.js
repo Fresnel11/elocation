@@ -22,41 +22,42 @@ let CategorySeeder = class CategorySeeder {
         this.categoryRepository = categoryRepository;
     }
     async seed() {
+        await this.categoryRepository.query('DELETE FROM ads');
+        console.log('Annonces supprimées');
+        await this.categoryRepository.query('DELETE FROM subcategories');
+        console.log('Sous-catégories supprimées');
+        await this.categoryRepository.query('DELETE FROM categories');
+        console.log('Anciennes catégories supprimées');
         const categories = [
             {
-                name: 'Appartement',
-                description: 'Appartements meublés ou non meublés',
+                name: 'Immobilier',
+                description: 'Biens immobiliers à louer',
             },
             {
-                name: 'Maison',
-                description: 'Maisons individuelles à louer',
+                name: 'Véhicules',
+                description: 'Véhicules de location',
             },
             {
-                name: 'Studio',
-                description: 'Studios et petits espaces',
+                name: 'Electroménager',
+                description: 'Appareils électroménagers',
             },
             {
-                name: 'Villa',
-                description: 'Villas de luxe avec jardin',
+                name: 'Evènementiel',
+                description: 'Matériel pour événements',
             },
             {
-                name: 'Chambre',
-                description: 'Chambres individuelles en colocation',
+                name: 'Professionnel',
+                description: 'Matériel professionnel',
             },
             {
-                name: 'Bureau',
-                description: 'Espaces de bureau et commerciaux',
+                name: 'Loisirs',
+                description: 'Équipements de loisirs',
             },
         ];
         for (const categoryData of categories) {
-            const existingCategory = await this.categoryRepository.findOne({
-                where: { name: categoryData.name },
-            });
-            if (!existingCategory) {
-                const category = this.categoryRepository.create(categoryData);
-                await this.categoryRepository.save(category);
-                console.log(`Catégorie ${categoryData.name} créée avec succès`);
-            }
+            const category = this.categoryRepository.create(categoryData);
+            await this.categoryRepository.save(category);
+            console.log(`Catégorie ${categoryData.name} créée avec succès`);
         }
     }
 };

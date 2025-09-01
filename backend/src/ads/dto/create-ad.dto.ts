@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsBoolean, MinLength, Min, MaxLength } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, MinLength, Min, MaxLength, IsArray, IsUUID } from 'class-validator';
 
 export class CreateAdDto {
   @ApiProperty({
@@ -59,7 +59,76 @@ export class CreateAdDto {
     example: 'uuid-category-id'
   })
   @IsString()
+  @IsUUID()
   categoryId: string;
+
+  @ApiProperty({
+    description: 'ID de la sous-catégorie',
+    example: 'uuid-subcategory-id',
+    required: false
+  })
+  @IsOptional()
+  @IsUUID(4, { message: 'subCategoryId must be a valid UUID' })
+  subCategoryId?: string;
+
+  @ApiProperty({
+    description: 'Nombre de chambres',
+    example: 2,
+    required: false
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  bedrooms?: number;
+
+  @ApiProperty({
+    description: 'Nombre de salles de bain',
+    example: 1,
+    required: false
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  bathrooms?: number;
+
+  @ApiProperty({
+    description: 'Surface en m²',
+    example: 65,
+    required: false
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  area?: number;
+
+  @ApiProperty({
+    description: 'Liste des équipements disponibles',
+    example: ['wifi', 'tv', 'ac', 'kitchen'],
+    required: false
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  amenities?: string[];
+
+  @ApiProperty({
+    description: 'URLs des photos',
+    example: ['photo1.jpg', 'photo2.jpg'],
+    required: false
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  photos?: string[];
+
+  @ApiProperty({
+    description: 'URL de la vidéo',
+    example: 'video.mp4',
+    required: false
+  })
+  @IsOptional()
+  @IsString()
+  video?: string;
 
   @ApiProperty({
     description: 'Annonce disponible à la vente/location',

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Menu, X, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { CreateAdButton } from '../ui/CreateAdButton';
 import { useAuth } from '../../context/AuthContext';
 import logoImage from '../../assets/elocation-512.png';
 
@@ -44,12 +45,10 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/dashboard">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Publier
-                  </Link>
-                </Button>
+                <CreateAdButton className="px-4 py-2 text-sm">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Publier
+                </CreateAdButton>
                 <div className="flex items-center space-x-3">
                   <User className="h-8 w-8 text-gray-600" />
                   <span className="text-gray-700 font-medium">{user.name}</span>
@@ -116,12 +115,10 @@ export const Navbar: React.FC = () => {
               
               {user ? (
                 <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Publier
-                    </Link>
-                  </Button>
+                  <CreateAdButton className="w-full px-4 py-2">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Publier
+                  </CreateAdButton>
                   <div className="flex items-center space-x-3">
                     <User className="h-6 w-6 text-gray-600" />
                     <span className="text-gray-700 font-medium">{user.name}</span>

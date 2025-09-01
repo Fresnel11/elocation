@@ -27,11 +27,7 @@ let AdSeeder = class AdSeeder {
         this.categoryRepository = categoryRepository;
     }
     async seed() {
-        const existingAds = await this.adRepository.count();
-        if (existingAds > 0) {
-            console.log('Des annonces existent déjà, seeding ignoré');
-            return;
-        }
+        console.log('Création des nouvelles annonces...');
         const users = await this.userRepository.find({
             relations: ['role'],
             where: { role: { name: user_role_enum_1.UserRole.OWNER } }

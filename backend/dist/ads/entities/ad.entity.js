@@ -13,6 +13,7 @@ exports.Ad = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const category_entity_1 = require("../../categories/entities/category.entity");
+const subcategory_entity_1 = require("../../subcategories/entities/subcategory.entity");
 let Ad = class Ad {
 };
 exports.Ad = Ad;
@@ -48,6 +49,10 @@ __decorate([
     (0, typeorm_1.Column)('json', { nullable: true }),
     __metadata("design:type", Array)
 ], Ad.prototype, "photos", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "video", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'int', nullable: true }),
     __metadata("design:type", Number)
@@ -90,6 +95,15 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Ad.prototype, "categoryId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => subcategory_entity_1.SubCategory, (subCategory) => subCategory.ads),
+    (0, typeorm_1.JoinColumn)({ name: 'subCategoryId' }),
+    __metadata("design:type", subcategory_entity_1.SubCategory)
+], Ad.prototype, "subCategory", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "subCategoryId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

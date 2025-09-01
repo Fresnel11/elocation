@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Ad } from '../../ads/entities/ad.entity';
+import { SubCategory } from '../../subcategories/entities/subcategory.entity';
 
 @Entity('categories')
 export class Category {
@@ -17,6 +18,9 @@ export class Category {
 
   @OneToMany(() => Ad, (ad) => ad.category)
   ads: Ad[];
+
+  @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
+  subCategories: SubCategory[];
 
   @CreateDateColumn()
   createdAt: Date;

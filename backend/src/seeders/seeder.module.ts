@@ -2,17 +2,21 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from '../roles/entities/role.entity';
 import { Category } from '../categories/entities/category.entity';
+import { SubCategory } from '../subcategories/entities/subcategory.entity';
 import { Ad } from '../ads/entities/ad.entity';
 import { User } from '../users/entities/user.entity';
 import { RoleSeeder } from './role.seeder';
 import { CategorySeeder } from './category.seeder';
+import { SubCategorySeeder } from './subcategory.seeder';
 import { UserSeeder } from './user.seeder';
 import { AdSeeder } from './ad.seeder';
 import { SeederService } from './seeder.service';
+import { InitDataController } from './init-data.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Role, Category, Ad, User])],
-  providers: [RoleSeeder, CategorySeeder, UserSeeder, AdSeeder, SeederService],
+  imports: [TypeOrmModule.forFeature([Role, Category, SubCategory, Ad, User])],
+  controllers: [InitDataController],
+  providers: [RoleSeeder, CategorySeeder, SubCategorySeeder, UserSeeder, AdSeeder, SeederService],
   exports: [SeederService],
 })
 export class SeederModule {}

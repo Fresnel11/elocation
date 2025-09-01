@@ -18,11 +18,8 @@ export class AdSeeder {
   ) {}
 
   async seed() {
-    const existingAds = await this.adRepository.count();
-    if (existingAds > 0) {
-      console.log('Des annonces existent déjà, seeding ignoré');
-      return;
-    }
+    // Les annonces ont déjà été supprimées par le seeder des catégories
+    console.log('Création des nouvelles annonces...');
 
     const users = await this.userRepository.find({ 
       relations: ['role'],

@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { RoleSeeder } from './role.seeder';
 import { CategorySeeder } from './category.seeder';
+import { SubCategorySeeder } from './subcategory.seeder';
 import { UserSeeder } from './user.seeder';
 import { AdSeeder } from './ad.seeder';
 
@@ -9,6 +10,7 @@ export class SeederService implements OnModuleInit {
   constructor(
     private readonly roleSeeder: RoleSeeder,
     private readonly categorySeeder: CategorySeeder,
+    private readonly subCategorySeeder: SubCategorySeeder,
     private readonly userSeeder: UserSeeder,
     private readonly adSeeder: AdSeeder,
   ) {}
@@ -17,6 +19,7 @@ export class SeederService implements OnModuleInit {
     // Force l'exécution des seeders
     await this.seedRoles();
     await this.seedCategories();
+    await this.seedSubCategories();
     await this.seedUsers();
     await this.seedAds();
   }
@@ -36,6 +39,15 @@ export class SeederService implements OnModuleInit {
       console.log('Seeding des catégories terminé');
     } catch (error) {
       console.error('Erreur lors du seeding des catégories:', error);
+    }
+  }
+
+  private async seedSubCategories() {
+    try {
+      await this.subCategorySeeder.seed();
+      console.log('Seeding des sous-catégories terminé');
+    } catch (error) {
+      console.error('Erreur lors du seeding des sous-catégories:', error);
     }
   }
 

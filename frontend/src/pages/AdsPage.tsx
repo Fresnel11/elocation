@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
 import { AdModal } from '../components/ui/AdModal';
+import { CreateAdButton } from '../components/ui/CreateAdButton';
 import { adsService, Ad } from '../services/adsService';
 
 interface AdWithUI extends Ad {
@@ -341,10 +342,11 @@ export const AdsPage: React.FC = () => {
 
           {/* Liste des annonces */}
           <div className="flex-1">
-            <div className="mb-6">
+            <div className="mb-6 flex items-center justify-between">
               <p className="text-gray-600">
                 {filteredAds.length} annonce{filteredAds.length > 1 ? 's' : ''} trouvée{filteredAds.length > 1 ? 's' : ''}
               </p>
+              <CreateAdButton onSuccess={() => window.location.reload()} />
             </div>
 
             {loading ? (

@@ -13,6 +13,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { AnnoncesPage } from './pages/AnnoncesPage';
 import { AdsPage } from './pages/AdsPage';
 import { AnnonceDetailPage } from './pages/AnnonceDetailPage';
+import { CreateAdPage } from './pages/CreateAdPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
@@ -37,6 +38,7 @@ function App() {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
+              <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
               <Route path="/annonces" element={<AnnoncesPage />} />
               <Route path="/annonce/:id" element={<AnnonceDetailPage />} />
               <Route path="/about" element={<AboutPage />} />

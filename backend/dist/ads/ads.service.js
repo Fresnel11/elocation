@@ -36,6 +36,7 @@ let AdsService = class AdsService {
             .createQueryBuilder('ad')
             .leftJoinAndSelect('ad.user', 'user')
             .leftJoinAndSelect('ad.category', 'category')
+            .leftJoinAndSelect('ad.subCategory', 'subCategory')
             .where('ad.isActive = :isActive', { isActive: true });
         if (search) {
             queryBuilder.andWhere('(ad.title ILIKE :search OR ad.description ILIKE :search OR ad.location ILIKE :search)', { search: `%${search}%` });
@@ -75,7 +76,7 @@ let AdsService = class AdsService {
     async findOne(id) {
         const ad = await this.adRepository.findOne({
             where: { id },
-            relations: ['user', 'category'],
+            relations: ['user', 'category', 'subCategory'],
         });
         if (!ad) {
             throw new common_1.NotFoundException('Ad not found');
@@ -87,7 +88,7 @@ let AdsService = class AdsService {
         const skip = (page - 1) * limit;
         const [ads, total] = await this.adRepository.findAndCount({
             where: { userId },
-            relations: ['category'],
+            relations: ['category', 'subCategory'],
             skip,
             take: limit,
             order: { createdAt: 'DESC' },
