@@ -22,6 +22,8 @@ const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const request_otp_dto_1 = require("./dto/request-otp.dto");
 const verify_otp_dto_1 = require("./dto/verify-otp.dto");
+const forgot_password_dto_1 = require("./dto/forgot-password.dto");
+const reset_password_dto_1 = require("./dto/reset-password.dto");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -47,6 +49,15 @@ let AuthController = class AuthController {
         const result = req.user;
         res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${result.access_token}`);
     }
+    forgotPassword(body) {
+        return this.authService.forgotPassword(body.email);
+    }
+    sendPasswordResetCode(body) {
+        return this.authService.sendPasswordResetCode(body.email);
+    }
+    resetPassword(body) {
+        return this.authService.resetPassword(body.email, body.code, body.newPassword);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -66,7 +77,6 @@ __decorate([
             properties: {
                 message: { type: 'string', example: 'Registration successful. Verify your phone with the OTP code.' },
                 phone: { type: 'string', example: '+22999154678' },
-                otpPreview: { type: 'string', example: '123456' },
                 expiresAt: { type: 'string', format: 'date-time' }
             }
         }
@@ -99,7 +109,6 @@ __decorate([
             properties: {
                 message: { type: 'string', example: 'OTP sent to email' },
                 email: { type: 'string', example: 'user@example.com' },
-                otpPreview: { type: 'string', example: '123456' },
                 expiresAt: { type: 'string', format: 'date-time' }
             }
         }
@@ -243,6 +252,91 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "googleAuthRedirect", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Rechercher un compte par email',
+        description: 'Recherche un compte utilisateur par email sans envoyer de code.'
+    }),
+    (0, swagger_1.ApiBody)({
+        type: forgot_password_dto_1.ForgotPasswordDto,
+        description: 'Email pour rechercher le compte'
+    }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Compte trouvé avec succès',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string', example: 'User found' },
+                email: { type: 'string', example: 'user@example.com' },
+                user: { type: 'object' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Email invalide ou utilisateur non trouvé'
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('send-password-reset-code'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Envoyer le code de réinitialisation',
+        description: 'Envoie un code OTP par email pour réinitialiser le mot de passe.'
+    }),
+    (0, swagger_1.ApiBody)({
+        type: forgot_password_dto_1.ForgotPasswordDto,
+        description: 'Email pour recevoir le code de réinitialisation'
+    }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Code de réinitialisation envoyé avec succès',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string', example: 'Password reset code sent to email' },
+                email: { type: 'string', example: 'user@example.com' },
+                expiresAt: { type: 'string', format: 'date-time' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Email invalide ou utilisateur non trouvé'
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendPasswordResetCode", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Réinitialiser le mot de passe',
+        description: 'Réinitialise le mot de passe avec le code OTP reçu par email.'
+    }),
+    (0, swagger_1.ApiBody)({
+        type: reset_password_dto_1.ResetPasswordDto,
+        description: 'Code OTP, email et nouveau mot de passe'
+    }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Mot de passe réinitialisé avec succès',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string', example: 'Password reset successfully' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Code OTP invalide, expiré ou données invalides'
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resetPassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),

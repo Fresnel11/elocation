@@ -49,6 +49,7 @@ export class AdsService {
       .createQueryBuilder('ad')
       .leftJoinAndSelect('ad.user', 'user')
       .leftJoinAndSelect('ad.category', 'category')
+      .leftJoinAndSelect('ad.subCategory', 'subCategory')
       .where('ad.isActive = :isActive', { isActive: true });
 
     if (search) {
@@ -102,7 +103,7 @@ export class AdsService {
   async findOne(id: string): Promise<Ad> {
     const ad = await this.adRepository.findOne({
       where: { id },
-      relations: ['user', 'category'],
+      relations: ['user', 'category', 'subCategory'],
     });
 
     if (!ad) {
@@ -118,7 +119,7 @@ export class AdsService {
 
     const [ads, total] = await this.adRepository.findAndCount({
       where: { userId },
-      relations: ['category'],
+      relations: ['category', 'subCategory'],
       skip,
       take: limit,
       order: { createdAt: 'DESC' },

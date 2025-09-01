@@ -43,7 +43,6 @@ let AuthService = class AuthService {
         return {
             message: 'Registration successful. Verify your phone with the OTP code.',
             phone: user.phone,
-            otpPreview: code,
             expiresAt,
         };
     }
@@ -55,7 +54,7 @@ let AuthService = class AuthService {
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
         await this.usersService.setOtpForEmail(email, code, expiresAt);
         await this.emailService.sendOtpEmail(email, code, user.firstName);
-        return { message: 'OTP sent to email', email, otpPreview: code, expiresAt };
+        return { message: 'OTP sent to email', email, expiresAt };
     }
     async verifyOtp(email, code) {
         const ok = await this.usersService.verifyOtpForEmail(email, code);
@@ -114,6 +113,52 @@ let AuthService = class AuthService {
                 role: user.role,
             },
         };
+    }
+    async forgotPassword(email) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user)
+            throw new common_1.BadRequestException('User not found');
+        return {
+            message: 'User found',
+            email,
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phone: user.phone,
+                role: user.role,
+            }
+        };
+    }
+    async sendPasswordResetCode(email) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user)
+            throw new common_1.BadRequestException('User not found');
+        if (user.resetPasswordOtp && user.resetPasswordOtpExpiresAt && user.resetPasswordOtpExpiresAt > new Date()) {
+            return {
+                message: 'Password reset code already sent',
+                email,
+                expiresAt: user.resetPasswordOtpExpiresAt
+            };
+        }
+        const code = (Math.floor(100000 + Math.random() * 900000)).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await this.usersService.setOtpForPasswordReset(email, code, expiresAt);
+        await this.emailService.sendPasswordResetEmail(email, code, user.firstName);
+        return {
+            message: 'Password reset code sent to email',
+            email,
+            expiresAt
+        };
+    }
+    async resetPassword(email, code, newPassword) {
+        const isValidOtp = await this.usersService.verifyOtpForPasswordReset(email, code);
+        if (!isValidOtp) {
+            throw new common_1.BadRequestException('Invalid or expired OTP');
+        }
+        await this.usersService.resetPassword(email, newPassword);
+        return { message: 'Password reset successfully' };
     }
 };
 exports.AuthService = AuthService;

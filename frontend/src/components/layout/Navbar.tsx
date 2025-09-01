@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, User, Menu, X, PlusCircle } from 'lucide-react';
+import { User, Menu, X, PlusCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { CreateAdButton } from '../ui/CreateAdButton';
 import { useAuth } from '../../context/AuthContext';
+import logoImage from '../../assets/elocation-512.png';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,15 +21,13 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <Home className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-800">eLocation</span>
-            <span className="text-sm text-blue-600 font-medium">Bénin</span>
+          <Link to="/" className="flex items-center">
+            <img src={logoImage} alt="eLocation Bénin" className="h-40 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/annonces" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+            <Link to="/ads" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
               Annonces
             </Link>
             <Link to="/about" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
@@ -45,12 +45,10 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/dashboard">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Publier
-                  </Link>
-                </Button>
+                <CreateAdButton className="px-4 py-2 text-sm">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Publier
+                </CreateAdButton>
                 <div className="flex items-center space-x-3">
                   <User className="h-8 w-8 text-gray-600" />
                   <span className="text-gray-700 font-medium">{user.name}</span>
@@ -87,7 +85,7 @@ export const Navbar: React.FC = () => {
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4">
               <Link
-                to="/annonces"
+                to="/ads"
                 className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -117,12 +115,10 @@ export const Navbar: React.FC = () => {
               
               {user ? (
                 <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Publier
-                    </Link>
-                  </Button>
+                  <CreateAdButton className="w-full px-4 py-2">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Publier
+                  </CreateAdButton>
                   <div className="flex items-center space-x-3">
                     <User className="h-6 w-6 text-gray-600" />
                     <span className="text-gray-700 font-medium">{user.name}</span>

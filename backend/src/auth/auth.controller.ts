@@ -18,6 +18,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
 
 @ApiTags('Authentication')
@@ -42,7 +44,6 @@ export class AuthController {
       properties: {
         message: { type: 'string', example: 'Registration successful. Verify your phone with the OTP code.' },
         phone: { type: 'string', example: '+22999154678' },
-        otpPreview: { type: 'string', example: '123456' },
         expiresAt: { type: 'string', format: 'date-time' }
       }
     }
@@ -73,7 +74,6 @@ export class AuthController {
       properties: {
         message: { type: 'string', example: 'OTP sent to email' },
         email: { type: 'string', example: 'user@example.com' },
-        otpPreview: { type: 'string', example: '123456' },
         expiresAt: { type: 'string', format: 'date-time' }
       }
     }
@@ -205,5 +205,84 @@ export class AuthController {
     const result = req.user;
     // Rediriger vers le frontend avec le token
     res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${result.access_token}`);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ 
+    summary: 'Rechercher un compte par email',
+    description: 'Recherche un compte utilisateur par email sans envoyer de code.'
+  })
+  @ApiBody({ 
+    type: ForgotPasswordDto,
+    description: 'Email pour rechercher le compte'
+  })
+  @ApiOkResponse({ 
+    description: 'Compte trouvé avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'User found' },
+        email: { type: 'string', example: 'user@example.com' },
+        user: { type: 'object' }
+      }
+    }
+  })
+  @ApiBadRequestResponse({ 
+    description: 'Email invalide ou utilisateur non trouvé' 
+  })
+  forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('send-password-reset-code')
+  @ApiOperation({ 
+    summary: 'Envoyer le code de réinitialisation',
+    description: 'Envoie un code OTP par email pour réinitialiser le mot de passe.'
+  })
+  @ApiBody({ 
+    type: ForgotPasswordDto,
+    description: 'Email pour recevoir le code de réinitialisation'
+  })
+  @ApiOkResponse({ 
+    description: 'Code de réinitialisation envoyé avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Password reset code sent to email' },
+        email: { type: 'string', example: 'user@example.com' },
+        expiresAt: { type: 'string', format: 'date-time' }
+      }
+    }
+  })
+  @ApiBadRequestResponse({ 
+    description: 'Email invalide ou utilisateur non trouvé' 
+  })
+  sendPasswordResetCode(@Body() body: ForgotPasswordDto) {
+    return this.authService.sendPasswordResetCode(body.email);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ 
+    summary: 'Réinitialiser le mot de passe',
+    description: 'Réinitialise le mot de passe avec le code OTP reçu par email.'
+  })
+  @ApiBody({ 
+    type: ResetPasswordDto,
+    description: 'Code OTP, email et nouveau mot de passe'
+  })
+  @ApiOkResponse({ 
+    description: 'Mot de passe réinitialisé avec succès',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Password reset successfully' }
+      }
+    }
+  })
+  @ApiBadRequestResponse({ 
+    description: 'Code OTP invalide, expiré ou données invalides' 
+  })
+  resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body.email, body.code, body.newPassword);
   }
 }

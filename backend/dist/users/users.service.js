@@ -168,6 +168,12 @@ let UsersService = class UsersService {
             throw new common_1.NotFoundException('User not found');
         await this.userRepository.update({ id: user.id }, { otpCode: code, otpExpiresAt: expiresAt });
     }
+    async setOtpForPasswordReset(email, code, expiresAt) {
+        const user = await this.findByEmail(email);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        await this.userRepository.update({ id: user.id }, { resetPasswordOtp: code, resetPasswordOtpExpiresAt: expiresAt });
+    }
     async verifyOtpForEmail(email, code) {
         const user = await this.findByEmail(email);
         if (!user)
@@ -197,6 +203,25 @@ let UsersService = class UsersService {
             googleId: googleData.googleId,
         });
         return this.userRepository.save(user);
+    }
+    async verifyOtpForPasswordReset(email, code) {
+        const user = await this.findByEmail(email);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        if (!user.resetPasswordOtp || !user.resetPasswordOtpExpiresAt)
+            return false;
+        return user.resetPasswordOtp === code && user.resetPasswordOtpExpiresAt > new Date();
+    }
+    async resetPassword(email, newPassword) {
+        const user = await this.findByEmail(email);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.userRepository.update({ id: user.id }, {
+            password: hashedPassword,
+            resetPasswordOtp: null,
+            resetPasswordOtpExpiresAt: null
+        });
     }
 };
 exports.UsersService = UsersService;

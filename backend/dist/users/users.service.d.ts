@@ -28,6 +28,9 @@ export declare class UsersService {
     setOtpForPhone(phone: string, code: string, expiresAt: Date): Promise<void>;
     verifyOtpForPhone(phone: string, code: string): Promise<boolean>;
     setOtpForEmail(email: string, code: string, expiresAt: Date): Promise<void>;
+    setOtpForPasswordReset(email: string, code: string, expiresAt: Date): Promise<void>;
     verifyOtpForEmail(email: string, code: string): Promise<boolean>;
     createGoogleUser(googleData: any): Promise<User>;
+    verifyOtpForPasswordReset(email: string, code: string): Promise<boolean>;
+    resetPassword(email: string, newPassword: string): Promise<void>;
 }

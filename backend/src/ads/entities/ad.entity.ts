@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { SubCategory } from '../../subcategories/entities/subcategory.entity';
 
 @Entity('ads')
 export class Ad {
@@ -37,6 +38,21 @@ export class Ad {
   photos: string[];
 
   @Column({ nullable: true })
+  video: string;
+
+  @Column({ type: 'int', nullable: true })
+  bedrooms: number;
+
+  @Column({ type: 'int', nullable: true })
+  bathrooms: number;
+
+  @Column({ type: 'int', nullable: true })
+  area: number;
+
+  @Column('json', { nullable: true })
+  amenities: string[];
+
+  @Column({ nullable: true })
   whatsappLink: string;
 
   @Column({ nullable: true })
@@ -55,6 +71,13 @@ export class Ad {
 
   @Column()
   categoryId: string;
+
+  @ManyToOne(() => SubCategory, (subCategory) => subCategory.ads)
+  @JoinColumn({ name: 'subCategoryId' })
+  subCategory: SubCategory;
+
+  @Column({ nullable: true })
+  subCategoryId: string;
 
   @CreateDateColumn()
   createdAt: Date;

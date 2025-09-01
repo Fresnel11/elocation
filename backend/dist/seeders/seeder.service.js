@@ -12,14 +12,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SeederService = void 0;
 const common_1 = require("@nestjs/common");
 const role_seeder_1 = require("./role.seeder");
+const category_seeder_1 = require("./category.seeder");
+const subcategory_seeder_1 = require("./subcategory.seeder");
+const user_seeder_1 = require("./user.seeder");
+const ad_seeder_1 = require("./ad.seeder");
 let SeederService = class SeederService {
-    constructor(roleSeeder) {
+    constructor(roleSeeder, categorySeeder, subCategorySeeder, userSeeder, adSeeder) {
         this.roleSeeder = roleSeeder;
+        this.categorySeeder = categorySeeder;
+        this.subCategorySeeder = subCategorySeeder;
+        this.userSeeder = userSeeder;
+        this.adSeeder = adSeeder;
     }
     async onModuleInit() {
-        if (process.env.NODE_ENV === 'development') {
-            await this.seedRoles();
-        }
+        await this.seedRoles();
+        await this.seedCategories();
+        await this.seedSubCategories();
+        await this.seedUsers();
+        await this.seedAds();
     }
     async seedRoles() {
         try {
@@ -30,10 +40,50 @@ let SeederService = class SeederService {
             console.error('Erreur lors du seeding des rôles:', error);
         }
     }
+    async seedCategories() {
+        try {
+            await this.categorySeeder.seed();
+            console.log('Seeding des catégories terminé');
+        }
+        catch (error) {
+            console.error('Erreur lors du seeding des catégories:', error);
+        }
+    }
+    async seedSubCategories() {
+        try {
+            await this.subCategorySeeder.seed();
+            console.log('Seeding des sous-catégories terminé');
+        }
+        catch (error) {
+            console.error('Erreur lors du seeding des sous-catégories:', error);
+        }
+    }
+    async seedUsers() {
+        try {
+            await this.userSeeder.seed();
+            console.log('Seeding des utilisateurs terminé');
+        }
+        catch (error) {
+            console.error('Erreur lors du seeding des utilisateurs:', error);
+        }
+    }
+    async seedAds() {
+        try {
+            await this.adSeeder.seed();
+            console.log('Seeding des annonces terminé');
+        }
+        catch (error) {
+            console.error('Erreur lors du seeding des annonces:', error);
+        }
+    }
 };
 exports.SeederService = SeederService;
 exports.SeederService = SeederService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [role_seeder_1.RoleSeeder])
+    __metadata("design:paramtypes", [role_seeder_1.RoleSeeder,
+        category_seeder_1.CategorySeeder,
+        subcategory_seeder_1.SubCategorySeeder,
+        user_seeder_1.UserSeeder,
+        ad_seeder_1.AdSeeder])
 ], SeederService);
 //# sourceMappingURL=seeder.service.js.map

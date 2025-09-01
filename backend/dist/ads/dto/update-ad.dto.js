@@ -90,8 +90,84 @@ __decorate([
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], UpdateAdDto.prototype, "categoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID de la sous-catégorie',
+        example: 'uuid-subcategory-id',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(4, { message: 'subCategoryId must be a valid UUID' }),
+    __metadata("design:type", String)
+], UpdateAdDto.prototype, "subCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Nombre de chambres',
+        example: 2,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], UpdateAdDto.prototype, "bedrooms", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Nombre de salles de bain',
+        example: 1,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], UpdateAdDto.prototype, "bathrooms", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Surface en m²',
+        example: 65,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], UpdateAdDto.prototype, "area", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Liste des équipements disponibles',
+        example: ['wifi', 'tv', 'ac', 'kitchen'],
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], UpdateAdDto.prototype, "amenities", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'URLs des photos',
+        example: ['photo1.jpg', 'photo2.jpg'],
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], UpdateAdDto.prototype, "photos", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'URL de la vidéo',
+        example: 'video.mp4',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateAdDto.prototype, "video", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Annonce disponible à la vente/location',

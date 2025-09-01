@@ -71,6 +71,14 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "otpExpiresAt", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 6, nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "resetPasswordOtp", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "resetPasswordOtpExpiresAt", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => role_entity_1.Role, (role) => role.users),
     (0, typeorm_1.JoinColumn)({ name: 'roleId' }),
     __metadata("design:type", role_entity_1.Role)
