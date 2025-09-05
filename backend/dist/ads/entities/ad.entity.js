@@ -14,6 +14,7 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const category_entity_1 = require("../../categories/entities/category.entity");
 const subcategory_entity_1 = require("../../subcategories/entities/subcategory.entity");
+const review_entity_1 = require("../../reviews/entities/review.entity");
 let Ad = class Ad {
 };
 exports.Ad = Ad;
@@ -78,6 +79,14 @@ __decorate([
     __metadata("design:type", String)
 ], Ad.prototype, "whatsappNumber", void 0);
 __decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 8, nullable: true }),
+    __metadata("design:type", Number)
+], Ad.prototype, "latitude", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 11, scale: 8, nullable: true }),
+    __metadata("design:type", Number)
+], Ad.prototype, "longitude", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.ads),
     (0, typeorm_1.JoinColumn)({ name: 'userId' }),
     __metadata("design:type", user_entity_1.User)
@@ -104,6 +113,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Ad.prototype, "subCategoryId", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => review_entity_1.Review, review => review.ad),
+    __metadata("design:type", Array)
+], Ad.prototype, "reviews", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

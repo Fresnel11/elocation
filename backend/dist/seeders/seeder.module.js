@@ -21,6 +21,7 @@ const user_seeder_1 = require("./user.seeder");
 const ad_seeder_1 = require("./ad.seeder");
 const seeder_service_1 = require("./seeder.service");
 const init_data_controller_1 = require("./init-data.controller");
+const update_coordinates_seeder_1 = require("./update-coordinates.seeder");
 let SeederModule = class SeederModule {
 };
 exports.SeederModule = SeederModule;
@@ -28,8 +29,8 @@ exports.SeederModule = SeederModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([role_entity_1.Role, category_entity_1.Category, subcategory_entity_1.SubCategory, ad_entity_1.Ad, user_entity_1.User])],
         controllers: [init_data_controller_1.InitDataController],
-        providers: [role_seeder_1.RoleSeeder, category_seeder_1.CategorySeeder, subcategory_seeder_1.SubCategorySeeder, user_seeder_1.UserSeeder, ad_seeder_1.AdSeeder, seeder_service_1.SeederService],
-        exports: [seeder_service_1.SeederService],
+        providers: [role_seeder_1.RoleSeeder, category_seeder_1.CategorySeeder, subcategory_seeder_1.SubCategorySeeder, user_seeder_1.UserSeeder, ad_seeder_1.AdSeeder, seeder_service_1.SeederService, update_coordinates_seeder_1.UpdateCoordinatesSeeder],
+        exports: [seeder_service_1.SeederService, update_coordinates_seeder_1.UpdateCoordinatesSeeder],
     })
 ], SeederModule);
 //# sourceMappingURL=seeder.module.js.map

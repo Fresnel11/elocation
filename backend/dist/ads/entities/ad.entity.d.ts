@@ -1,6 +1,7 @@
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../subcategories/entities/subcategory.entity';
+import { Review } from '../../reviews/entities/review.entity';
 export declare class Ad {
     id: string;
     title: string;
@@ -17,12 +18,15 @@ export declare class Ad {
     amenities: string[];
     whatsappLink: string;
     whatsappNumber: string;
+    latitude: number;
+    longitude: number;
     user: User;
     userId: string;
     category: Category;
     categoryId: string;
     subCategory: SubCategory;
     subCategoryId: string;
+    reviews: Review[];
     createdAt: Date;
     updatedAt: Date;
 }

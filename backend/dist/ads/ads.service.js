@@ -30,7 +30,7 @@ let AdsService = class AdsService {
         return this.adRepository.save(ad);
     }
     async findAll(searchAdsDto) {
-        const { page = 1, limit = 10, search, categoryId, minPrice, maxPrice, location, isAvailable, sortBy = 'createdAt', sortOrder = 'DESC', } = searchAdsDto;
+        const { page = 1, limit = 10, search, categoryId, minPrice, maxPrice, location, isAvailable, sortBy = 'createdAt', sortOrder = 'DESC', userLatitude, userLongitude, radius = 50, } = searchAdsDto;
         const skip = (page - 1) * limit;
         let queryBuilder = this.adRepository
             .createQueryBuilder('ad')
@@ -38,6 +38,37 @@ let AdsService = class AdsService {
             .leftJoinAndSelect('ad.category', 'category')
             .leftJoinAndSelect('ad.subCategory', 'subCategory')
             .where('ad.isActive = :isActive', { isActive: true });
+        if (userLatitude && userLongitude) {
+            const searchRadius = radius > 100 ? 200 : radius;
+            queryBuilder.andWhere(`(
+          ad.latitude IS NULL OR ad.longitude IS NULL OR
+          (
+            6371 * acos(
+              cos(radians(:userLat)) * 
+              cos(radians(ad.latitude)) * 
+              cos(radians(ad.longitude) - radians(:userLng)) + 
+              sin(radians(:userLat)) * 
+              sin(radians(ad.latitude))
+            )
+          ) <= :radius
+        )`, {
+                userLat: userLatitude,
+                userLng: userLongitude,
+                radius: searchRadius,
+            });
+            queryBuilder.addSelect(`CASE 
+          WHEN ad.latitude IS NULL OR ad.longitude IS NULL THEN 999999
+          ELSE (
+            6371 * acos(
+              cos(radians(:userLat)) * 
+              cos(radians(ad.latitude)) * 
+              cos(radians(ad.longitude) - radians(:userLng)) + 
+              sin(radians(:userLat)) * 
+              sin(radians(ad.latitude))
+            )
+          )
+        END`, 'distance');
+        }
         if (search) {
             queryBuilder.andWhere('(ad.title ILIKE :search OR ad.description ILIKE :search OR ad.location ILIKE :search)', { search: `%${search}%` });
         }
@@ -56,12 +87,15 @@ let AdsService = class AdsService {
         if (isAvailable !== undefined) {
             queryBuilder.andWhere('ad.isAvailable = :isAvailable', { isAvailable });
         }
-        const validSortFields = ['createdAt', 'price', 'title'];
+        const validSortFields = ['createdAt', 'price', 'title', 'distance'];
         const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-        queryBuilder
-            .orderBy(`ad.${sortField}`, sortOrder)
-            .skip(skip)
-            .take(limit);
+        if (sortField === 'distance' && userLatitude && userLongitude) {
+            queryBuilder.orderBy('distance', sortOrder);
+        }
+        else {
+            queryBuilder.orderBy(`ad.${sortField}`, sortOrder);
+        }
+        queryBuilder.skip(skip).take(limit);
         const [ads, total] = await queryBuilder.getManyAndCount();
         return {
             ads,

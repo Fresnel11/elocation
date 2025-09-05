@@ -118,7 +118,7 @@ __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Champ de tri',
         example: 'createdAt',
-        enum: ['createdAt', 'price', 'title', 'location'],
+        enum: ['createdAt', 'price', 'title', 'location', 'distance'],
         required: false
     }),
     (0, class_validator_1.IsOptional)(),
@@ -137,4 +137,40 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SearchAdsDto.prototype, "sortOrder", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Latitude de l\'utilisateur',
+        example: 6.3703,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], SearchAdsDto.prototype, "userLatitude", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Longitude de l\'utilisateur',
+        example: 2.3912,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], SearchAdsDto.prototype, "userLongitude", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Rayon de recherche en km',
+        example: 20,
+        default: 50,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(200),
+    __metadata("design:type", Number)
+], SearchAdsDto.prototype, "radius", void 0);
 //# sourceMappingURL=search-ads.dto.js.map

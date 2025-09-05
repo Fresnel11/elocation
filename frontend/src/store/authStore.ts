@@ -5,6 +5,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
   
   // Actions
@@ -21,6 +22,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
   isLoading: false,
+  isInitialized: false,
   error: null,
 
   login: async (data: LoginData) => {
@@ -99,7 +101,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const token = authService.getStoredToken();
     const user = authService.getStoredUser();
     if (token && user) {
-      set({ token, user });
+      set({ token, user, isInitialized: true });
+    } else {
+      set({ isInitialized: true });
     }
   }
 }));

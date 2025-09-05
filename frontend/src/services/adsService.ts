@@ -35,9 +35,27 @@ interface AdsResponse {
   };
 }
 
+interface LocationParams {
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
+}
+
 export const adsService = {
-  async getAds(): Promise<AdsResponse> {
-    const response = await api.get('/ads');
+  async getAds(page: number = 1, limit: number = 10, location?: LocationParams): Promise<AdsResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (location?.latitude && location?.longitude) {
+      params.append('userLatitude', location.latitude.toString());
+      params.append('userLongitude', location.longitude.toString());
+      params.append('radius', (location.radius || 20).toString());
+      params.append('sortBy', 'distance');
+    }
+    
+    const response = await api.get(`/ads?${params.toString()}`);
     return response.data;
   },
 

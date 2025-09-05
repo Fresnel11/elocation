@@ -8,6 +8,9 @@ export declare class SearchAdsDto extends PaginationDto {
     isAvailable?: boolean;
     page?: number;
     limit?: number;
-    sortBy?: 'createdAt' | 'price' | 'title' | 'location';
+    sortBy?: 'createdAt' | 'price' | 'title' | 'location' | 'distance';
     sortOrder?: 'ASC' | 'DESC';
+    userLatitude?: number;
+    userLongitude?: number;
+    radius?: number;
 }
