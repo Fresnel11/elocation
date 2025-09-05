@@ -12,5 +12,7 @@ export declare class CreateAdDto {
     amenities?: string[];
     photos?: string[];
     video?: string;
+    latitude?: number;
+    longitude?: number;
     isAvailable?: boolean;
 }

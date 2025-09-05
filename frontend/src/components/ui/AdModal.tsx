@@ -75,7 +75,13 @@ export const AdModal: React.FC<AdModalProps> = ({ ad, isOpen, onClose }) => {
 
   if (!isOpen || !ad) return null;
 
-  const photos = ad.photos.length > 0 ? ad.photos : ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'];
+  const photos = ad.photos.length > 0 
+    ? ad.photos.map(photo => 
+        photo.startsWith('http') 
+          ? photo 
+          : `http://localhost:3000${photo}`
+      )
+    : ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'];
 
   const nextPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);

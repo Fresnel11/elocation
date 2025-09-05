@@ -143,6 +143,24 @@ export class UpdateAdDto {
   video?: string;
 
   @ApiProperty({
+    description: 'Latitude de l\'annonce',
+    example: 6.3703,
+    required: false
+  })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiProperty({
+    description: 'Longitude de l\'annonce',
+    example: 2.3912,
+    required: false
+  })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @ApiProperty({
     description: 'Annonce disponible à la vente/location',
     example: true,
     required: false

@@ -41,6 +41,9 @@ export class AdsService {
       isAvailable,
       sortBy = 'createdAt',
       sortOrder = 'DESC',
+      userLatitude,
+      userLongitude,
+      radius = 50,
     } = searchAdsDto;
 
     const skip = (page - 1) * limit;
@@ -51,6 +54,49 @@ export class AdsService {
       .leftJoinAndSelect('ad.category', 'category')
       .leftJoinAndSelect('ad.subCategory', 'subCategory')
       .where('ad.isActive = :isActive', { isActive: true });
+
+    // Filtre par géolocalisation avec formule de Haversine
+    if (userLatitude && userLongitude) {
+      // Pour les villes, on utilise un rayon large (200km) pour couvrir toute la zone urbaine
+      const searchRadius = radius > 100 ? 200 : radius;
+      
+      queryBuilder.andWhere(
+        `(
+          ad.latitude IS NULL OR ad.longitude IS NULL OR
+          (
+            6371 * acos(
+              cos(radians(:userLat)) * 
+              cos(radians(ad.latitude)) * 
+              cos(radians(ad.longitude) - radians(:userLng)) + 
+              sin(radians(:userLat)) * 
+              sin(radians(ad.latitude))
+            )
+          ) <= :radius
+        )`,
+        {
+          userLat: userLatitude,
+          userLng: userLongitude,
+          radius: searchRadius,
+        }
+      );
+      
+      // Ajouter la distance calculée pour le tri (NULL pour les annonces sans coordonnées)
+      queryBuilder.addSelect(
+        `CASE 
+          WHEN ad.latitude IS NULL OR ad.longitude IS NULL THEN 999999
+          ELSE (
+            6371 * acos(
+              cos(radians(:userLat)) * 
+              cos(radians(ad.latitude)) * 
+              cos(radians(ad.longitude) - radians(:userLng)) + 
+              sin(radians(:userLat)) * 
+              sin(radians(ad.latitude))
+            )
+          )
+        END`,
+        'distance'
+      );
+    }
 
     if (search) {
       queryBuilder.andWhere(
@@ -79,13 +125,16 @@ export class AdsService {
       queryBuilder.andWhere('ad.isAvailable = :isAvailable', { isAvailable });
     }
 
-    const validSortFields = ['createdAt', 'price', 'title'];
+    const validSortFields = ['createdAt', 'price', 'title', 'distance'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     
-    queryBuilder
-      .orderBy(`ad.${sortField}` as any, sortOrder as any)
-      .skip(skip)
-      .take(limit);
+    if (sortField === 'distance' && userLatitude && userLongitude) {
+      queryBuilder.orderBy('distance', sortOrder as any);
+    } else {
+      queryBuilder.orderBy(`ad.${sortField}` as any, sortOrder as any);
+    }
+    
+    queryBuilder.skip(skip).take(limit);
 
     const [ads, total] = await queryBuilder.getManyAndCount();
 

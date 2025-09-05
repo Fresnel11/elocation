@@ -158,6 +158,26 @@ __decorate([
 ], CreateAdDto.prototype, "video", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Latitude de l\'annonce',
+        example: 6.3703,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateAdDto.prototype, "latitude", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Longitude de l\'annonce',
+        example: 2.3912,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateAdDto.prototype, "longitude", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Annonce disponible à la vente/location',
         default: true,
         required: false

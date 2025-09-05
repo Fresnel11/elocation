@@ -96,12 +96,12 @@ export class SearchAdsDto extends PaginationDto {
   @ApiProperty({
     description: 'Champ de tri',
     example: 'createdAt',
-    enum: ['createdAt', 'price', 'title', 'location'],
+    enum: ['createdAt', 'price', 'title', 'location', 'distance'],
     required: false
   })
   @IsOptional()
   @IsString()
-  sortBy?: 'createdAt' | 'price' | 'title' | 'location';
+  sortBy?: 'createdAt' | 'price' | 'title' | 'location' | 'distance';
 
   @ApiProperty({
     description: 'Ordre de tri',
@@ -113,4 +113,37 @@ export class SearchAdsDto extends PaginationDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'ASC' | 'DESC';
+
+  @ApiProperty({
+    description: 'Latitude de l\'utilisateur',
+    example: 6.3703,
+    required: false
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  userLatitude?: number;
+
+  @ApiProperty({
+    description: 'Longitude de l\'utilisateur',
+    example: 2.3912,
+    required: false
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  userLongitude?: number;
+
+  @ApiProperty({
+    description: 'Rayon de recherche en km',
+    example: 20,
+    default: 50,
+    required: false
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(200)
+  radius?: number;
 }

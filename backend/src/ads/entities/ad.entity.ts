@@ -5,11 +5,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../subcategories/entities/subcategory.entity';
+import { Review } from '../../reviews/entities/review.entity';
 
 @Entity('ads')
 export class Ad {
@@ -58,6 +60,12 @@ export class Ad {
   @Column({ nullable: true })
   whatsappNumber: string;
 
+  @Column('decimal', { precision: 10, scale: 8, nullable: true })
+  latitude: number;
+
+  @Column('decimal', { precision: 11, scale: 8, nullable: true })
+  longitude: number;
+
   @ManyToOne(() => User, (user) => user.ads)
   @JoinColumn({ name: 'userId' })
   user: User;
@@ -78,6 +86,9 @@ export class Ad {
 
   @Column({ nullable: true })
   subCategoryId: string;
+
+  @OneToMany(() => Review, review => review.ad)
+  reviews: Review[];
 
   @CreateDateColumn()
   createdAt: Date;

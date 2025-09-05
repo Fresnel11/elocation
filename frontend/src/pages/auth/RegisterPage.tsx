@@ -166,8 +166,9 @@ export const RegisterPage: React.FC = () => {
               placeholder="+22999154678"
             />
             <Input
-              label="Email (optionnel)"
+              label="Email"
               type="email"
+              required
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
               error={errors.email}

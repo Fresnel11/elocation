@@ -10,6 +10,7 @@ interface AuthContextType {
   verifyOtp: (email: string, code: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  isInitialized: boolean;
   error: string | null;
   clearError: () => void;
 }
@@ -32,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const {
     user,
     isLoading,
+    isInitialized,
     error,
     login: storeLogin,
     register: storeRegister,
@@ -74,6 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     verifyOtp,
     logout,
     loading: isLoading,
+    isInitialized,
     error,
     clearError
   };

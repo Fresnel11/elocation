@@ -64,6 +64,13 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
     }
   }, [isOpen]);
 
+  // Charger les sous-catégories si une catégorie est déjà sélectionnée
+  useEffect(() => {
+    if (formData.categoryId && categories.length > 0) {
+      fetchSubCategories(formData.categoryId);
+    }
+  }, [formData.categoryId, categories]);
+
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
@@ -298,18 +305,18 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label="Catégorie"
-                options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
+                options={[{ value: '', label: 'Sélectionner une catégorie' }, ...categories.map(cat => ({ value: cat.id, label: cat.name }))]}
                 value={formData.categoryId}
                 onChange={(e) => handleChange('categoryId', e.target.value)}
                 required
               />
               <Select
                 label="Sous-catégorie"
-                options={subCategories.map(subCat => ({ value: subCat.id, label: subCat.name }))}
+                options={[{ value: '', label: 'Sélectionner une sous-catégorie' }, ...subCategories.map(subCat => ({ value: subCat.id, label: subCat.name }))]}
                 value={formData.subCategoryId}
                 onChange={(e) => handleChange('subCategoryId', e.target.value)}
                 required
-                disabled={!formData.categoryId}
+                disabled={!formData.categoryId || subCategories.length === 0}
               />
             </div>
 

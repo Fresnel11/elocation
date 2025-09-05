@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, MapPin, Calendar, Users, Bed, Bath, Car, Wifi, Tv, AirVent, Utensils, ChevronDown, Grid, List, Heart, Star, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
 import { AdModal } from '../components/ui/AdModal';
 import { CreateAdButton } from '../components/ui/CreateAdButton';
+import { InfiniteLoader } from '../components/ui/InfiniteLoader';
+import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
+import { LocationSelector } from '../components/ui/LocationSelector';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { adsService, Ad } from '../services/adsService';
 
 interface AdWithUI extends Ad {
@@ -27,11 +31,16 @@ export const AdsPage: React.FC = () => {
   const [ads, setAds] = useState<AdWithUI[]>([]);
   const [filteredAds, setFilteredAds] = useState<AdWithUI[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedAd, setSelectedAd] = useState<AdWithUI | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalAds, setTotalAds] = useState(0);
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number; radius: number; isCity?: boolean} | null>(null);
   const [filters, setFilters] = useState({
     priceMin: '',
     priceMax: '',
@@ -52,67 +61,85 @@ export const AdsPage: React.FC = () => {
     { value: 'parking', label: 'Parking' }
   ];
 
-  useEffect(() => {
-    const fetchAds = async () => {
-      try {
-        setLoading(true);
-        console.log('Début du chargement des annonces...');
-        const response = await adsService.getAds();
-        console.log('Données reçues:', response);
-        
-        // Extraire le tableau ads de la réponse
-        const adsArray = response.ads || [];
-        console.log('Nombre d\'annonces:', adsArray.length);
-        console.log('Premier élément:', adsArray[0]);
-        
-        const adsWithUI = adsArray.map(ad => ({
-          ...ad,
-          isLiked: false,
-          rating: 4.5 + Math.random() * 0.5,
-          reviews: Math.floor(Math.random() * 30) + 5
-        }));
-        
-        console.log('Annonces avec UI:', adsWithUI);
+  const fetchAds = useCallback(async (page: number = 1, reset: boolean = false) => {
+    try {
+      if (page === 1) setLoading(true);
+      else setLoadingMore(true);
+      
+      const response = await adsService.getAds(page, 10, userLocation || undefined);
+      const adsArray = response.ads || [];
+      
+      const adsWithUI = adsArray.map(ad => ({
+        ...ad,
+        isLiked: false,
+        rating: 4.5 + Math.random() * 0.5,
+        reviews: Math.floor(Math.random() * 30) + 5
+      }));
+      
+      if (reset || page === 1) {
         setAds(adsWithUI);
-        setFilteredAds(adsWithUI);
-        
-        // Extraire les catégories uniques
+        setCurrentPage(1);
+      } else {
+        setAds(prev => [...prev, ...adsWithUI]);
+      }
+      
+      setTotalAds(response.pagination.total);
+      setHasMore(page < response.pagination.pages);
+      
+      if (page === 1) {
         const uniqueCategories = [...new Set(adsArray.map(ad => ad.category.name))];
         setCategories(uniqueCategories.map(cat => ({ value: cat.toLowerCase(), label: cat })));
-      } catch (error) {
-        console.error('Erreur lors du chargement des annonces:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-    
-    fetchAds();
-  }, []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des annonces:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [userLocation]);
+
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchAds(nextPage, false);
+    }
+  }, [currentPage, hasMore, loadingMore, fetchAds]);
+
+  useInfiniteScroll(loadMore, hasMore, loadingMore);
 
   useEffect(() => {
-    let filtered = ads.filter(ad => {
-      const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           ad.location.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesPrice = (!filters.priceMin || ad.price >= parseInt(filters.priceMin)) &&
-                          (!filters.priceMax || ad.price <= parseInt(filters.priceMax));
-      
-      const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
-      
-      const matchesType = !filters.type || ad.category.name.toLowerCase() === filters.type;
-      
-      const matchesBedrooms = !filters.bedrooms || ad.bedrooms >= parseInt(filters.bedrooms);
-      
-      const matchesBathrooms = !filters.bathrooms || ad.bathrooms >= parseInt(filters.bathrooms);
-      
-      const matchesAmenities = filters.amenities.length === 0 || 
-                              filters.amenities.every(amenity => ad.amenities.includes(amenity));
+    fetchAds(1, true);
+  }, [fetchAds]);
 
-      return matchesSearch && matchesPrice && matchesLocation && matchesType && 
-             matchesBedrooms && matchesBathrooms && matchesAmenities;
-    });
+  useEffect(() => {
+    const applyFilters = () => {
+      let filtered = ads.filter(ad => {
+        const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             ad.location.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesPrice = (!filters.priceMin || ad.price >= parseInt(filters.priceMin)) &&
+                            (!filters.priceMax || ad.price <= parseInt(filters.priceMax));
+        
+        const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
+        
+        const matchesType = !filters.type || ad.category.name.toLowerCase() === filters.type;
+        
+        const matchesBedrooms = !filters.bedrooms || ad.bedrooms >= parseInt(filters.bedrooms);
+        
+        const matchesBathrooms = !filters.bathrooms || ad.bathrooms >= parseInt(filters.bathrooms);
+        
+        const matchesAmenities = filters.amenities.length === 0 || 
+                                filters.amenities.every(amenity => ad.amenities.includes(amenity));
 
-    setFilteredAds(filtered);
+        return matchesSearch && matchesPrice && matchesLocation && matchesType && 
+               matchesBedrooms && matchesBathrooms && matchesAmenities;
+      });
+
+      setFilteredAds(filtered);
+    };
+
+    applyFilters();
   }, [ads, searchTerm, filters]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
@@ -155,6 +182,10 @@ export const AdsPage: React.FC = () => {
       amenities: []
     });
     setSearchTerm('');
+    // Recharger les données depuis le début
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchAds(1, true);
   };
 
   return (
@@ -177,6 +208,11 @@ export const AdsPage: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
+              <LocationSelector
+                onLocationChange={setUserLocation}
+                currentLocation={userLocation}
+              />
+              
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
@@ -342,23 +378,32 @@ export const AdsPage: React.FC = () => {
 
           {/* Liste des annonces */}
           <div className="flex-1">
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-gray-600">
-                {filteredAds.length} annonce{filteredAds.length > 1 ? 's' : ''} trouvée{filteredAds.length > 1 ? 's' : ''}
-              </p>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-gray-600">
+                  {filteredAds.length} sur {totalAds} annonce{totalAds > 1 ? 's' : ''}
+                </p>
+                {userLocation && (
+                  <p className="text-sm text-blue-600">
+                    📍 {userLocation.isCity 
+                      ? 'Résultats pour la ville sélectionnée' 
+                      : `Résultats dans un rayon de ${userLocation.radius} km`
+                    }
+                  </p>
+                )}
+              </div>
               <CreateAdButton onSuccess={() => window.location.reload()} />
             </div>
 
             {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
+              <AdCardSkeletonGrid count={6} />
             ) : (
-              <div className={viewMode === 'grid' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' 
-                : 'space-y-4 sm:space-y-6'
-              }>
-                {filteredAds.map((ad, index) => (
+              <>
+                <div className={viewMode === 'grid' 
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' 
+                  : 'space-y-4 sm:space-y-6'
+                }>
+                  {filteredAds.map((ad, index) => (
                 <Card 
                   key={ad.id} 
                   className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
@@ -367,7 +412,13 @@ export const AdsPage: React.FC = () => {
                   {/* Image Section */}
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={ad.photos[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'}
+                      src={ad.photos[0] 
+                        ? (ad.photos[0].startsWith('http') 
+                            ? ad.photos[0] 
+                            : `http://localhost:3000${ad.photos[0]}`
+                          )
+                        : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+                      }
                       alt={ad.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -469,18 +520,41 @@ export const AdsPage: React.FC = () => {
                     </div>
                   </div>
                 </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+                
+                <InfiniteLoader 
+                  loading={loadingMore} 
+                  hasMore={hasMore && filteredAds.length === ads.length}
+                />
+              </>
             )}
 
-            {filteredAds.length === 0 && (
+            {filteredAds.length === 0 && !loading && (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Search className="h-12 w-12 mx-auto" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune annonce trouvée</h3>
-                <p className="text-gray-600 mb-4">Essayez de modifier vos critères de recherche</p>
-                <Button onClick={clearFilters}>Effacer les filtres</Button>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {userLocation ? 'Aucune annonce proche de vous' : 'Aucune annonce trouvée'}
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {userLocation 
+                    ? 'Élargissez le rayon ou changez de localisation' 
+                    : 'Essayez de modifier vos critères de recherche'
+                  }
+                </p>
+                <div className="flex gap-2 justify-center">
+                  {userLocation && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setUserLocation(null)}
+                    >
+                      Supprimer filtre localisation
+                    </Button>
+                  )}
+                  <Button onClick={clearFilters}>Effacer tous les filtres</Button>
+                </div>
               </div>
             )}
           </div>

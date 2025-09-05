@@ -13,10 +13,12 @@ exports.InitDataController = void 0;
 const common_1 = require("@nestjs/common");
 const category_seeder_1 = require("./category.seeder");
 const subcategory_seeder_1 = require("./subcategory.seeder");
+const update_coordinates_seeder_1 = require("./update-coordinates.seeder");
 let InitDataController = class InitDataController {
-    constructor(categorySeeder, subCategorySeeder) {
+    constructor(categorySeeder, subCategorySeeder, updateCoordinatesSeeder) {
         this.categorySeeder = categorySeeder;
         this.subCategorySeeder = subCategorySeeder;
+        this.updateCoordinatesSeeder = updateCoordinatesSeeder;
     }
     async seedData() {
         try {
@@ -28,6 +30,15 @@ let InitDataController = class InitDataController {
             return { error: 'Erreur lors de l\'initialisation', details: error.message };
         }
     }
+    async updateCoordinates() {
+        try {
+            await this.updateCoordinatesSeeder.updateCoordinates();
+            return { message: 'Coordonnées mises à jour avec succès' };
+        }
+        catch (error) {
+            return { error: 'Erreur lors de la mise à jour', details: error.message };
+        }
+    }
 };
 exports.InitDataController = InitDataController;
 __decorate([
@@ -36,9 +47,16 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], InitDataController.prototype, "seedData", null);
+__decorate([
+    (0, common_1.Post)('update-coordinates'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], InitDataController.prototype, "updateCoordinates", null);
 exports.InitDataController = InitDataController = __decorate([
     (0, common_1.Controller)('init'),
     __metadata("design:paramtypes", [category_seeder_1.CategorySeeder,
-        subcategory_seeder_1.SubCategorySeeder])
+        subcategory_seeder_1.SubCategorySeeder,
+        update_coordinates_seeder_1.UpdateCoordinatesSeeder])
 ], InitDataController);
 //# sourceMappingURL=init-data.controller.js.map

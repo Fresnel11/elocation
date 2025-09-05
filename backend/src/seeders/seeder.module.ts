@@ -12,11 +12,12 @@ import { UserSeeder } from './user.seeder';
 import { AdSeeder } from './ad.seeder';
 import { SeederService } from './seeder.service';
 import { InitDataController } from './init-data.controller';
+import { UpdateCoordinatesSeeder } from './update-coordinates.seeder';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Role, Category, SubCategory, Ad, User])],
   controllers: [InitDataController],
-  providers: [RoleSeeder, CategorySeeder, SubCategorySeeder, UserSeeder, AdSeeder, SeederService],
-  exports: [SeederService],
+  providers: [RoleSeeder, CategorySeeder, SubCategorySeeder, UserSeeder, AdSeeder, SeederService, UpdateCoordinatesSeeder],
+  exports: [SeederService, UpdateCoordinatesSeeder],
 })
 export class SeederModule {}

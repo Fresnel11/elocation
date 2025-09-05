@@ -7,10 +7,11 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isInitialized } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Afficher le loader pendant l'initialisation ou le chargement
+  if (loading || !isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -18,6 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // Rediriger seulement après l'initialisation
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
