@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { Ad } from '../ads/entities/ad.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class ReviewsService {
@@ -12,6 +13,8 @@ export class ReviewsService {
     private reviewRepository: Repository<Review>,
     @InjectRepository(Ad)
     private adRepository: Repository<Ad>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async create(createReviewDto: CreateReviewDto, userId: string): Promise<Review> {
@@ -28,19 +31,11 @@ export class ReviewsService {
       throw new ForbiddenException('Vous ne pouvez pas évaluer votre propre annonce');
     }
 
-    // Vérifier si l'utilisateur a déjà laissé un avis
-    const existingReview = await this.reviewRepository.findOne({
-      where: { ad: { id: createReviewDto.adId }, user: { id: userId } }
-    });
-
-    if (existingReview) {
-      throw new ForbiddenException('Vous avez déjà laissé un avis pour cette annonce');
-    }
-
     const review = this.reviewRepository.create({
-      ...createReviewDto,
-      user: { id: userId },
-      ad: { id: createReviewDto.adId }
+      rating: createReviewDto.rating,
+      comment: createReviewDto.comment,
+      user: { id: userId } as User,
+      ad: { id: createReviewDto.adId } as Ad
     });
 
     return this.reviewRepository.save(review);
@@ -49,6 +44,19 @@ export class ReviewsService {
   async findByAd(adId: string): Promise<Review[]> {
     return this.reviewRepository.find({
       where: { ad: { id: adId } },
+      relations: ['user'],
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          id: true,
+          firstName: true,
+          lastName: true
+        }
+      },
       order: { createdAt: 'DESC' }
     });
   }

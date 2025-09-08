@@ -12,6 +12,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const ads_service_1 = require("./ads.service");
 const ads_controller_1 = require("./ads.controller");
 const ad_entity_1 = require("./entities/ad.entity");
+const geocoding_service_1 = require("../common/services/geocoding.service");
 let AdsModule = class AdsModule {
 };
 exports.AdsModule = AdsModule;
@@ -19,7 +20,7 @@ exports.AdsModule = AdsModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([ad_entity_1.Ad])],
         controllers: [ads_controller_1.AdsController],
-        providers: [ads_service_1.AdsService],
+        providers: [ads_service_1.AdsService, geocoding_service_1.GeocodingService],
         exports: [ads_service_1.AdsService],
     })
 ], AdsModule);

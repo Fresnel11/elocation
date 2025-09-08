@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdsService } from './ads.service';
 import { AdsController } from './ads.controller';
 import { Ad } from './entities/ad.entity';
+import { GeocodingService } from '../common/services/geocoding.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Ad])],
   controllers: [AdsController],
-  providers: [AdsService],
+  providers: [AdsService, GeocodingService],
   exports: [AdsService],
 })
 export class AdsModule {}

@@ -18,10 +18,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const review_entity_1 = require("./entities/review.entity");
 const ad_entity_1 = require("../ads/entities/ad.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let ReviewsService = class ReviewsService {
-    constructor(reviewRepository, adRepository) {
+    constructor(reviewRepository, adRepository, userRepository) {
         this.reviewRepository = reviewRepository;
         this.adRepository = adRepository;
+        this.userRepository = userRepository;
     }
     async create(createReviewDto, userId) {
         const ad = await this.adRepository.findOne({
@@ -34,18 +36,30 @@ let ReviewsService = class ReviewsService {
         if (ad.user.id === userId) {
             throw new common_1.ForbiddenException('Vous ne pouvez pas évaluer votre propre annonce');
         }
-        const existingReview = await this.reviewRepository.findOne({
-            where: { ad: { id: createReviewDto.adId }, user: { id: userId } }
+        const review = this.reviewRepository.create({
+            rating: createReviewDto.rating,
+            comment: createReviewDto.comment,
+            user: { id: userId },
+            ad: { id: createReviewDto.adId }
         });
-        if (existingReview) {
-            throw new common_1.ForbiddenException('Vous avez déjà laissé un avis pour cette annonce');
-        }
-        const review = this.reviewRepository.create(Object.assign(Object.assign({}, createReviewDto), { user: { id: userId }, ad: { id: createReviewDto.adId } }));
         return this.reviewRepository.save(review);
     }
     async findByAd(adId) {
         return this.reviewRepository.find({
             where: { ad: { id: adId } },
+            relations: ['user'],
+            select: {
+                id: true,
+                rating: true,
+                comment: true,
+                createdAt: true,
+                updatedAt: true,
+                user: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                }
+            },
             order: { createdAt: 'DESC' }
         });
     }
@@ -67,7 +81,9 @@ exports.ReviewsService = ReviewsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(review_entity_1.Review)),
     __param(1, (0, typeorm_1.InjectRepository)(ad_entity_1.Ad)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], ReviewsService);
 //# sourceMappingURL=reviews.service.js.map

@@ -35,6 +35,9 @@ let AdsController = class AdsController {
     findAll(searchAdsDto) {
         return this.adsService.findAll(searchAdsDto);
     }
+    findUserAds(userId, paginationDto) {
+        return this.adsService.findUserAds(userId, paginationDto);
+    }
     findMyAds(req, paginationDto) {
         return this.adsService.findUserAds(req.user.id, paginationDto);
     }
@@ -153,6 +156,27 @@ __decorate([
     __metadata("design:paramtypes", [search_ads_dto_1.SearchAdsDto]),
     __metadata("design:returntype", void 0)
 ], AdsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('user/:userId'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Récupérer les annonces d\'un utilisateur',
+        description: 'Récupère la liste des annonces publiques d\'un utilisateur spécifique.'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'userId', description: 'ID de l\'utilisateur' }),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false, description: 'Numéro de page', example: 1 }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Nombre d\'éléments par page', example: 10 }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Liste des annonces de l\'utilisateur récupérée avec succès'
+    }),
+    (0, swagger_1.ApiNotFoundResponse)({
+        description: 'Utilisateur non trouvé'
+    }),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, pagination_dto_1.PaginationDto]),
+    __metadata("design:returntype", void 0)
+], AdsController.prototype, "findUserAds", null);
 __decorate([
     (0, common_1.Get)('my-ads'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

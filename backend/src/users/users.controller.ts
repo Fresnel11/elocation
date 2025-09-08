@@ -90,6 +90,22 @@ export class UsersController {
     return this.usersService.findAll(paginationDto);
   }
 
+  @Get(':id/profile')
+  @ApiOperation({ 
+    summary: 'Récupérer le profil public d\'un utilisateur',
+    description: 'Récupère les informations publiques d\'un utilisateur (nom, date d\'inscription, statistiques).'
+  })
+  @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
+  @ApiOkResponse({ 
+    description: 'Profil utilisateur récupéré avec succès' 
+  })
+  @ApiNotFoundResponse({ 
+    description: 'Utilisateur non trouvé' 
+  })
+  getPublicProfile(@Param('id') id: string) {
+    return this.usersService.getPublicProfile(id);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

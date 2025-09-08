@@ -223,6 +223,28 @@ let UsersService = class UsersService {
             resetPasswordOtpExpiresAt: null
         });
     }
+    async getPublicProfile(id) {
+        var _a;
+        const user = await this.userRepository.findOne({
+            where: { id },
+            select: ['id', 'firstName', 'lastName', 'email', 'phone', 'createdAt'],
+            relations: ['ads'],
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        return {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone,
+            createdAt: user.createdAt,
+            _count: {
+                ads: ((_a = user.ads) === null || _a === void 0 ? void 0 : _a.length) || 0
+            }
+        };
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

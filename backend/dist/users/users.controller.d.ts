@@ -15,6 +15,17 @@ export declare class UsersController {
             pages: number;
         };
     }>;
+    getPublicProfile(id: string): Promise<{
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string | null;
+        phone: string | null;
+        createdAt: Date;
+        _count: {
+            ads: number;
+        };
+    }>;
     findOne(id: string): Promise<import("./entities/user.entity").User>;
     update(id: string, updateUserDto: UpdateUserDto, req: any): Promise<import("./entities/user.entity").User>;
     remove(id: string): Promise<void>;

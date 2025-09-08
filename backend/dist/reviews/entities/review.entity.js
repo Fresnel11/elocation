@@ -29,7 +29,7 @@ __decorate([
     __metadata("design:type", String)
 ], Review.prototype, "comment", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { eager: true }),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
     __metadata("design:type", user_entity_1.User)
 ], Review.prototype, "user", void 0);
 __decorate([

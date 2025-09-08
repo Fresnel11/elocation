@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MapPin, Calendar, Users, Bed, Bath, Car, Wifi, Tv, AirVent, Utensils, ChevronDown, Grid, List, Heart, Star, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -8,13 +9,15 @@ import { CreateAdButton } from '../components/ui/CreateAdButton';
 import { InfiniteLoader } from '../components/ui/InfiniteLoader';
 import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
 import { LocationSelector } from '../components/ui/LocationSelector';
+import { PriceRangeSlider } from '../components/ui/PriceRangeSlider';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { adsService, Ad } from '../services/adsService';
+import { api } from '../services/api';
 
 interface AdWithUI extends Ad {
   isLiked: boolean;
-  rating: number;
-  reviews: number;
+  averageRating?: number;
+  reviewsCount?: number;
 }
 
 
@@ -28,6 +31,7 @@ const amenityIcons = {
 };
 
 export const AdsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [ads, setAds] = useState<AdWithUI[]>([]);
   const [filteredAds, setFilteredAds] = useState<AdWithUI[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,11 +45,10 @@ export const AdsPage: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [totalAds, setTotalAds] = useState(0);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number; radius: number; isCity?: boolean} | null>(null);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
   const [filters, setFilters] = useState({
-    priceMin: '',
-    priceMax: '',
     location: '',
-    type: '',
+    categoryId: '',
     bedrooms: '',
     bathrooms: '',
     amenities: [] as string[]
@@ -61,6 +64,15 @@ export const AdsPage: React.FC = () => {
     { value: 'parking', label: 'Parking' }
   ];
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(response.data.map(cat => ({ value: cat.id, label: cat.name })));
+    } catch (error) {
+      console.error('Erreur lors du chargement des catégories:', error);
+    }
+  }, []);
+
   const fetchAds = useCallback(async (page: number = 1, reset: boolean = false) => {
     try {
       if (page === 1) setLoading(true);
@@ -69,12 +81,29 @@ export const AdsPage: React.FC = () => {
       const response = await adsService.getAds(page, 10, userLocation || undefined);
       const adsArray = response.ads || [];
       
-      const adsWithUI = adsArray.map(ad => ({
-        ...ad,
-        isLiked: false,
-        rating: 4.5 + Math.random() * 0.5,
-        reviews: Math.floor(Math.random() * 30) + 5
-      }));
+      // Récupérer les ratings pour chaque annonce
+      const adsWithRatings = await Promise.all(
+        adsArray.map(async (ad) => {
+          try {
+            const ratingResponse = await api.get(`/reviews/ad/${ad.id}/rating`);
+            return {
+              ...ad,
+              isLiked: false,
+              averageRating: ratingResponse.data.averageRating,
+              reviewsCount: ratingResponse.data.totalReviews
+            };
+          } catch (error) {
+            return {
+              ...ad,
+              isLiked: false,
+              averageRating: 0,
+              reviewsCount: 0
+            };
+          }
+        })
+      );
+      
+      const adsWithUI = adsWithRatings;
       
       if (reset || page === 1) {
         setAds(adsWithUI);
@@ -85,11 +114,6 @@ export const AdsPage: React.FC = () => {
       
       setTotalAds(response.pagination.total);
       setHasMore(page < response.pagination.pages);
-      
-      if (page === 1) {
-        const uniqueCategories = [...new Set(adsArray.map(ad => ad.category.name))];
-        setCategories(uniqueCategories.map(cat => ({ value: cat.toLowerCase(), label: cat })));
-      }
     } catch (error) {
       console.error('Erreur lors du chargement des annonces:', error);
     } finally {
@@ -109,8 +133,9 @@ export const AdsPage: React.FC = () => {
   useInfiniteScroll(loadMore, hasMore, loadingMore);
 
   useEffect(() => {
+    fetchCategories();
     fetchAds(1, true);
-  }, [fetchAds]);
+  }, [fetchCategories, fetchAds]);
 
   useEffect(() => {
     const applyFilters = () => {
@@ -118,12 +143,11 @@ export const AdsPage: React.FC = () => {
         const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              ad.location.toLowerCase().includes(searchTerm.toLowerCase());
         
-        const matchesPrice = (!filters.priceMin || ad.price >= parseInt(filters.priceMin)) &&
-                            (!filters.priceMax || ad.price <= parseInt(filters.priceMax));
+        const matchesPrice = ad.price >= priceRange[0] && ad.price <= priceRange[1];
         
         const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
         
-        const matchesType = !filters.type || ad.category.name.toLowerCase() === filters.type;
+        const matchesCategory = !filters.categoryId || ad.category.id === filters.categoryId;
         
         const matchesBedrooms = !filters.bedrooms || ad.bedrooms >= parseInt(filters.bedrooms);
         
@@ -132,7 +156,7 @@ export const AdsPage: React.FC = () => {
         const matchesAmenities = filters.amenities.length === 0 || 
                                 filters.amenities.every(amenity => ad.amenities.includes(amenity));
 
-        return matchesSearch && matchesPrice && matchesLocation && matchesType && 
+        return matchesSearch && matchesPrice && matchesLocation && matchesCategory && 
                matchesBedrooms && matchesBathrooms && matchesAmenities;
       });
 
@@ -140,7 +164,7 @@ export const AdsPage: React.FC = () => {
     };
 
     applyFilters();
-  }, [ads, searchTerm, filters]);
+  }, [ads, searchTerm, filters, priceRange]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -171,17 +195,23 @@ export const AdsPage: React.FC = () => {
     setSelectedAd(null);
   };
 
+  const hasActiveFilters = () => {
+    return (priceRange[0] > 0 || priceRange[1] < 500000) || filters.location || filters.categoryId || 
+           filters.bedrooms || filters.bathrooms || filters.amenities.length > 0 || 
+           searchTerm || userLocation;
+  };
+
   const clearFilters = () => {
     setFilters({
-      priceMin: '',
-      priceMax: '',
       location: '',
-      type: '',
+      categoryId: '',
       bedrooms: '',
       bathrooms: '',
       amenities: []
     });
+    setPriceRange([0, 500000]);
     setSearchTerm('');
+    setUserLocation(null);
     // Recharger les données depuis le début
     setCurrentPage(1);
     setHasMore(true);
@@ -259,9 +289,15 @@ export const AdsPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Filtres</h3>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={clearFilters}>
-                      Effacer tout
-                    </Button>
+                    {hasActiveFilters() && (
+                      <button
+                        onClick={clearFilters}
+                        className="inline-flex mt-5 items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-lg transition-all duration-200 hover:shadow-sm"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Effacer tout
+                      </button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -277,20 +313,12 @@ export const AdsPage: React.FC = () => {
                   {/* Prix */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">Prix (FCFA)</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        placeholder="Min"
-                        type="number"
-                        value={filters.priceMin}
-                        onChange={(e) => handleFilterChange('priceMin', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Max"
-                        type="number"
-                        value={filters.priceMax}
-                        onChange={(e) => handleFilterChange('priceMax', e.target.value)}
-                      />
-                    </div>
+                    <PriceRangeSlider
+                      min={0}
+                      max={500000}
+                      value={priceRange}
+                      onChange={setPriceRange}
+                    />
                   </div>
 
                   {/* Localisation */}
@@ -308,17 +336,17 @@ export const AdsPage: React.FC = () => {
                     </select>
                   </div>
 
-                  {/* Type de propriété */}
+                  {/* Catégorie */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Type de propriété</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Catégorie</label>
                     <select
-                      value={filters.type}
-                      onChange={(e) => handleFilterChange('type', e.target.value)}
+                      value={filters.categoryId}
+                      onChange={(e) => handleFilterChange('categoryId', e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="">Tous les types</option>
-                      {categories.map(type => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
+                      <option value="">Toutes les catégories</option>
+                      {categories.map(category => (
+                        <option key={category.value} value={category.value}>{category.label}</option>
                       ))}
                     </select>
                   </div>
@@ -474,10 +502,12 @@ export const AdsPage: React.FC = () => {
                       <div className="flex items-center gap-1 text-gray-600">
                         <span className="text-sm">{ad.area}m²</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-600 ml-auto">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{ad.rating.toFixed(1)}</span>
-                      </div>
+                      {ad.averageRating && ad.averageRating > 0 && (
+                        <div className="flex items-center gap-1 text-gray-600 ml-auto">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">{ad.averageRating.toFixed(1)}</span>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Amenities */}
@@ -499,12 +529,18 @@ export const AdsPage: React.FC = () => {
                     
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-2">
+                      <div 
+                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/user/${ad.user.id}`);
+                        }}
+                      >
                         <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-semibold">{ad.user.firstName[0]}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900 truncate max-w-[100px]">
+                          <span className="text-sm font-medium text-gray-900 truncate max-w-[100px] hover:text-blue-600 transition-colors">
                             {ad.user.firstName}
                           </span>
                           <span className="text-xs text-gray-500">Propriétaire</span>
@@ -512,7 +548,10 @@ export const AdsPage: React.FC = () => {
                       </div>
                       <Button 
                         size="sm" 
-                        onClick={() => openModal(ad)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal(ad);
+                        }}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
                       >
                         Voir détails

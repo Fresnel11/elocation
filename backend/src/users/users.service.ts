@@ -232,4 +232,28 @@ export class UsersService {
       resetPasswordOtpExpiresAt: null 
     });
   }
+
+  async getPublicProfile(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: ['id', 'firstName', 'lastName', 'email', 'phone', 'createdAt'],
+      relations: ['ads'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      _count: {
+        ads: user.ads?.length || 0
+      }
+    };
+  }
 }
