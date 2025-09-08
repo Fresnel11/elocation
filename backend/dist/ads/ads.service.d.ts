@@ -4,9 +4,11 @@ import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { SearchAdsDto } from './dto/search-ads.dto';
 import { User } from '../users/entities/user.entity';
+import { GeocodingService } from '../common/services/geocoding.service';
 export declare class AdsService {
     private readonly adRepository;
-    constructor(adRepository: Repository<Ad>);
+    private readonly geocodingService;
+    constructor(adRepository: Repository<Ad>, geocodingService: GeocodingService);
     create(createAdDto: CreateAdDto, user: User): Promise<Ad>;
     findAll(searchAdsDto: SearchAdsDto): Promise<{
         ads: Ad[];

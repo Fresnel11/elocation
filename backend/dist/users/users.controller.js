@@ -33,6 +33,9 @@ let UsersController = class UsersController {
     findAll(paginationDto) {
         return this.usersService.findAll(paginationDto);
     }
+    getPublicProfile(id) {
+        return this.usersService.getPublicProfile(id);
+    }
     findOne(id) {
         return this.usersService.findOne(id);
     }
@@ -102,6 +105,24 @@ __decorate([
     __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)(':id/profile'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Récupérer le profil public d\'un utilisateur',
+        description: 'Récupère les informations publiques d\'un utilisateur (nom, date d\'inscription, statistiques).'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID de l\'utilisateur' }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Profil utilisateur récupéré avec succès'
+    }),
+    (0, swagger_1.ApiNotFoundResponse)({
+        description: 'Utilisateur non trouvé'
+    }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getPublicProfile", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

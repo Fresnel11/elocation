@@ -135,6 +135,24 @@ export class AdsController {
     return this.adsService.findAll(searchAdsDto);
   }
 
+  @Get('user/:userId')
+  @ApiOperation({ 
+    summary: 'Récupérer les annonces d\'un utilisateur',
+    description: 'Récupère la liste des annonces publiques d\'un utilisateur spécifique.'
+  })
+  @ApiParam({ name: 'userId', description: 'ID de l\'utilisateur' })
+  @ApiQuery({ name: 'page', required: false, description: 'Numéro de page', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Nombre d\'éléments par page', example: 10 })
+  @ApiOkResponse({ 
+    description: 'Liste des annonces de l\'utilisateur récupérée avec succès' 
+  })
+  @ApiNotFoundResponse({ 
+    description: 'Utilisateur non trouvé' 
+  })
+  findUserAds(@Param('userId') userId: string, @Query() paginationDto: PaginationDto) {
+    return this.adsService.findUserAds(userId, paginationDto);
+  }
+
   @Get('my-ads')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

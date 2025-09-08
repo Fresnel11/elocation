@@ -13,12 +13,13 @@ const reviews_service_1 = require("./reviews.service");
 const reviews_controller_1 = require("./reviews.controller");
 const review_entity_1 = require("./entities/review.entity");
 const ad_entity_1 = require("../ads/entities/ad.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let ReviewsModule = class ReviewsModule {
 };
 exports.ReviewsModule = ReviewsModule;
 exports.ReviewsModule = ReviewsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([review_entity_1.Review, ad_entity_1.Ad])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([review_entity_1.Review, ad_entity_1.Ad, user_entity_1.User])],
         controllers: [reviews_controller_1.ReviewsController],
         providers: [reviews_service_1.ReviewsService],
         exports: [reviews_service_1.ReviewsService],

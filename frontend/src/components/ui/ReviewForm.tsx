@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 import { Button } from './Button';
-import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 
 interface ReviewFormProps {
@@ -14,12 +13,14 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ adId, onReviewAdded }) =
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
-  const { success, error } = useToast();
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
     if (rating === 0) {
-      error('Erreur', 'Veuillez sélectionner une note');
+      setError('Veuillez sélectionner une note');
       return;
     }
 
@@ -30,20 +31,25 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ adId, onReviewAdded }) =
         rating,
         comment
       });
-      success('Avis ajouté !', 'Votre avis a été publié avec succès');
       setRating(0);
       setComment('');
       onReviewAdded();
     } catch (err: any) {
-      error('Erreur', err.response?.data?.message || 'Impossible d\'ajouter l\'avis');
+      setError(err.response?.data?.message || 'Impossible d\'ajouter l\'avis');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Laisser un avis</h3>
+    <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-4">
+      <h3 className="font-semibold text-gray-900 mb-3">Laisser un avis</h3>
+      
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+          {error}
+        </div>
+      )}
       
       {/* Rating */}
       <div className="mb-4">

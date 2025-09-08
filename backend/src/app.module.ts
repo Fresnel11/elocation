@@ -12,6 +12,7 @@ import { AdminModule } from './admin/admin.module';
 import { RolesModule } from './roles/roles.module';
 import { SubCategoriesModule } from './subcategories/subcategories.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { MessagesModule } from './messages/messages.module';
 import { CommonModule } from './common/common.module';
 import { SeederModule } from './seeders/seeder.module';
 
@@ -43,6 +44,7 @@ import { SeederModule } from './seeders/seeder.module';
     RolesModule,
     SubCategoriesModule,
     ReviewsModule,
+    MessagesModule,
     CommonModule,
     SeederModule,
   ],

@@ -17,6 +17,15 @@ export declare class AdsController {
             pages: number;
         };
     }>;
+    findUserAds(userId: string, paginationDto: PaginationDto): Promise<{
+        ads: import("./entities/ad.entity").Ad[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            pages: number;
+        };
+    }>;
     findMyAds(req: any, paginationDto: PaginationDto): Promise<{
         ads: import("./entities/ad.entity").Ad[];
         pagination: {

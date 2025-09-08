@@ -33,4 +33,15 @@ export declare class UsersService {
     createGoogleUser(googleData: any): Promise<User>;
     verifyOtpForPasswordReset(email: string, code: string): Promise<boolean>;
     resetPassword(email: string, newPassword: string): Promise<void>;
+    getPublicProfile(id: string): Promise<{
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string | null;
+        phone: string | null;
+        createdAt: Date;
+        _count: {
+            ads: number;
+        };
+    }>;
 }

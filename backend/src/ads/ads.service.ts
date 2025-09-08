@@ -7,12 +7,14 @@ import { UpdateAdDto } from './dto/update-ad.dto';
 import { SearchAdsDto } from './dto/search-ads.dto';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../common/enums/user-role.enum';
+import { GeocodingService } from '../common/services/geocoding.service';
 
 @Injectable()
 export class AdsService {
   constructor(
     @InjectRepository(Ad)
     private readonly adRepository: Repository<Ad>,
+    private readonly geocodingService: GeocodingService,
   ) {}
 
   async create(createAdDto: CreateAdDto, user: User): Promise<Ad> {
@@ -20,9 +22,14 @@ export class AdsService {
       ? `https://wa.me/${createAdDto.whatsappNumber.replace(/\D/g, '')}`
       : undefined;
 
+    // Géocodage automatique de la localisation
+    const coordinates = this.geocodingService.extractCoordinates(createAdDto.location);
+
     const ad = this.adRepository.create({
       ...createAdDto,
       whatsappLink,
+      latitude: coordinates?.latitude || null,
+      longitude: coordinates?.longitude || null,
       userId: user.id,
     } as Partial<Ad>);
 
@@ -167,8 +174,12 @@ export class AdsService {
     const skip = (page - 1) * limit;
 
     const [ads, total] = await this.adRepository.findAndCount({
-      where: { userId },
-      relations: ['category', 'subCategory'],
+      where: { 
+        userId,
+        isActive: true,
+        isAvailable: true
+      },
+      relations: ['category', 'subCategory', 'user'],
       skip,
       take: limit,
       order: { createdAt: 'DESC' },

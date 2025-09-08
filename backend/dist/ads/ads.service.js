@@ -18,15 +18,18 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const ad_entity_1 = require("./entities/ad.entity");
 const user_role_enum_1 = require("../common/enums/user-role.enum");
+const geocoding_service_1 = require("../common/services/geocoding.service");
 let AdsService = class AdsService {
-    constructor(adRepository) {
+    constructor(adRepository, geocodingService) {
         this.adRepository = adRepository;
+        this.geocodingService = geocodingService;
     }
     async create(createAdDto, user) {
         const whatsappLink = createAdDto.whatsappNumber
             ? `https://wa.me/${createAdDto.whatsappNumber.replace(/\D/g, '')}`
             : undefined;
-        const ad = this.adRepository.create(Object.assign(Object.assign({}, createAdDto), { whatsappLink, userId: user.id }));
+        const coordinates = this.geocodingService.extractCoordinates(createAdDto.location);
+        const ad = this.adRepository.create(Object.assign(Object.assign({}, createAdDto), { whatsappLink, latitude: (coordinates === null || coordinates === void 0 ? void 0 : coordinates.latitude) || null, longitude: (coordinates === null || coordinates === void 0 ? void 0 : coordinates.longitude) || null, userId: user.id }));
         return this.adRepository.save(ad);
     }
     async findAll(searchAdsDto) {
@@ -121,8 +124,12 @@ let AdsService = class AdsService {
         const { page = 1, limit = 10 } = searchAdsDto;
         const skip = (page - 1) * limit;
         const [ads, total] = await this.adRepository.findAndCount({
-            where: { userId },
-            relations: ['category', 'subCategory'],
+            where: {
+                userId,
+                isActive: true,
+                isAvailable: true
+            },
+            relations: ['category', 'subCategory', 'user'],
             skip,
             take: limit,
             order: { createdAt: 'DESC' },
@@ -186,6 +193,7 @@ exports.AdsService = AdsService;
 exports.AdsService = AdsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(ad_entity_1.Ad)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        geocoding_service_1.GeocodingService])
 ], AdsService);
 //# sourceMappingURL=ads.service.js.map

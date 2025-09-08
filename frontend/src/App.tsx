@@ -17,6 +17,7 @@ import { CreateAdPage } from './pages/CreateAdPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
+import { UserProfilePage } from './pages/UserProfilePage';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -39,6 +40,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
               <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
+              <Route path="/user/:userId" element={<UserProfilePage />} />
               <Route path="/annonces" element={<AnnoncesPage />} />
               <Route path="/annonce/:id" element={<AnnonceDetailPage />} />
               <Route path="/about" element={<AboutPage />} />

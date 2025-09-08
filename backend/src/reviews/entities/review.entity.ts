@@ -13,7 +13,7 @@ export class Review {
   @Column({ type: 'text' })
   comment: string;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User)
   user: User;
 
   @ManyToOne(() => Ad, ad => ad.reviews)

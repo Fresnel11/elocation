@@ -149,7 +149,8 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    validateAndSetFiles(selectedFiles);
+    const newFiles = [...files, ...selectedFiles];
+    validateAndSetFiles(newFiles);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -166,7 +167,8 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
     e.preventDefault();
     setIsDragOver(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
-    validateAndSetFiles(droppedFiles);
+    const newFiles = [...files, ...droppedFiles];
+    validateAndSetFiles(newFiles);
   };
 
   const openFileDialog = () => {

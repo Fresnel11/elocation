@@ -32,6 +32,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ adId, refreshTrigger }
   const fetchReviews = async () => {
     try {
       const response = await api.get(`/reviews/ad/${adId}`);
+      console.log('Reviews data:', response.data);
       setReviews(response.data);
     } catch (err) {
       console.error('Erreur lors du chargement des avis:', err);
@@ -104,13 +105,19 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ adId, refreshTrigger }
             <div key={review.id} className="bg-white p-4 rounded-lg border border-gray-200">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-blue-600" />
+                  {review.user ? (
+                    <span className="text-blue-600 font-semibold text-sm">
+                      {review.user.firstName?.[0] || 'U'}
+                    </span>
+                  ) : (
+                    <User className="h-5 w-5 text-blue-600" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <h4 className="font-medium text-gray-900">
-                        {review.user.firstName} {review.user.lastName}
+                        {review.user ? `${review.user.firstName} ${review.user.lastName}` : 'Utilisateur anonyme'}
                       </h4>
                       <div className="flex items-center gap-2 mt-1">
                         {renderStars(review.rating)}
