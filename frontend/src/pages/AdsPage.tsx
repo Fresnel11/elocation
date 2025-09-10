@@ -6,11 +6,10 @@ import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
 import { AdModal } from '../components/ui/AdModal';
 import { CreateAdButton } from '../components/ui/CreateAdButton';
-import { InfiniteLoader } from '../components/ui/InfiniteLoader';
 import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
 import { LocationSelector } from '../components/ui/LocationSelector';
 import { PriceRangeSlider } from '../components/ui/PriceRangeSlider';
-import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
+import { MobileSearchFilter } from '../components/ui/MobileSearchFilter';
 import { adsService, Ad } from '../services/adsService';
 import { api } from '../services/api';
 
@@ -35,17 +34,18 @@ export const AdsPage: React.FC = () => {
   const [ads, setAds] = useState<AdWithUI[]>([]);
   const [filteredAds, setFilteredAds] = useState<AdWithUI[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+
   const [selectedAd, setSelectedAd] = useState<AdWithUI | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [totalAds, setTotalAds] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number; radius: number; isCity?: boolean} | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
+  const [priceFilterActive, setPriceFilterActive] = useState(false);
   const [filters, setFilters] = useState({
     location: '',
     categoryId: '',
@@ -73,12 +73,11 @@ export const AdsPage: React.FC = () => {
     }
   }, []);
 
-  const fetchAds = useCallback(async (page: number = 1, reset: boolean = false) => {
+  const fetchAds = useCallback(async (page = 1) => {
     try {
-      if (page === 1) setLoading(true);
-      else setLoadingMore(true);
+      setLoading(true);
       
-      const response = await adsService.getAds(page, 10, userLocation || undefined);
+      const response = await adsService.getAds(page, 12, userLocation || undefined);
       const adsArray = response.ads || [];
       
       // Récupérer les ratings pour chaque annonce
@@ -103,68 +102,27 @@ export const AdsPage: React.FC = () => {
         })
       );
       
-      const adsWithUI = adsWithRatings;
-      
-      if (reset || page === 1) {
-        setAds(adsWithUI);
-        setCurrentPage(1);
-      } else {
-        setAds(prev => [...prev, ...adsWithUI]);
-      }
-      
+      setAds(adsWithRatings);
       setTotalAds(response.pagination.total);
-      setHasMore(page < response.pagination.pages);
+      setTotalPages(response.pagination.pages);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Erreur lors du chargement des annonces:', error);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   }, [userLocation]);
 
-  const loadMore = useCallback(() => {
-    if (!loadingMore && hasMore) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      fetchAds(nextPage, false);
-    }
-  }, [currentPage, hasMore, loadingMore, fetchAds]);
 
-  useInfiniteScroll(loadMore, hasMore, loadingMore);
 
   useEffect(() => {
     fetchCategories();
-    fetchAds(1, true);
+    fetchAds();
   }, [fetchCategories, fetchAds]);
 
   useEffect(() => {
-    const applyFilters = () => {
-      let filtered = ads.filter(ad => {
-        const matchesSearch = ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             ad.location.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesPrice = ad.price >= priceRange[0] && ad.price <= priceRange[1];
-        
-        const matchesLocation = !filters.location || ad.location.toLowerCase().includes(filters.location.toLowerCase());
-        
-        const matchesCategory = !filters.categoryId || ad.category.id === filters.categoryId;
-        
-        const matchesBedrooms = !filters.bedrooms || ad.bedrooms >= parseInt(filters.bedrooms);
-        
-        const matchesBathrooms = !filters.bathrooms || ad.bathrooms >= parseInt(filters.bathrooms);
-        
-        const matchesAmenities = filters.amenities.length === 0 || 
-                                filters.amenities.every(amenity => ad.amenities.includes(amenity));
-
-        return matchesSearch && matchesPrice && matchesLocation && matchesCategory && 
-               matchesBedrooms && matchesBathrooms && matchesAmenities;
-      });
-
-      setFilteredAds(filtered);
-    };
-
-    applyFilters();
-  }, [ads, searchTerm, filters, priceRange]);
+    setFilteredAds(ads);
+  }, [ads]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -196,7 +154,7 @@ export const AdsPage: React.FC = () => {
   };
 
   const hasActiveFilters = () => {
-    return (priceRange[0] > 0 || priceRange[1] < 500000) || filters.location || filters.categoryId || 
+    return priceFilterActive || filters.location || filters.categoryId || 
            filters.bedrooms || filters.bathrooms || filters.amenities.length > 0 || 
            searchTerm || userLocation;
   };
@@ -210,12 +168,12 @@ export const AdsPage: React.FC = () => {
       amenities: []
     });
     setPriceRange([0, 500000]);
+    setPriceFilterActive(false);
     setSearchTerm('');
     setUserLocation(null);
-    // Recharger les données depuis le début
+    // Recharger les données
     setCurrentPage(1);
-    setHasMore(true);
-    fetchAds(1, true);
+    fetchAds(1);
   };
 
   return (
@@ -275,38 +233,20 @@ export const AdsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar des filtres */}
-          <div className={`lg:w-80 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            {/* Overlay pour mobile */}
-            {showFilters && (
-              <div 
-                className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                onClick={() => setShowFilters(false)}
-              />
-            )}
-            
-            <Card className={`sticky top-6 ${showFilters ? 'fixed inset-x-4 top-20 z-50 lg:relative lg:inset-auto lg:top-6 lg:z-auto animate-in slide-in-from-bottom-4 duration-300' : ''} lg:animate-none`}>
+          <div className="hidden lg:block lg:w-80">
+            <Card className="sticky top-6">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Filtres</h3>
-                  <div className="flex items-center gap-2">
-                    {hasActiveFilters() && (
-                      <button
-                        onClick={clearFilters}
-                        className="inline-flex mt-5 items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-lg transition-all duration-200 hover:shadow-sm"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        Effacer tout
-                      </button>
-                    )}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="lg:hidden"
-                      onClick={() => setShowFilters(false)}
+                  {hasActiveFilters() && (
+                    <button
+                      onClick={clearFilters}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-lg transition-all duration-200 hover:shadow-sm"
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      <X className="h-3.5 w-3.5" />
+                      Effacer tout
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-6">
@@ -317,7 +257,10 @@ export const AdsPage: React.FC = () => {
                       min={0}
                       max={500000}
                       value={priceRange}
-                      onChange={setPriceRange}
+                      onChange={(value) => {
+                        setPriceRange(value);
+                        setPriceFilterActive(true);
+                      }}
                     />
                   </div>
 
@@ -409,7 +352,7 @@ export const AdsPage: React.FC = () => {
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <p className="text-gray-600">
-                  {filteredAds.length} sur {totalAds} annonce{totalAds > 1 ? 's' : ''}
+                  {ads.length} sur {totalAds} annonce{totalAds > 1 ? 's' : ''}
                 </p>
                 {userLocation && (
                   <p className="text-sm text-blue-600">
@@ -431,7 +374,7 @@ export const AdsPage: React.FC = () => {
                   ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' 
                   : 'space-y-4 sm:space-y-6'
                 }>
-                  {filteredAds.map((ad, index) => (
+                  {ads.map((ad, index) => (
                 <Card 
                   key={ad.id} 
                   className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
@@ -562,14 +505,33 @@ export const AdsPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <InfiniteLoader 
-                  loading={loadingMore} 
-                  hasMore={hasMore && filteredAds.length === ads.length}
-                />
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchAds(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Précédent
+                    </Button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} sur {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchAds(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Suivant
+                    </Button>
+                  </div>
+                )}
+
               </>
             )}
 
-            {filteredAds.length === 0 && !loading && (
+            {ads.length === 0 && !loading && (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Search className="h-12 w-12 mx-auto" />
@@ -605,6 +567,24 @@ export const AdsPage: React.FC = () => {
         ad={selectedAd}
         isOpen={isModalOpen}
         onClose={closeModal}
+      />
+      
+      {/* Mobile Filter Bottom Sheet */}
+      <MobileSearchFilter 
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        onSearch={(filters) => {
+          setFilters({
+            location: filters.city,
+            categoryId: filters.category,
+            bedrooms: filters.bedrooms,
+            bathrooms: filters.bathrooms,
+            amenities: filters.amenities
+          });
+          setPriceRange([0, filters.priceRange[1]]);
+          setPriceFilterActive(filters.priceRange[1] < 500000);
+        }}
+        categories={categories}
       />
     </div>
   );

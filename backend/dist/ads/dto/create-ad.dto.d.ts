@@ -15,4 +15,17 @@ export declare class CreateAdDto {
     latitude?: number;
     longitude?: number;
     isAvailable?: boolean;
+    brand?: string;
+    model?: string;
+    year?: number;
+    condition?: string;
+    color?: string;
+    fuel?: string;
+    transmission?: string;
+    mileage?: number;
+    size?: string;
+    weight?: string;
+    power?: string;
+    specifications?: string[];
+    features?: string[];
 }

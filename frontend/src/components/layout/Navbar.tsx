@@ -70,6 +70,14 @@ export const Navbar: React.FC = () => {
               Annonces
             </Link>
             <Link 
+              to="/requests" 
+              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                location.pathname === '/requests' ? 'text-blue-600' : 'text-gray-700'
+              }`}
+            >
+              Demandes
+            </Link>
+            <Link 
               to="/about" 
               className={`text-sm font-medium transition-colors hover:text-blue-600 ${
                 location.pathname === '/about' ? 'text-blue-600' : 'text-gray-700'
@@ -174,6 +182,15 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Annonces
+              </Link>
+              <Link
+                to="/requests"
+                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  location.pathname === '/requests' ? 'text-blue-600' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Demandes
               </Link>
               <Link
                 to="/about"

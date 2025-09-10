@@ -66,6 +66,46 @@ export class Ad {
   @Column('decimal', { precision: 11, scale: 8, nullable: true })
   longitude: number;
 
+  // Champs génériques pour différentes catégories
+  @Column({ nullable: true })
+  brand: string; // Marque (véhicules, électroménager, etc.)
+
+  @Column({ nullable: true })
+  model: string; // Modèle
+
+  @Column({ type: 'int', nullable: true })
+  year: number; // Année (véhicules, électroménager)
+
+  @Column({ nullable: true })
+  condition: string; // État (neuf, bon, usagé)
+
+  @Column({ nullable: true })
+  color: string; // Couleur
+
+  @Column({ nullable: true })
+  fuel: string; // Carburant (véhicules)
+
+  @Column({ nullable: true })
+  transmission: string; // Transmission (véhicules)
+
+  @Column({ type: 'int', nullable: true })
+  mileage: number; // Kilométrage (véhicules)
+
+  @Column({ nullable: true })
+  size: string; // Taille/Dimensions
+
+  @Column({ nullable: true })
+  weight: string; // Poids
+
+  @Column({ nullable: true })
+  power: string; // Puissance/Consommation
+
+  @Column('json', { nullable: true })
+  specifications: string[]; // Spécifications techniques
+
+  @Column('json', { nullable: true })
+  features: string[]; // Caractéristiques/Options
+
   @ManyToOne(() => User, (user) => user.ads)
   @JoinColumn({ name: 'userId' })
   user: User;

@@ -13,6 +13,7 @@ import { RolesModule } from './roles/roles.module';
 import { SubCategoriesModule } from './subcategories/subcategories.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { MessagesModule } from './messages/messages.module';
+import { RequestsModule } from './requests/requests.module';
 import { CommonModule } from './common/common.module';
 import { SeederModule } from './seeders/seeder.module';
 
@@ -45,6 +46,7 @@ import { SeederModule } from './seeders/seeder.module';
     SubCategoriesModule,
     ReviewsModule,
     MessagesModule,
+    RequestsModule,
     CommonModule,
     SeederModule,
   ],

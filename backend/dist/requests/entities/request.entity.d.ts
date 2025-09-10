@@ -1,0 +1,30 @@
+import { User } from '../../users/entities/user.entity';
+import { Category } from '../../categories/entities/category.entity';
+import { RequestComment } from './request-comment.entity';
+export declare class Request {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    maxBudget: number;
+    bedrooms: number;
+    bathrooms: number;
+    minArea: number;
+    desiredAmenities: string[];
+    desiredBrand: string;
+    desiredModel: string;
+    minYear: number;
+    desiredCondition: string;
+    desiredColor: string;
+    desiredFuel: string;
+    desiredTransmission: string;
+    maxMileage: number;
+    desiredSize: string;
+    desiredFeatures: string[];
+    status: string;
+    user: User;
+    category: Category;
+    comments: RequestComment[];
+    createdAt: Date;
+    updatedAt: Date;
+}
