@@ -12,15 +12,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const requests_service_1 = require("./requests.service");
 const requests_controller_1 = require("./requests.controller");
 const request_entity_1 = require("./entities/request.entity");
-const request_comment_entity_1 = require("./entities/request-comment.entity");
-const user_entity_1 = require("../users/entities/user.entity");
-const category_entity_1 = require("../categories/entities/category.entity");
 let RequestsModule = class RequestsModule {
 };
 exports.RequestsModule = RequestsModule;
 exports.RequestsModule = RequestsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([request_entity_1.Request, request_comment_entity_1.RequestComment, user_entity_1.User, category_entity_1.Category])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([request_entity_1.Request])],
         controllers: [requests_controller_1.RequestsController],
         providers: [requests_service_1.RequestsService],
         exports: [requests_service_1.RequestsService],

@@ -17,8 +17,7 @@ export const RegisterPage: React.FC = () => {
     phone: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'tenant' as 'owner' | 'tenant'
+    confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -33,10 +32,7 @@ export const RegisterPage: React.FC = () => {
     { id: 3, title: 'Sécurité', icon: Shield, description: 'Mot de passe et confirmation' }
   ];
 
-  const roleOptions = [
-    { value: 'tenant', label: 'Locataire' },
-    { value: 'owner', label: 'Propriétaire' }
-  ];
+
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -93,7 +89,7 @@ export const RegisterPage: React.FC = () => {
     if (!validateStep(3)) return;
     
     try {
-      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.role, formData.email || undefined);
+      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined);
       success(
         'Inscription réussie !', 
         'Votre compte a été créé avec succès. Vérifiez votre téléphone pour activer votre compte.'
@@ -153,7 +149,7 @@ export const RegisterPage: React.FC = () => {
               <div className="flex justify-center mb-4">
                 <Phone className="h-12 w-12 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Contact & Type de compte</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Informations de contact</h3>
               <p className="text-gray-600">Vos informations de contact</p>
             </div>
             <Input
@@ -174,13 +170,7 @@ export const RegisterPage: React.FC = () => {
               error={errors.email}
               placeholder="votre@email.com"
             />
-            <Select
-              label="Type de compte"
-              options={roleOptions}
-              value={formData.role}
-              onChange={(e) => handleChange('role', e.target.value as 'owner' | 'tenant')}
-              required
-            />
+
           </div>
         );
       
@@ -252,10 +242,7 @@ export const RegisterPage: React.FC = () => {
                     <span className="font-medium break-all">{formData.email}</span>
                   </div>
                 )}
-                <div className="flex flex-col sm:flex-row sm:justify-between">
-                  <span className="text-gray-600 mb-1 sm:mb-0">Type de compte:</span>
-                  <span className="font-medium">{formData.role === 'tenant' ? 'Locataire' : 'Propriétaire'}</span>
-                </div>
+
               </div>
             </div>
             

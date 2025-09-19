@@ -112,14 +112,12 @@ export class CreateAdDto {
   amenities?: string[];
 
   @ApiProperty({
-    description: 'URLs des photos',
-    example: ['photo1.jpg', 'photo2.jpg'],
-    required: false
+    description: 'URLs des photos (au moins 1 requis)',
+    example: ['photo1.jpg', 'photo2.jpg']
   })
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  photos?: string[];
+  photos: string[];
 
   @ApiProperty({
     description: 'URL de la vidéo',
@@ -224,4 +222,13 @@ export class CreateAdDto {
   @IsArray()
   @IsString({ each: true })
   features?: string[];
+
+  @ApiProperty({ 
+    description: 'Rôle de publication', 
+    enum: ['owner', 'tenant', 'middleman'],
+    default: 'owner'
+  })
+  @IsOptional()
+  @IsString()
+  publisherRole?: string;
 }

@@ -2,7 +2,6 @@ import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
-import { RequestComment } from '../../requests/entities/request-comment.entity';
 export declare class User {
     id: string;
     email: string | null;
@@ -24,7 +23,6 @@ export declare class User {
     ads: Ad[];
     payments: Payment[];
     requests: Request[];
-    requestComments: RequestComment[];
     createdAt: Date;
     updatedAt: Date;
 }

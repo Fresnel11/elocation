@@ -29,7 +29,7 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], RequestComment.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => request_entity_1.Request, request => request.comments),
+    (0, typeorm_1.ManyToOne)(() => request_entity_1.Request),
     __metadata("design:type", request_entity_1.Request)
 ], RequestComment.prototype, "request", void 0);
 __decorate([

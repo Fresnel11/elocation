@@ -17,6 +17,7 @@ const user_entity_1 = require("../users/entities/user.entity");
 const role_seeder_1 = require("./role.seeder");
 const category_seeder_1 = require("./category.seeder");
 const subcategory_seeder_1 = require("./subcategory.seeder");
+const cleanup_subcategories_seeder_1 = require("./cleanup-subcategories.seeder");
 const user_seeder_1 = require("./user.seeder");
 const ad_seeder_1 = require("./ad.seeder");
 const seeder_service_1 = require("./seeder.service");
@@ -29,7 +30,7 @@ exports.SeederModule = SeederModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([role_entity_1.Role, category_entity_1.Category, subcategory_entity_1.SubCategory, ad_entity_1.Ad, user_entity_1.User])],
         controllers: [init_data_controller_1.InitDataController],
-        providers: [role_seeder_1.RoleSeeder, category_seeder_1.CategorySeeder, subcategory_seeder_1.SubCategorySeeder, user_seeder_1.UserSeeder, ad_seeder_1.AdSeeder, seeder_service_1.SeederService, update_coordinates_seeder_1.UpdateCoordinatesSeeder],
+        providers: [role_seeder_1.RoleSeeder, category_seeder_1.CategorySeeder, subcategory_seeder_1.SubCategorySeeder, cleanup_subcategories_seeder_1.CleanupSubCategoriesSeeder, user_seeder_1.UserSeeder, ad_seeder_1.AdSeeder, seeder_service_1.SeederService, update_coordinates_seeder_1.UpdateCoordinatesSeeder],
         exports: [seeder_service_1.SeederService, update_coordinates_seeder_1.UpdateCoordinatesSeeder],
     })
 ], SeederModule);

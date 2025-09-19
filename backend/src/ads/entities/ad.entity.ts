@@ -12,6 +12,7 @@ import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../subcategories/entities/subcategory.entity';
 import { Review } from '../../reviews/entities/review.entity';
+import { AdPublisherRole } from '../../common/enums/ad-publisher-role.enum';
 
 @Entity('ads')
 export class Ad {
@@ -36,7 +37,7 @@ export class Ad {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column('json', { nullable: true })
+  @Column('json')
   photos: string[];
 
   @Column({ nullable: true })
@@ -105,6 +106,13 @@ export class Ad {
 
   @Column('json', { nullable: true })
   features: string[]; // Caractéristiques/Options
+
+  @Column({
+    type: 'enum',
+    enum: AdPublisherRole,
+    default: AdPublisherRole.OWNER
+  })
+  publisherRole: AdPublisherRole;
 
   @ManyToOne(() => User, (user) => user.ads)
   @JoinColumn({ name: 'userId' })

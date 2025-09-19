@@ -14,7 +14,7 @@ interface Request {
   bathrooms?: number;
   minArea?: number;
   desiredAmenities: string[];
-  status: string;
+  isActive: boolean;
   user: {
     id: string;
     firstName: string;
@@ -24,7 +24,6 @@ interface Request {
     id: string;
     name: string;
   };
-  comments: any[];
   createdAt: string;
 }
 
@@ -35,47 +34,28 @@ export const RequestsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const mockRequests: Request[] = [
-    {
-      id: '1',
-      title: 'Recherche appartement 2 pièces à Cotonou',
-      description: 'Je recherche un appartement de 2 pièces dans le quartier de Fidjrossè ou environs. Proche des transports en commun.',
-      location: 'Cotonou, Fidjrossè',
-      maxBudget: 150000,
-      bedrooms: 2,
-      bathrooms: 1,
-      minArea: 50,
-      desiredAmenities: ['WiFi', 'Parking'],
-      status: 'active',
-      user: { id: '1', firstName: 'Marie', lastName: 'Adjovi' },
-      category: { id: '1', name: 'Appartement' },
-      comments: [{}, {}],
-      createdAt: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: '2',
-      title: 'Villa avec jardin à Porto-Novo',
-      description: 'Famille avec enfants recherche une villa avec jardin, 3 chambres minimum. Quartier calme et sécurisé.',
-      location: 'Porto-Novo',
-      maxBudget: 300000,
-      bedrooms: 3,
-      bathrooms: 2,
-      minArea: 120,
-      desiredAmenities: ['Jardin', 'Sécurité', 'Parking'],
-      status: 'active',
-      user: { id: '2', firstName: 'Jean', lastName: 'Koffi' },
-      category: { id: '2', name: 'Villa' },
-      comments: [{}],
-      createdAt: '2024-01-14T15:20:00Z'
+  const fetchRequests = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/requests', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des demandes:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    // Simuler le chargement
-    setTimeout(() => {
-      setRequests(mockRequests);
-      setLoading(false);
-    }, 1000);
+    fetchRequests();
   }, []);
 
   const getTimeAgo = (dateString: string) => {
@@ -226,7 +206,7 @@ export const RequestsPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-gray-500">
                         <MessageCircle className="h-4 w-4" />
-                        <span className="text-sm">{request.comments.length}</span>
+                        <span className="text-sm">0</span>
                       </div>
                       <Button 
                         size="sm" 
@@ -271,7 +251,7 @@ export const RequestsPage: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => {
           // Recharger les demandes
-          setRequests([...mockRequests]);
+          fetchRequests();
         }}
       />
     </div>

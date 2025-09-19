@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, DollarSign, Home, Bath, Bed, Wifi, Car, Tv, AirVent, Utensils, Shield } from 'lucide-react';
 import { Button } from './Button';
+import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 
 interface CreateRequestModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const { success, error } = useToast();
 
   const amenitiesList = [
     { value: 'wifi', label: 'WiFi', icon: Wifi },
@@ -44,17 +47,18 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
 
   useEffect(() => {
     if (isOpen) {
-      // Simuler le chargement des catégories
-      setCategories([
-        { id: '1', name: 'Immobilier' },
-        { id: '2', name: 'Véhicules' },
-        { id: '3', name: 'Électroménager' },
-        { id: '4', name: 'Mobilier' },
-        { id: '5', name: 'Électronique' },
-        { id: '6', name: 'Outils & Équipements' }
-      ]);
+      fetchCategories();
     }
   }, [isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(response.data);
+    } catch (err) {
+      console.error('Erreur lors du chargement des catégories:', err);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -74,9 +78,20 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
     setLoading(true);
     
     try {
-      // Simuler l'envoi
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Demande créée:', formData);
+      const requestData = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        maxBudget: formData.maxBudget ? parseFloat(formData.maxBudget) : undefined,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
+        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : undefined,
+        minArea: formData.minArea ? parseInt(formData.minArea) : undefined,
+        categoryId: formData.categoryId,
+        desiredAmenities: formData.desiredAmenities
+      };
+
+      await api.post('/requests', requestData);
+      success('Demande publiée !', 'Votre demande a été publiée avec succès.');
       onSuccess?.();
       onClose();
       // Reset form
@@ -91,8 +106,8 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
         categoryId: '',
         desiredAmenities: []
       });
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch (err: any) {
+      error('Erreur', err.response?.data?.message || 'Une erreur est survenue lors de la publication.');
     } finally {
       setLoading(false);
     }
@@ -214,7 +229,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                   </label>
                   
                   {/* Critères pour Immobilier */}
-                  {formData.categoryId === '1' && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Chambres minimum</label>
@@ -257,17 +272,15 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                   )}
                   
                   {/* Critères pour Véhicules */}
-                  {formData.categoryId === '2' && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name === 'Véhicules' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Type de véhicule</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                          <option value="">Peu importe</option>
-                          <option value="voiture">Voiture</option>
-                          <option value="moto">Moto</option>
-                          <option value="camion">Camion</option>
-                          <option value="bus">Bus</option>
-                        </select>
+                        <label className="block text-xs text-gray-500 mb-1">Marque souhaitée</label>
+                        <input
+                          type="text"
+                          placeholder="Toyota, Honda..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Année minimum</label>
@@ -277,11 +290,39 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Carburant</label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          <option value="">Peu importe</option>
+                          <option value="essence">Essence</option>
+                          <option value="diesel">Diesel</option>
+                          <option value="hybride">Hybride</option>
+                          <option value="electrique">Électrique</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Transmission</label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          <option value="">Peu importe</option>
+                          <option value="manuelle">Manuelle</option>
+                          <option value="automatique">Automatique</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs text-gray-500 mb-1">État minimum accepté</label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          <option value="">Peu importe</option>
+                          <option value="neuf">Neuf uniquement</option>
+                          <option value="tres-bon">Très bon état minimum</option>
+                          <option value="bon">Bon état minimum</option>
+                          <option value="correct">État correct minimum</option>
+                        </select>
+                      </div>
                     </div>
                   )}
                   
                   {/* Critères pour Électroménager */}
-                  {formData.categoryId === '3' && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name === 'Électroménager' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Type d'appareil</label>
@@ -306,7 +347,8 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                   )}
                   
                   {/* Critères pour autres catégories */}
-                  {(formData.categoryId === '4' || formData.categoryId === '5' || formData.categoryId === '6') && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name && 
+                   !['Immobilier', 'Véhicules', 'Électroménager'].includes(categories.find(cat => cat.id === formData.categoryId)?.name || '') && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">État souhaité</label>
@@ -336,13 +378,13 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
               {formData.categoryId && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    {formData.categoryId === '1' ? 'Équipements souhaités' : 
-                     formData.categoryId === '2' ? 'Options véhicule' :
+                    {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' ? 'Équipements souhaités' : 
+                     categories.find(cat => cat.id === formData.categoryId)?.name === 'Véhicules' ? 'Options véhicule' :
                      'Options souhaitées'}
                   </label>
                   
                   {/* Équipements pour Immobilier */}
-                  {formData.categoryId === '1' && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {amenitiesList.map(amenity => {
                         const Icon = amenity.icon;
@@ -367,9 +409,9 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                   )}
                   
                   {/* Options pour Véhicules */}
-                  {formData.categoryId === '2' && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name === 'Véhicules' && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {['GPS', 'Climatisation', 'Bluetooth', 'Sièges cuir', 'Boîte auto', 'Caméra recul'].map(option => (
+                      {['GPS', 'Climatisation', 'Bluetooth', 'Sièges cuir', 'Transmission auto', 'Caméra recul'].map(option => (
                         <button
                           key={option}
                           type="button"
@@ -387,7 +429,8 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                   )}
                   
                   {/* Options pour autres catégories */}
-                  {(formData.categoryId === '3' || formData.categoryId === '4' || formData.categoryId === '5' || formData.categoryId === '6') && (
+                  {categories.find(cat => cat.id === formData.categoryId)?.name && 
+                   !['Immobilier', 'Véhicules'].includes(categories.find(cat => cat.id === formData.categoryId)?.name || '') && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {['Livraison incluse', 'Installation', 'Manuel inclus', 'Garantie', 'Accessoires', 'Support technique'].map(option => (
                         <button

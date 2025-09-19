@@ -16,7 +16,6 @@ const ad_entity_1 = require("../../ads/entities/ad.entity");
 const payment_entity_1 = require("../../payments/entities/payment.entity");
 const role_entity_1 = require("../../roles/entities/role.entity");
 const request_entity_1 = require("../../requests/entities/request.entity");
-const request_comment_entity_1 = require("../../requests/entities/request-comment.entity");
 let User = class User {
 };
 exports.User = User;
@@ -105,10 +104,6 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => request_entity_1.Request, (request) => request.user),
     __metadata("design:type", Array)
 ], User.prototype, "requests", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => request_comment_entity_1.RequestComment, (comment) => comment.user),
-    __metadata("design:type", Array)
-], User.prototype, "requestComments", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

@@ -31,10 +31,9 @@ let UserSeeder = class UserSeeder {
             console.log('Les utilisateurs de test existent déjà, seeding ignoré');
             return;
         }
-        const ownerRole = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.OWNER } });
-        const tenantRole = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.TENANT } });
-        if (!ownerRole || !tenantRole) {
-            console.log('Rôles non trouvés, seeding des utilisateurs ignoré');
+        const userRole = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.USER } });
+        if (!userRole) {
+            console.log('Rôle user non trouvé, seeding des utilisateurs ignoré');
             return;
         }
         const usersData = [
@@ -44,7 +43,7 @@ let UserSeeder = class UserSeeder {
                 email: 'marie.adjovi@example.com',
                 phone: '+22997123456',
                 password: await bcrypt.hash('password123', 10),
-                role: ownerRole,
+                role: userRole,
                 isVerified: true,
             },
             {
@@ -53,7 +52,7 @@ let UserSeeder = class UserSeeder {
                 email: 'jean.koudjo@example.com',
                 phone: '+22997234567',
                 password: await bcrypt.hash('password123', 10),
-                role: ownerRole,
+                role: userRole,
                 isVerified: true,
             },
             {
@@ -62,7 +61,7 @@ let UserSeeder = class UserSeeder {
                 email: 'fatou.sanni@example.com',
                 phone: '+22997345678',
                 password: await bcrypt.hash('password123', 10),
-                role: ownerRole,
+                role: userRole,
                 isVerified: true,
             },
             {
@@ -71,7 +70,7 @@ let UserSeeder = class UserSeeder {
                 email: 'pierre.dossou@example.com',
                 phone: '+22997456789',
                 password: await bcrypt.hash('password123', 10),
-                role: ownerRole,
+                role: userRole,
                 isVerified: true,
             },
             {
@@ -80,7 +79,7 @@ let UserSeeder = class UserSeeder {
                 email: 'aminata.traore@example.com',
                 phone: '+22997567890',
                 password: await bcrypt.hash('password123', 10),
-                role: tenantRole,
+                role: userRole,
                 isVerified: true,
             },
         ];

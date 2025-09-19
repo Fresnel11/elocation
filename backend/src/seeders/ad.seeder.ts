@@ -23,12 +23,12 @@ export class AdSeeder {
 
     const users = await this.userRepository.find({ 
       relations: ['role'],
-      where: { role: { name: UserRole.OWNER } }
+      where: { role: { name: UserRole.USER } }
     });
     const categories = await this.categoryRepository.find();
 
     if (users.length === 0 || categories.length === 0) {
-      console.log('Aucun propriétaire ou catégorie trouvé, seeding des annonces ignoré');
+      console.log('Aucun utilisateur ou catégorie trouvé, seeding des annonces ignoré');
       return;
     }
 

@@ -10,7 +10,7 @@ export declare class CreateAdDto {
     bathrooms?: number;
     area?: number;
     amenities?: string[];
-    photos?: string[];
+    photos: string[];
     video?: string;
     latitude?: number;
     longitude?: number;
@@ -28,4 +28,5 @@ export declare class CreateAdDto {
     power?: string;
     specifications?: string[];
     features?: string[];
+    publisherRole?: string;
 }

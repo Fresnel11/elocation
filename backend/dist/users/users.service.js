@@ -41,10 +41,9 @@ let UsersService = class UsersService {
         if (existingByPhone) {
             throw new common_1.ConflictException('User with this phone already exists');
         }
-        const roleEnum = createUserDto.role || user_role_enum_1.UserRole.TENANT;
-        const role = await this.roleRepository.findOne({ where: { name: roleEnum } });
+        const role = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.USER } });
         if (!role) {
-            throw new common_1.NotFoundException(`Role ${roleEnum} not found`);
+            throw new common_1.NotFoundException('Default user role not found');
         }
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
         const user = this.userRepository.create({
@@ -187,9 +186,9 @@ let UsersService = class UsersService {
         return isValid;
     }
     async createGoogleUser(googleData) {
-        const role = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.TENANT } });
+        const role = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.USER } });
         if (!role) {
-            throw new common_1.NotFoundException('Default role not found');
+            throw new common_1.NotFoundException('Default user role not found');
         }
         const user = this.userRepository.create({
             email: googleData.email.toLowerCase(),

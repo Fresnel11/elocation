@@ -15,6 +15,7 @@ const user_entity_1 = require("../../users/entities/user.entity");
 const category_entity_1 = require("../../categories/entities/category.entity");
 const subcategory_entity_1 = require("../../subcategories/entities/subcategory.entity");
 const review_entity_1 = require("../../reviews/entities/review.entity");
+const ad_publisher_role_enum_1 = require("../../common/enums/ad-publisher-role.enum");
 let Ad = class Ad {
 };
 exports.Ad = Ad;
@@ -47,7 +48,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Ad.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.Column)('json', { nullable: true }),
+    (0, typeorm_1.Column)('json'),
     __metadata("design:type", Array)
 ], Ad.prototype, "photos", void 0);
 __decorate([
@@ -138,6 +139,14 @@ __decorate([
     (0, typeorm_1.Column)('json', { nullable: true }),
     __metadata("design:type", Array)
 ], Ad.prototype, "features", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ad_publisher_role_enum_1.AdPublisherRole,
+        default: ad_publisher_role_enum_1.AdPublisherRole.OWNER
+    }),
+    __metadata("design:type", String)
+], Ad.prototype, "publisherRole", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.ads),
     (0, typeorm_1.JoinColumn)({ name: 'userId' }),

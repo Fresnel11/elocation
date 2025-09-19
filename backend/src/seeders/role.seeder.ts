@@ -18,12 +18,8 @@ export class RoleSeeder {
         description: 'Administrateur système avec tous les privilèges',
       },
       {
-        name: UserRole.OWNER,
-        description: 'Propriétaire pouvant publier des annonces',
-      },
-      {
-        name: UserRole.TENANT,
-        description: 'Locataire pouvant consulter et réserver',
+        name: UserRole.USER,
+        description: 'Utilisateur standard',
       },
     ];
 

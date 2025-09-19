@@ -4,7 +4,6 @@ import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
-import { RequestComment } from '../../requests/entities/request-comment.entity';
 
 @Entity('users')
 export class User {
@@ -72,9 +71,6 @@ export class User {
 
   @OneToMany(() => Request, (request) => request.user)
   requests: Request[];
-
-  @OneToMany(() => RequestComment, (comment) => comment.user)
-  requestComments: RequestComment[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -4,7 +4,6 @@ exports.UserRole = void 0;
 var UserRole;
 (function (UserRole) {
     UserRole["ADMIN"] = "admin";
-    UserRole["OWNER"] = "owner";
-    UserRole["TENANT"] = "tenant";
+    UserRole["USER"] = "user";
 })(UserRole || (exports.UserRole = UserRole = {}));
 //# sourceMappingURL=user-role.enum.js.map

@@ -1,8 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, Unique } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Ad } from '../../ads/entities/ad.entity';
 
 @Entity('subcategories')
+@Unique(['name', 'categoryId'])
 export class SubCategory {
   @PrimaryGeneratedColumn('uuid')
   id: string;

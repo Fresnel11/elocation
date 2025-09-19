@@ -137,11 +137,9 @@ __decorate([
 ], CreateAdDto.prototype, "amenities", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'URLs des photos',
-        example: ['photo1.jpg', 'photo2.jpg'],
-        required: false
+        description: 'URLs des photos (au moins 1 requis)',
+        example: ['photo1.jpg', 'photo2.jpg']
     }),
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
@@ -266,4 +264,14 @@ __decorate([
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateAdDto.prototype, "features", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Rôle de publication',
+        enum: ['owner', 'tenant', 'middleman'],
+        default: 'owner'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateAdDto.prototype, "publisherRole", void 0);
 //# sourceMappingURL=create-ad.dto.js.map

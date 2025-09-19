@@ -29,12 +29,8 @@ let RoleSeeder = class RoleSeeder {
                 description: 'Administrateur système avec tous les privilèges',
             },
             {
-                name: user_role_enum_1.UserRole.OWNER,
-                description: 'Propriétaire pouvant publier des annonces',
-            },
-            {
-                name: user_role_enum_1.UserRole.TENANT,
-                description: 'Locataire pouvant consulter et réserver',
+                name: user_role_enum_1.UserRole.USER,
+                description: 'Utilisateur standard',
             },
         ];
         for (const roleData of roles) {
