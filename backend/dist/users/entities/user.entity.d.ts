@@ -2,12 +2,14 @@ import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
+import { Response } from '../../responses/entities/response.entity';
 export declare class User {
     id: string;
     email: string | null;
     firstName: string;
     lastName: string;
     phone: string | null;
+    whatsappNumber: string | null;
     password: string | null;
     googleId: string | null;
     profilePicture: string | null;
@@ -23,6 +25,7 @@ export declare class User {
     ads: Ad[];
     payments: Payment[];
     requests: Request[];
+    responses: Response[];
     createdAt: Date;
     updatedAt: Date;
 }

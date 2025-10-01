@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Request, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
@@ -21,5 +21,19 @@ export class RequestsController {
   @ApiOperation({ summary: 'Récupérer toutes les demandes' })
   findAll() {
     return this.requestsService.findAll();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Récupérer une demande par ID' })
+  findOne(@Param('id') id: string) {
+    return this.requestsService.findOne(id);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Modifier une demande' })
+  update(@Param('id') id: string, @Body() updateRequestDto: CreateRequestDto, @Request() req) {
+    return this.requestsService.update(id, updateRequestDto, req.user.id);
   }
 }

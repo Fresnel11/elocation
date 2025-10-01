@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Conversation = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
-const message_entity_1 = require("./message.entity");
+const ad_entity_1 = require("../../ads/entities/ad.entity");
 let Conversation = class Conversation {
 };
 exports.Conversation = Conversation;
@@ -22,18 +22,44 @@ __decorate([
 ], Conversation.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
-    (0, typeorm_1.JoinColumn)({ name: 'user1Id' }),
     __metadata("design:type", user_entity_1.User)
 ], Conversation.prototype, "user1", void 0);
 __decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Conversation.prototype, "user1Id", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
-    (0, typeorm_1.JoinColumn)({ name: 'user2Id' }),
     __metadata("design:type", user_entity_1.User)
 ], Conversation.prototype, "user2", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => message_entity_1.Message, message => message.conversation),
-    __metadata("design:type", Array)
-], Conversation.prototype, "messages", void 0);
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Conversation.prototype, "user2Id", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => ad_entity_1.Ad, { nullable: true }),
+    __metadata("design:type", Object)
+], Conversation.prototype, "ad", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Object)
+], Conversation.prototype, "adId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Conversation.prototype, "lastMessageContent", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Date)
+], Conversation.prototype, "lastMessageAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], Conversation.prototype, "unreadCountUser1", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], Conversation.prototype, "unreadCountUser2", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

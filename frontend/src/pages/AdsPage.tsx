@@ -17,6 +17,7 @@ interface AdWithUI extends Ad {
   isLiked: boolean;
   averageRating?: number;
   reviewsCount?: number;
+  imageLoading?: boolean;
 }
 
 
@@ -34,6 +35,7 @@ export const AdsPage: React.FC = () => {
   const [ads, setAds] = useState<AdWithUI[]>([]);
   const [filteredAds, setFilteredAds] = useState<AdWithUI[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageLoadingStates, setImageLoadingStates] = useState<{[key: string]: boolean}>({});
 
   const [selectedAd, setSelectedAd] = useState<AdWithUI | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,14 +91,16 @@ export const AdsPage: React.FC = () => {
               ...ad,
               isLiked: false,
               averageRating: ratingResponse.data.averageRating,
-              reviewsCount: ratingResponse.data.totalReviews
+              reviewsCount: ratingResponse.data.totalReviews,
+              imageLoading: true
             };
           } catch (error) {
             return {
               ...ad,
               isLiked: false,
               averageRating: 0,
-              reviewsCount: 0
+              reviewsCount: 0,
+              imageLoading: true
             };
           }
         })
@@ -106,6 +110,13 @@ export const AdsPage: React.FC = () => {
       setTotalAds(response.pagination.total);
       setTotalPages(response.pagination.pages);
       setCurrentPage(page);
+      
+      // Initialiser les états de chargement des images
+      const initialLoadingStates = {};
+      adsWithRatings.forEach(ad => {
+        initialLoadingStates[ad.id] = true;
+      });
+      setImageLoadingStates(initialLoadingStates);
     } catch (error) {
       console.error('Erreur lors du chargement des annonces:', error);
     } finally {
@@ -121,8 +132,57 @@ export const AdsPage: React.FC = () => {
   }, [fetchCategories, fetchAds]);
 
   useEffect(() => {
-    setFilteredAds(ads);
-  }, [ads]);
+    let filtered = [...ads];
+
+    // Filtre par terme de recherche
+    if (searchTerm) {
+      filtered = filtered.filter(ad => 
+        ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ad.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtre par prix
+    if (priceFilterActive) {
+      filtered = filtered.filter(ad => {
+        const price = parseInt(ad.price);
+        return price >= priceRange[0] && price <= priceRange[1];
+      });
+    }
+
+    // Filtre par localisation
+    if (filters.location) {
+      filtered = filtered.filter(ad => 
+        ad.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    // Filtre par catégorie
+    if (filters.categoryId) {
+      filtered = filtered.filter(ad => ad.category.id === filters.categoryId);
+    }
+
+    // Filtre par chambres
+    if (filters.bedrooms) {
+      const minBedrooms = parseInt(filters.bedrooms);
+      filtered = filtered.filter(ad => ad.bedrooms >= minBedrooms);
+    }
+
+    // Filtre par salles de bain
+    if (filters.bathrooms) {
+      const minBathrooms = parseInt(filters.bathrooms);
+      filtered = filtered.filter(ad => ad.bathrooms >= minBathrooms);
+    }
+
+    // Filtre par équipements
+    if (filters.amenities.length > 0) {
+      filtered = filtered.filter(ad => 
+        filters.amenities.every(amenity => ad.amenities.includes(amenity))
+      );
+    }
+
+    setFilteredAds(filtered);
+  }, [ads, searchTerm, priceRange, priceFilterActive, filters]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -141,6 +201,17 @@ export const AdsPage: React.FC = () => {
     setAds(prev => prev.map(ad => 
       ad.id === adId ? { ...ad, isLiked: !ad.isLiked } : ad
     ));
+    setFilteredAds(prev => prev.map(ad => 
+      ad.id === adId ? { ...ad, isLiked: !ad.isLiked } : ad
+    ));
+  };
+
+  const handleImageLoad = (adId: string) => {
+    setImageLoadingStates(prev => ({ ...prev, [adId]: false }));
+  };
+
+  const handleImageError = (adId: string) => {
+    setImageLoadingStates(prev => ({ ...prev, [adId]: false }));
   };
 
   const openModal = (ad: AdWithUI) => {
@@ -352,7 +423,10 @@ export const AdsPage: React.FC = () => {
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <p className="text-gray-600">
-                  {ads.length} sur {totalAds} annonce{totalAds > 1 ? 's' : ''}
+                  {filteredAds.length} sur {totalAds} annonce{totalAds > 1 ? 's' : ''}
+                  {filteredAds.length !== ads.length && (
+                    <span className="text-blue-600 ml-1">(filtrées)</span>
+                  )}
                 </p>
                 {userLocation && (
                   <p className="text-sm text-blue-600">
@@ -374,7 +448,7 @@ export const AdsPage: React.FC = () => {
                   ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' 
                   : 'space-y-4 sm:space-y-6'
                 }>
-                  {ads.map((ad, index) => (
+                  {filteredAds.map((ad, index) => (
                 <Card 
                   key={ad.id} 
                   className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
@@ -382,6 +456,11 @@ export const AdsPage: React.FC = () => {
                 >
                   {/* Image Section */}
                   <div className="relative h-48 overflow-hidden">
+                    {imageLoadingStates[ad.id] && (
+                      <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                      </div>
+                    )}
                     <img
                       src={ad.photos[0] 
                         ? (ad.photos[0].startsWith('http') 
@@ -391,7 +470,11 @@ export const AdsPage: React.FC = () => {
                         : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
                       }
                       alt={ad.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                        imageLoadingStates[ad.id] ? 'opacity-0' : 'opacity-100'
+                      }`}
+                      onLoad={() => handleImageLoad(ad.id)}
+                      onError={() => handleImageError(ad.id)}
                     />
                     
                     {/* Heart Button */}
@@ -531,18 +614,18 @@ export const AdsPage: React.FC = () => {
               </>
             )}
 
-            {ads.length === 0 && !loading && (
+            {filteredAds.length === 0 && !loading && (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Search className="h-12 w-12 mx-auto" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {userLocation ? 'Aucune annonce proche de vous' : 'Aucune annonce trouvée'}
+                  {hasActiveFilters() ? 'Aucune annonce ne correspond aux filtres' : 'Aucune annonce trouvée'}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {userLocation 
-                    ? 'Élargissez le rayon ou changez de localisation' 
-                    : 'Essayez de modifier vos critères de recherche'
+                  {hasActiveFilters() 
+                    ? 'Essayez de modifier vos critères de recherche' 
+                    : 'Aucune annonce disponible pour le moment'
                   }
                 </p>
                 <div className="flex gap-2 justify-center">

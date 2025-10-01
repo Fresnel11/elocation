@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { LandingPage } from './pages/LandingPage';
@@ -19,11 +19,16 @@ import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { RequestsPage } from './pages/RequestsPage';
+import { RequestDetailPage } from './pages/RequestDetailPage';
+import { MessagesPage } from './pages/MessagesPage';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 function App() {
+  const location = useLocation();
+  const hideFooter = location.pathname === '/messages';
+  
   return (
     <ToastProvider>
       <AuthProvider>
@@ -41,6 +46,8 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
               <Route path="/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
+              <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
+              <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
               <Route path="/user/:userId" element={<UserProfilePage />} />
               <Route path="/annonces" element={<AnnoncesPage />} />
@@ -50,7 +57,7 @@ function App() {
               <Route path="/faq" element={<FAQPage />} />
             </Routes>
           </main>
-          <Footer />
+          {!hideFooter && <Footer />}
         </div>
       </AuthProvider>
     </ToastProvider>

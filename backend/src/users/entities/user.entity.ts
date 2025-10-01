@@ -4,6 +4,7 @@ import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
+import { Response } from '../../responses/entities/response.entity';
 
 @Entity('users')
 export class User {
@@ -23,6 +24,9 @@ export class User {
   @Column('varchar', { length: 20, unique: true, nullable: true })
   @Index({ unique: true })
   phone: string | null;
+
+  @Column('varchar', { length: 20, nullable: true })
+  whatsappNumber: string | null;
 
   @Column('varchar', { length: 255, nullable: true })
   @Exclude()
@@ -71,6 +75,9 @@ export class User {
 
   @OneToMany(() => Request, (request) => request.user)
   requests: Request[];
+
+  @OneToMany(() => Response, (response) => response.user)
+  responses: Response[];
 
   @CreateDateColumn()
   createdAt: Date;

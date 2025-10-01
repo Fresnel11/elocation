@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { Response } from '../../responses/entities/response.entity';
 
 @Entity('requests')
 export class Request {
@@ -58,6 +60,9 @@ export class Request {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => Response, (response) => response.request)
+  responses: Response[];
 
   @UpdateDateColumn()
   updatedAt: Date;

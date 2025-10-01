@@ -1,5 +1,6 @@
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { Response } from '../../responses/entities/response.entity';
 export declare class Request {
     id: string;
     title: string;
@@ -16,5 +17,6 @@ export declare class Request {
     category: Category;
     categoryId: string;
     createdAt: Date;
+    responses: Response[];
     updatedAt: Date;
 }

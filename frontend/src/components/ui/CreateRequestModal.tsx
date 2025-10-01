@@ -8,6 +8,18 @@ interface CreateRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  editRequest?: {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    maxBudget?: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    minArea?: number;
+    categoryId: string;
+    desiredAmenities: string[];
+  };
 }
 
 interface Category {
@@ -15,7 +27,7 @@ interface Category {
   name: string;
 }
 
-export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, onClose, onSuccess, editRequest }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -48,8 +60,21 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
   useEffect(() => {
     if (isOpen) {
       fetchCategories();
+      if (editRequest) {
+        setFormData({
+          title: editRequest.title,
+          description: editRequest.description,
+          location: editRequest.location,
+          maxBudget: editRequest.maxBudget?.toString() || '',
+          bedrooms: editRequest.bedrooms?.toString() || '',
+          bathrooms: editRequest.bathrooms?.toString() || '',
+          minArea: editRequest.minArea?.toString() || '',
+          categoryId: editRequest.categoryId,
+          desiredAmenities: editRequest.desiredAmenities || []
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editRequest]);
 
   const fetchCategories = async () => {
     try {
@@ -90,8 +115,15 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
         desiredAmenities: formData.desiredAmenities
       };
 
-      await api.post('/requests', requestData);
-      success('Demande publiée !', 'Votre demande a été publiée avec succès.');
+      if (editRequest) {
+        await api.put(`/requests/${editRequest.id}`, requestData);
+      } else {
+        await api.post('/requests', requestData);
+      }
+      success(
+        editRequest ? 'Demande modifiée !' : 'Demande publiée !', 
+        editRequest ? 'Votre demande a été modifiée avec succès.' : 'Votre demande a été publiée avec succès.'
+      );
       onSuccess?.();
       onClose();
       // Reset form
@@ -125,7 +157,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Nouvelle demande</h2>
+            <h2 className="text-xl font-bold text-gray-900">{editRequest ? 'Modifier la demande' : 'Nouvelle demande'}</h2>
             <button
               onClick={onClose}
               className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
@@ -469,7 +501,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({ isOpen, 
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                   disabled={loading}
                 >
-                  {loading ? 'Publication...' : 'Publier la demande'}
+                  {loading ? (editRequest ? 'Modification...' : 'Publication...') : (editRequest ? 'Modifier la demande' : 'Publier la demande')}
                 </Button>
               </div>
             </div>

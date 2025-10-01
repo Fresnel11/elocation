@@ -13,6 +13,7 @@ exports.Request = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const category_entity_1 = require("../../categories/entities/category.entity");
+const response_entity_1 = require("../../responses/entities/response.entity");
 let Request = class Request {
 };
 exports.Request = Request;
@@ -78,6 +79,10 @@ __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Request.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => response_entity_1.Response, (response) => response.request),
+    __metadata("design:type", Array)
+], Request.prototype, "responses", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)

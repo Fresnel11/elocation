@@ -1,4 +1,7 @@
 export declare class CreateMessageDto {
     content: string;
-    recipientId: string;
+    receiverId: string;
+    adId?: string;
+    imageUrl?: string;
+    messageType?: 'text' | 'image';
 }

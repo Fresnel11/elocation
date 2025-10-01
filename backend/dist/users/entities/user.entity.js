@@ -16,6 +16,7 @@ const ad_entity_1 = require("../../ads/entities/ad.entity");
 const payment_entity_1 = require("../../payments/entities/payment.entity");
 const role_entity_1 = require("../../roles/entities/role.entity");
 const request_entity_1 = require("../../requests/entities/request.entity");
+const response_entity_1 = require("../../responses/entities/response.entity");
 let User = class User {
 };
 exports.User = User;
@@ -41,6 +42,10 @@ __decorate([
     (0, typeorm_1.Index)({ unique: true }),
     __metadata("design:type", Object)
 ], User.prototype, "phone", void 0);
+__decorate([
+    (0, typeorm_1.Column)('varchar', { length: 20, nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "whatsappNumber", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 255, nullable: true }),
     (0, class_transformer_1.Exclude)(),
@@ -104,6 +109,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => request_entity_1.Request, (request) => request.user),
     __metadata("design:type", Array)
 ], User.prototype, "requests", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => response_entity_1.Response, (response) => response.user),
+    __metadata("design:type", Array)
+], User.prototype, "responses", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

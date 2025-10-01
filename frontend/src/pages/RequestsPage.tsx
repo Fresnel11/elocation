@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, MapPin, Clock, MessageCircle, User, Filter } from 'lucide-react';
+import { Search, Plus, MapPin, Clock, MessageCircle, User, Filter, Eye, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { CreateRequestModal } from '../components/ui/CreateRequestModal';
+import { RespondToRequestModal } from '../components/ui/RespondToRequestModal';
 
 interface Request {
   id: string;
@@ -20,19 +23,27 @@ interface Request {
     firstName: string;
     lastName: string;
   };
+  userId: string;
   category: {
     id: string;
     name: string;
   };
+  categoryId: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export const RequestsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [isRespondModalOpen, setIsRespondModalOpen] = useState(false);
+  const [editRequest, setEditRequest] = useState<Request | null>(null);
 
   const fetchRequests = async () => {
     try {
@@ -69,19 +80,23 @@ export const RequestsPage: React.FC = () => {
     return `Il y a ${diffInDays}j`;
   };
 
+  const isModified = (request: Request) => {
+    return new Date(request.updatedAt).getTime() > new Date(request.createdAt).getTime();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header iOS Style */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">Demandes</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Demandes</h1>
             <Button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-6 py-2 shadow-lg"
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-3 sm:px-6 py-2 shadow-lg text-sm"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle demande
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Nouvelle demande</span>
             </Button>
           </div>
           
@@ -100,7 +115,7 @@ export const RequestsPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24 md:pb-6">
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -115,31 +130,39 @@ export const RequestsPage: React.FC = () => {
           <div className="space-y-4">
             {requests.map((request) => (
               <Card key={request.id} className="bg-white rounded-2xl shadow-sm border-0 overflow-hidden hover:shadow-md transition-all duration-300">
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                      <h3 
+                        className="text-base sm:text-lg font-semibold text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => navigate(`/requests/${request.id}`)}
+                      >
                         {request.title}
                       </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          <span>{request.location}</span>
+                          <MapPin className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{request.location}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{getTimeAgo(request.createdAt)}</span>
+                          <Clock className="h-4 w-4 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm">
+                            {isModified(request) 
+                              ? `Modifié ${getTimeAgo(request.updatedAt)}`
+                              : `Publié ${getTimeAgo(request.createdAt)}`
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                    <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2 justify-between sm:justify-start">
+                      <span className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs font-medium">
                         {request.category.name}
                       </span>
                       {request.maxBudget && (
-                        <span className="text-lg font-bold text-green-600">
-                          {request.maxBudget.toLocaleString()} FCFA
+                        <span className="text-base sm:text-lg font-bold text-green-600">
+                          {Math.round(request.maxBudget).toLocaleString()} FCFA
                         </span>
                       )}
                     </div>
@@ -150,21 +173,21 @@ export const RequestsPage: React.FC = () => {
                     {request.description}
                   </p>
 
-                  {/* Details */}
-                  {(request.bedrooms || request.bathrooms || request.minArea) && (
-                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                  {/* Details - uniquement pour Immobilier */}
+                  {request.category.name === 'Immobilier' && (request.bedrooms || request.bathrooms || request.minArea) && (
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 text-sm text-gray-600">
                       {request.bedrooms && (
-                        <span className="bg-gray-100 px-3 py-1 rounded-lg">
+                        <span className="bg-gray-100 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm">
                           {request.bedrooms} ch.
                         </span>
                       )}
                       {request.bathrooms && (
-                        <span className="bg-gray-100 px-3 py-1 rounded-lg">
+                        <span className="bg-gray-100 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm">
                           {request.bathrooms} sdb
                         </span>
                       )}
                       {request.minArea && (
-                        <span className="bg-gray-100 px-3 py-1 rounded-lg">
+                        <span className="bg-gray-100 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm">
                           {request.minArea}m² min
                         </span>
                       )}
@@ -188,32 +211,70 @@ export const RequestsPage: React.FC = () => {
                   )}
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-100 gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-semibold">
                           {request.user.firstName[0]}
                         </span>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {request.user.firstName} {request.user.lastName}
                         </p>
                         <p className="text-xs text-gray-500">Demandeur</p>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-gray-500">
+                      <div className="flex items-center gap-1 text-gray-500 sm:hidden">
                         <MessageCircle className="h-4 w-4" />
                         <span className="text-sm">0</span>
                       </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
+                      <div className="hidden sm:flex items-center gap-1 text-gray-500">
+                        <MessageCircle className="h-4 w-4" />
+                        <span className="text-sm">0</span>
+                      </div>
+                      
+                      {/* Bouton modifier - visible uniquement pour le propriétaire */}
+                      {user?.id === request.userId && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setEditRequest(request);
+                            setIsCreateModalOpen(true);
+                          }}
+                          className="rounded-lg px-2 sm:px-3 py-2 text-orange-600 border-orange-200 hover:bg-orange-50 text-xs sm:text-sm"
+                        >
+                          <Edit className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Modifier</span>
+                        </Button>
+                      )}
+                      
                       <Button 
                         size="sm" 
-                        className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-2"
+                        variant="outline"
+                        onClick={() => navigate(`/requests/${request.id}`)}
+                        className="rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm"
                       >
-                        Répondre
+                        <Eye className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Voir</span>
                       </Button>
+                      
+                      {/* Bouton répondre - masqué pour le propriétaire */}
+                      {user?.id !== request.userId && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setIsRespondModalOpen(true);
+                          }}
+                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm"
+                        >
+                          Répondre
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -245,15 +306,46 @@ export const RequestsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de création */}
+      {/* Modal de création/modification */}
       <CreateRequestModal 
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditRequest(null);
+        }}
+        editRequest={editRequest ? {
+          id: editRequest.id,
+          title: editRequest.title,
+          description: editRequest.description,
+          location: editRequest.location,
+          maxBudget: editRequest.maxBudget,
+          bedrooms: editRequest.bedrooms,
+          bathrooms: editRequest.bathrooms,
+          minArea: editRequest.minArea,
+          categoryId: editRequest.categoryId,
+          desiredAmenities: editRequest.desiredAmenities
+        } : undefined}
         onSuccess={() => {
           // Recharger les demandes
           fetchRequests();
         }}
       />
+
+      {/* Modal de réponse */}
+      {selectedRequest && (
+        <RespondToRequestModal 
+          isOpen={isRespondModalOpen}
+          onClose={() => {
+            setIsRespondModalOpen(false);
+            setSelectedRequest(null);
+          }}
+          request={selectedRequest}
+          onSuccess={() => {
+            // Optionnel: recharger les demandes ou afficher un message
+            fetchRequests();
+          }}
+        />
+      )}
     </div>
   );
 };

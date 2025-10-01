@@ -6,4 +6,6 @@ export declare class RequestsService {
     constructor(requestRepository: Repository<Request>);
     create(createRequestDto: CreateRequestDto, userId: string): Promise<Request>;
     findAll(): Promise<Request[]>;
+    findOne(id: string): Promise<Request>;
+    update(id: string, updateRequestDto: CreateRequestDto, userId: string): Promise<Request>;
 }

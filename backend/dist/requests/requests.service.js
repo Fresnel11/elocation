@@ -31,6 +31,37 @@ let RequestsService = class RequestsService {
             order: { createdAt: 'DESC' },
         });
     }
+    async findOne(id) {
+        const request = await this.requestRepository.findOne({
+            where: { id },
+            relations: ['user', 'category']
+        });
+        if (!request) {
+            throw new common_1.NotFoundException('Demande introuvable');
+        }
+        return request;
+    }
+    async update(id, updateRequestDto, userId) {
+        const request = await this.requestRepository.findOne({
+            where: { id },
+            relations: ['user']
+        });
+        if (!request) {
+            throw new common_1.NotFoundException('Demande introuvable');
+        }
+        if (request.userId !== userId) {
+            throw new common_1.ForbiddenException('Vous n\'avez pas l\'autorisation de modifier cette demande');
+        }
+        await this.requestRepository.update(id, updateRequestDto);
+        const updatedRequest = await this.requestRepository.findOne({
+            where: { id },
+            relations: ['user', 'category']
+        });
+        if (!updatedRequest) {
+            throw new common_1.NotFoundException('Demande introuvable après mise à jour');
+        }
+        return updatedRequest;
+    }
 };
 exports.RequestsService = RequestsService;
 exports.RequestsService = RequestsService = __decorate([

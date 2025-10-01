@@ -3,8 +3,10 @@ import { X, ChevronLeft, ChevronRight, MapPin, Bed, Bath, Wifi, Tv, AirVent, Ute
 import { Button } from './Button';
 import { ReviewForm } from './ReviewForm';
 import { ReviewsList } from './ReviewsList';
+import { ContactOwnerButton } from './ContactOwnerButton';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface AdModalProps {
   ad: {
@@ -338,10 +340,13 @@ export const AdModal: React.FC<AdModalProps> = ({ ad, isOpen, onClose }) => {
                 <Phone className="h-4 w-4 mr-2" />
                 Appeler
               </Button>
-              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium">
-                <MessageCircle className="h-4 w-4 mr-2" />
-                WhatsApp
-              </Button>
+              <ContactOwnerButton
+                adId={ad.id}
+                adTitle={ad.title}
+                ownerId={ad.user.id}
+                ownerName={`${ad.user.firstName} ${ad.user.lastName}`}
+                className="flex-1 py-3 rounded-xl font-medium"
+              />
             </div>
             </>
             ) : (
