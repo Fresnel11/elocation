@@ -36,6 +36,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Ad.prototype, "price", void 0);
 __decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ['monthly', 'daily', 'weekly', 'hourly', 'fixed'],
+        default: 'monthly'
+    }),
+    __metadata("design:type", String)
+], Ad.prototype, "paymentMode", void 0);
+__decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Ad.prototype, "location", void 0);
@@ -47,6 +55,10 @@ __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], Ad.prototype, "isActive", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Ad.prototype, "allowBooking", void 0);
 __decorate([
     (0, typeorm_1.Column)('json'),
     __metadata("design:type", Array)

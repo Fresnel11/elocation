@@ -15,6 +15,7 @@ export declare class CreateAdDto {
     latitude?: number;
     longitude?: number;
     isAvailable?: boolean;
+    allowBooking?: boolean;
     brand?: string;
     model?: string;
     year?: number;
@@ -29,4 +30,5 @@ export declare class CreateAdDto {
     specifications?: string[];
     features?: string[];
     publisherRole?: string;
+    paymentMode?: string;
 }

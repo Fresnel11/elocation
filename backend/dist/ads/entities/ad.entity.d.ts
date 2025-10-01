@@ -8,9 +8,11 @@ export declare class Ad {
     title: string;
     description: string;
     price: number;
+    paymentMode: string;
     location: string;
     isAvailable: boolean;
     isActive: boolean;
+    allowBooking: boolean;
     photos: string[];
     video: string;
     bedrooms: number;

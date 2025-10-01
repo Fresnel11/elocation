@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, MapPin, Bed, Bath, Wifi, Tv, AirVent, Utensils, Car, Star, Phone, MessageCircle, Send, ThumbsUp, MessageSquare, Play } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MapPin, Bed, Bath, Wifi, Tv, AirVent, Utensils, Car, Star, Phone, MessageCircle, Send, ThumbsUp, MessageSquare, Play, Calendar } from 'lucide-react';
 import { Button } from './Button';
 import { ReviewForm } from './ReviewForm';
 import { ReviewsList } from './ReviewsList';
 import { ContactOwnerButton } from './ContactOwnerButton';
+import { BookingModal } from './BookingModal';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -21,6 +22,7 @@ interface AdModalProps {
     bathrooms?: number;
     area?: number;
     amenities?: string[];
+    allowBooking?: boolean;
     category: { name: string };
     user: { firstName: string; lastName: string };
     rating?: number;
@@ -56,8 +58,10 @@ export const AdModal: React.FC<AdModalProps> = ({ ad, isOpen, onClose }) => {
   const [averageRating, setAverageRating] = useState(0);
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { success } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (ad?.id) {
@@ -335,18 +339,29 @@ export const AdModal: React.FC<AdModalProps> = ({ ad, isOpen, onClose }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium">
-                <Phone className="h-4 w-4 mr-2" />
-                Appeler
-              </Button>
-              <ContactOwnerButton
-                adId={ad.id}
-                adTitle={ad.title}
-                ownerId={ad.user.id}
-                ownerName={`${ad.user.firstName} ${ad.user.lastName}`}
-                className="flex-1 py-3 rounded-xl font-medium"
-              />
+            <div className="space-y-3">
+              {user && (
+                <Button 
+                  onClick={() => setShowBookingModal(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {ad.allowBooking ? 'Réserver maintenant' : 'Voir les modalités'}
+                </Button>
+              )}
+              <div className="flex gap-3">
+                <Button className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-medium">
+                  <Phone className="h-4 w-4 mr-2" />
+                  Appeler
+                </Button>
+                <ContactOwnerButton
+                  adId={ad.id}
+                  adTitle={ad.title}
+                  ownerId={ad.user.id}
+                  ownerName={`${ad.user.firstName} ${ad.user.lastName}`}
+                  className="flex-1 py-3 rounded-xl font-medium"
+                />
+              </div>
             </div>
             </>
             ) : (
@@ -391,6 +406,13 @@ export const AdModal: React.FC<AdModalProps> = ({ ad, isOpen, onClose }) => {
           </div>
         </div>
       </div>
+      
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        ad={ad}
+      />
     </div>
   );
 };

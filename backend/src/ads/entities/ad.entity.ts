@@ -28,6 +28,13 @@ export class Ad {
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
+  @Column({
+    type: 'enum',
+    enum: ['monthly', 'daily', 'weekly', 'hourly', 'fixed'],
+    default: 'monthly'
+  })
+  paymentMode: string;
+
   @Column()
   location: string;
 
@@ -36,6 +43,9 @@ export class Ad {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ default: false })
+  allowBooking: boolean;
 
   @Column('json')
   photos: string[];

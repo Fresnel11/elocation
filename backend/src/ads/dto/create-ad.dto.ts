@@ -155,6 +155,15 @@ export class CreateAdDto {
   @IsBoolean()
   isAvailable?: boolean;
 
+  @ApiProperty({
+    description: 'Autoriser les réservations en ligne',
+    default: false,
+    required: false
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowBooking?: boolean;
+
   // Champs génériques pour différentes catégories
   @ApiProperty({ description: 'Marque', required: false })
   @IsOptional()
@@ -231,4 +240,13 @@ export class CreateAdDto {
   @IsOptional()
   @IsString()
   publisherRole?: string;
+
+  @ApiProperty({
+    description: 'Modalité de paiement',
+    enum: ['monthly', 'daily', 'weekly', 'hourly', 'fixed'],
+    default: 'monthly'
+  })
+  @IsOptional()
+  @IsString()
+  paymentMode?: string;
 }

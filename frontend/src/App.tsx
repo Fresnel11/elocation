@@ -21,6 +21,7 @@ import { UserProfilePage } from './pages/UserProfilePage';
 import { RequestsPage } from './pages/RequestsPage';
 import { RequestDetailPage } from './pages/RequestDetailPage';
 import { MessagesPage } from './pages/MessagesPage';
+import { BookingsPage } from './pages/BookingsPage';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -48,6 +49,7 @@ function App() {
               <Route path="/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
               <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+              <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
               <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
               <Route path="/user/:userId" element={<UserProfilePage />} />
               <Route path="/annonces" element={<AnnoncesPage />} />

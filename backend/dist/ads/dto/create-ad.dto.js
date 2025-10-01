@@ -185,6 +185,16 @@ __decorate([
     __metadata("design:type", Boolean)
 ], CreateAdDto.prototype, "isAvailable", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Autoriser les réservations en ligne',
+        default: false,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateAdDto.prototype, "allowBooking", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ description: 'Marque', required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -274,4 +284,14 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateAdDto.prototype, "publisherRole", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Modalité de paiement',
+        enum: ['monthly', 'daily', 'weekly', 'hourly', 'fixed'],
+        default: 'monthly'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateAdDto.prototype, "paymentMode", void 0);
 //# sourceMappingURL=create-ad.dto.js.map
