@@ -1,4 +1,3 @@
-import { Multer } from 'multer';
 import { AdsService } from './ads.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
@@ -42,5 +41,5 @@ export declare class AdsController {
     update(id: string, updateAdDto: UpdateAdDto, req: any): Promise<import("./entities/ad.entity").Ad>;
     remove(id: string, req: any): Promise<void>;
     toggleStatus(id: string, req: any): Promise<import("./entities/ad.entity").Ad>;
-    uploadPhotos(id: string, files: Multer.File[], req: any): Promise<import("./entities/ad.entity").Ad>;
+    uploadPhotos(id: string, files: Express.Multer.File[], req: any): Promise<import("./entities/ad.entity").Ad>;
 }

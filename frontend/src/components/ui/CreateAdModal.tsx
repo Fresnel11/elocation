@@ -62,23 +62,45 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
   const enhanceDescription = async () => {
     const desc = (formData.description || '').toString().trim();
     
-    if (desc.length < 10) {
-      error('Description trop courte', 'Veuillez écrire au moins 10 caractères avant d\'utiliser l\'IA.');
+    // Vérifier qu'il y a au moins une phrase complète
+    const hasCompleteSentence = /^[A-ZÀ-ÿ].*[.!?]/.test(desc);
+    
+    if (!hasCompleteSentence) {
+      error('Phrase incomplète', 'Veuillez écrire au moins une phrase complète (qui commence par une majuscule et se termine par un point) avant d\'utiliser l\'IA.');
       return;
     }
     
     setEnhancing(true);
     try {
-      const adType = categories.find(cat => cat.id === formData.categoryId)?.name || 'immobilier';
-      const prompt = `Transforme cette description d'annonce ${adType.toLowerCase()} en un texte plus attractif, professionnel et engageant pour le marché béninois. Utilise un vocabulaire commercial, ajoute des qualificatifs positifs et garde un ton chaleureux. IMPORTANT: Maximum 100 mots (environ 600 caractères).\n\nDescription: ${desc}\n\nDescription améliorée (max 100 mots):`;
+      const prompt = `Transforme cette description d'annonce de location en un texte plus attractif, professionnel et engageant pour le marché béninois.
+
+Description actuelle: ${desc}
+
+Consignes:
+- Analyse le contenu pour déterminer le type de bien/service (immobilier, véhicule, électronique, etc.)
+- Adapte le vocabulaire selon ce que tu détectes dans la description
+- Utilise un ton commercial et chaleureux
+- Ajoute des qualificatifs positifs pertinents au type de bien
+- Mets en avant les avantages et caractéristiques importantes
+- Garde un style professionnel mais accessible
+- IMPORTANT: Maximum 100 mots (environ 600 caractères)
+
+Description améliorée (max 100 mots):`;
       
-      const response = await (window as any).puter.ai.chat(prompt, { model: "gpt-4o" });
+      const response = await (window as any).puter.ai.chat(prompt, { 
+        model: "gpt-4o",
+        maxTokens: 200
+      });
       
-      // Extraire le contenu de la réponse Puter.js
-      const aiText = response?.result?.message?.content || response?.content || response;
+      console.log('Réponse complète Puter:', response);
       
-      if (!aiText || aiText.length < 10) {
-        error('Erreur IA', 'Impossible d\'améliorer la description. Veuillez réessayer.');
+      const aiText = response?.result?.message?.content || response?.message?.content || response?.content || (typeof response === 'string' ? response : null);
+      
+      console.log('Texte extrait:', aiText);
+      
+      if (!aiText) {
+        console.log('Structure de la réponse:', JSON.stringify(response, null, 2));
+        error('Erreur IA', 'Impossible d\'extraire le texte généré.');
         return;
       }
       
@@ -379,7 +401,7 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
                 <button
                   type="button"
                   onClick={enhanceDescription}
-                  disabled={(formData.description || '').toString().trim().length < 10 || enhancing}
+                  disabled={!/^[A-ZÀ-ÿ].*[.!?]/.test((formData.description || '').toString().trim()) || enhancing}
                   className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {enhancing ? '✨ Amélioration...' : '✨ Améliorer avec IA'}

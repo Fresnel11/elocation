@@ -22,8 +22,10 @@ import { RequestsPage } from './pages/RequestsPage';
 import { RequestDetailPage } from './pages/RequestDetailPage';
 import { MessagesPage } from './pages/MessagesPage';
 import { BookingsPage } from './pages/BookingsPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 function App() {
@@ -33,7 +35,8 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
+        <NotificationProvider>
+          <div className="min-h-screen bg-gray-50">
           <Navbar />
           <main>
             <Routes>
@@ -50,6 +53,7 @@ function App() {
               <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
               <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
               <Route path="/user/:userId" element={<UserProfilePage />} />
               <Route path="/annonces" element={<AnnoncesPage />} />
@@ -60,7 +64,8 @@ function App() {
             </Routes>
           </main>
           {!hideFooter && <Footer />}
-        </div>
+          </div>
+        </NotificationProvider>
       </AuthProvider>
     </ToastProvider>
   );

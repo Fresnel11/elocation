@@ -1,9 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum NotificationType {
+  BOOKING_REQUEST = 'booking_request',
+  BOOKING_CONFIRMED = 'booking_confirmed',
+  BOOKING_CANCELLED = 'booking_cancelled',
+  BOOKING_EXPIRED = 'booking_expired',
   NEW_MESSAGE = 'new_message',
-  NEW_RESPONSE = 'new_response',
   AD_APPROVED = 'ad_approved',
   AD_REJECTED = 'ad_rejected'
 }
@@ -13,30 +16,27 @@ export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({
-    type: 'enum',
-    enum: NotificationType
-  })
+  @Column({ type: 'enum', enum: NotificationType })
   type: NotificationType;
 
   @Column()
   title: string;
 
-  @Column('text')
+  @Column()
   message: string;
 
+  @Column({ type: 'json', nullable: true })
+  data: any;
+
   @Column({ default: false })
-  isRead: boolean;
+  read: boolean;
 
-  @Column({ nullable: true })
-  relatedId: string;
-
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { eager: true })
   user: User;
-
-  @Column()
-  userId: string;
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -19,8 +19,8 @@ export declare class UsersController {
         id: string;
         firstName: string;
         lastName: string;
-        email: string | null;
-        phone: string | null;
+        email: string;
+        phone: string;
         createdAt: Date;
         _count: {
             ads: number;

@@ -13,6 +13,13 @@ export declare class BookingsController {
         limit: number;
         totalPages: number;
     }>;
+    findReceivedBookings(req: any, paginationDto: PaginationDto): Promise<{
+        data: import("./entities/booking.entity").Booking[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
     checkAvailability(adId: string, startDate?: string, endDate?: string): Promise<{
         isAvailable: boolean;
         conflictingBookings: import("./entities/booking.entity").Booking[];

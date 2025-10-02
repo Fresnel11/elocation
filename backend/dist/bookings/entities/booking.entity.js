@@ -19,6 +19,7 @@ var BookingStatus;
     BookingStatus["CONFIRMED"] = "confirmed";
     BookingStatus["CANCELLED"] = "cancelled";
     BookingStatus["COMPLETED"] = "completed";
+    BookingStatus["EXPIRED"] = "expired";
 })(BookingStatus || (exports.BookingStatus = BookingStatus = {}));
 let Booking = class Booking {
 };

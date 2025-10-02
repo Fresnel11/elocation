@@ -14,7 +14,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Express } from 'express';
-import { Multer } from 'multer';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -347,7 +346,7 @@ export class AdsController {
   )
   uploadPhotos(
     @Param('id') id: string,
-    @UploadedFiles() files: Multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
   ) {
     if (!files || files.length === 0) {

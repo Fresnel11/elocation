@@ -27,7 +27,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 255, unique: true, nullable: true }),
     (0, typeorm_1.Index)({ unique: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 100 }),
@@ -40,49 +40,49 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 20, unique: true, nullable: true }),
     (0, typeorm_1.Index)({ unique: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "phone", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 20, nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "whatsappNumber", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 255, nullable: true }),
     (0, class_transformer_1.Exclude)(),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 255, nullable: true, unique: true }),
     (0, typeorm_1.Index)({ unique: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "googleId", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 512, nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "profilePicture", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date', nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", Date)
 ], User.prototype, "birthDate", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", Date)
 ], User.prototype, "lastLogin", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 6, nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "otpCode", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", Date)
 ], User.prototype, "otpExpiresAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 6, nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], User.prototype, "resetPasswordOtp", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", Date)
 ], User.prototype, "resetPasswordOtpExpiresAt", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => role_entity_1.Role, (role) => role.users),

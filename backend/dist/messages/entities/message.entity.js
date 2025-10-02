@@ -26,7 +26,7 @@ __decorate([
 ], Message.prototype, "content", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 500, nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], Message.prototype, "imageUrl", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 10, default: 'text' }),
@@ -54,11 +54,11 @@ __decorate([
 ], Message.prototype, "receiverId", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => ad_entity_1.Ad, { nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", ad_entity_1.Ad)
 ], Message.prototype, "ad", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], Message.prototype, "adId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),

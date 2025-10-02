@@ -11,7 +11,7 @@ export declare class AuthController {
     constructor(authService: AuthService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
-        phone: string | null;
+        phone: string;
         expiresAt: Date;
     }>;
     requestOtp(body: RequestOtpDto): Promise<{
@@ -26,10 +26,10 @@ export declare class AuthController {
         access_token: string;
         user: {
             id: string;
-            email: string | null;
+            email: string;
             firstName: string;
             lastName: string;
-            phone: string | null;
+            phone: string;
             role: import("../roles/entities/role.entity").Role;
         };
     }>;
@@ -41,10 +41,10 @@ export declare class AuthController {
         email: string;
         user: {
             id: string;
-            email: string | null;
+            email: string;
             firstName: string;
             lastName: string;
-            phone: string | null;
+            phone: string;
             role: import("../roles/entities/role.entity").Role;
         };
     }>;

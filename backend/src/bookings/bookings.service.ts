@@ -5,6 +5,7 @@ import { Booking, BookingStatus } from './entities/booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { AdsService } from '../ads/ads.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class BookingsService {
     @InjectRepository(Booking)
     private bookingRepository: Repository<Booking>,
     private adsService: AdsService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, user: any): Promise<Booking> {
@@ -93,7 +95,17 @@ export class BookingsService {
       status: BookingStatus.PENDING,
     });
 
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    // Envoyer notification au propriétaire
+    await this.notificationsService.notifyBookingRequest(ad.user.id, {
+      bookingId: savedBooking.id,
+      adId: ad.id,
+      adTitle: ad.title,
+      tenantName: `${user.firstName} ${user.lastName}`,
+    });
+
+    return savedBooking;
   }
 
   async findAll(paginationDto: PaginationDto) {
@@ -116,10 +128,25 @@ export class BookingsService {
   async findUserBookings(userId: string, paginationDto: PaginationDto) {
     const { page = 1, limit = 10 } = paginationDto;
     const [bookings, total] = await this.bookingRepository.findAndCount({
-      where: [
-        { tenant: { id: userId } },
-        { owner: { id: userId } },
-      ],
+      where: { tenant: { id: userId } },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      data: bookings,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async findOwnerBookings(userId: string, paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [bookings, total] = await this.bookingRepository.findAndCount({
+      where: { owner: { id: userId } },
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -160,7 +187,25 @@ export class BookingsService {
     }
 
     Object.assign(booking, updateBookingDto);
-    return this.bookingRepository.save(booking);
+    const updatedBooking = await this.bookingRepository.save(booking);
+
+    // Envoyer notifications selon le changement de statut
+    if (updateBookingDto.status === BookingStatus.CONFIRMED) {
+      await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
+        bookingId: booking.id,
+        adId: booking.ad.id,
+        adTitle: booking.ad.title,
+      });
+    } else if (updateBookingDto.status === BookingStatus.CANCELLED) {
+      const targetUserId = user.id === booking.owner.id ? booking.tenant.id : booking.owner.id;
+      await this.notificationsService.notifyBookingCancelled(targetUserId, {
+        bookingId: booking.id,
+        adId: booking.ad.id,
+        adTitle: booking.ad.title,
+      }, updateBookingDto.cancellationReason);
+    }
+
+    return updatedBooking;
   }
 
   async getAdAvailability(adId: string, startDate?: string, endDate?: string) {
