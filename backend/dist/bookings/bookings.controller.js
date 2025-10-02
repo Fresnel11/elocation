@@ -30,6 +30,9 @@ let BookingsController = class BookingsController {
     findMyBookings(req, paginationDto) {
         return this.bookingsService.findUserBookings(req.user.id, paginationDto);
     }
+    findReceivedBookings(req, paginationDto) {
+        return this.bookingsService.findOwnerBookings(req.user.id, paginationDto);
+    }
     checkAvailability(adId, startDate, endDate) {
         return this.bookingsService.getAdAvailability(adId, startDate, endDate);
     }
@@ -63,8 +66,8 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, swagger_1.ApiOperation)({
-        summary: 'Récupérer mes réservations',
-        description: 'Récupère les réservations de l\'utilisateur connecté'
+        summary: 'Récupérer mes demandes de réservation',
+        description: 'Récupère les réservations que j\'ai demandées'
     }),
     (0, swagger_1.ApiOkResponse)({ description: 'Liste des réservations récupérée avec succès' }),
     (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Token JWT invalide' }),
@@ -74,6 +77,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "findMyBookings", null);
+__decorate([
+    (0, common_1.Get)('received-bookings'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Récupérer les demandes reçues',
+        description: 'Récupère les demandes de réservation pour mes propriétés'
+    }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Liste des demandes reçues récupérée avec succès' }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Token JWT invalide' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, pagination_dto_1.PaginationDto]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "findReceivedBookings", null);
 __decorate([
     (0, common_1.Get)('ad/:adId/availability'),
     (0, swagger_1.ApiOperation)({

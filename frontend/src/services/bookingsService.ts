@@ -52,6 +52,11 @@ export const bookingsService = {
     return response.data;
   },
 
+  async getReceivedBookings(page = 1, limit = 10) {
+    const response = await api.get(`/bookings/received-bookings?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+
   async getBooking(id: string): Promise<Booking> {
     const response = await api.get(`/bookings/${id}`);
     return response.data;

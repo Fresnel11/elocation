@@ -14,8 +14,11 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 var NotificationType;
 (function (NotificationType) {
+    NotificationType["BOOKING_REQUEST"] = "booking_request";
+    NotificationType["BOOKING_CONFIRMED"] = "booking_confirmed";
+    NotificationType["BOOKING_CANCELLED"] = "booking_cancelled";
+    NotificationType["BOOKING_EXPIRED"] = "booking_expired";
     NotificationType["NEW_MESSAGE"] = "new_message";
-    NotificationType["NEW_RESPONSE"] = "new_response";
     NotificationType["AD_APPROVED"] = "ad_approved";
     NotificationType["AD_REJECTED"] = "ad_rejected";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
@@ -27,10 +30,7 @@ __decorate([
     __metadata("design:type", String)
 ], Notification.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        type: 'enum',
-        enum: NotificationType
-    }),
+    (0, typeorm_1.Column)({ type: 'enum', enum: NotificationType }),
     __metadata("design:type", String)
 ], Notification.prototype, "type", void 0);
 __decorate([
@@ -38,29 +38,29 @@ __decorate([
     __metadata("design:type", String)
 ], Notification.prototype, "title", void 0);
 __decorate([
-    (0, typeorm_1.Column)('text'),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Notification.prototype, "message", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'json', nullable: true }),
+    __metadata("design:type", Object)
+], Notification.prototype, "data", void 0);
+__decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)
-], Notification.prototype, "isRead", void 0);
+], Notification.prototype, "read", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Notification.prototype, "relatedId", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { eager: true }),
     __metadata("design:type", user_entity_1.User)
 ], Notification.prototype, "user", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Notification.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Notification.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)(),
+    __metadata("design:type", Date)
+], Notification.prototype, "updatedAt", void 0);
 exports.Notification = Notification = __decorate([
     (0, typeorm_1.Entity)('notifications')
 ], Notification);

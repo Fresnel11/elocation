@@ -3,11 +3,13 @@ import { Booking } from './entities/booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { AdsService } from '../ads/ads.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 export declare class BookingsService {
     private bookingRepository;
     private adsService;
-    constructor(bookingRepository: Repository<Booking>, adsService: AdsService);
+    private notificationsService;
+    constructor(bookingRepository: Repository<Booking>, adsService: AdsService, notificationsService: NotificationsService);
     create(createBookingDto: CreateBookingDto, user: any): Promise<Booking>;
     findAll(paginationDto: PaginationDto): Promise<{
         data: Booking[];
@@ -17,6 +19,13 @@ export declare class BookingsService {
         totalPages: number;
     }>;
     findUserBookings(userId: string, paginationDto: PaginationDto): Promise<{
+        data: Booking[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
+    findOwnerBookings(userId: string, paginationDto: PaginationDto): Promise<{
         data: Booking[];
         total: number;
         page: number;

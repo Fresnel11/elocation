@@ -4,7 +4,8 @@ export declare enum BookingStatus {
     PENDING = "pending",
     CONFIRMED = "confirmed",
     CANCELLED = "cancelled",
-    COMPLETED = "completed"
+    COMPLETED = "completed",
+    EXPIRED = "expired"
 }
 export declare class Booking {
     id: string;

@@ -38,11 +38,11 @@ __decorate([
 ], Conversation.prototype, "user2Id", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => ad_entity_1.Ad, { nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", ad_entity_1.Ad)
 ], Conversation.prototype, "ad", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Object)
+    __metadata("design:type", String)
 ], Conversation.prototype, "adId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),

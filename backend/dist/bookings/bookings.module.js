@@ -11,8 +11,10 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const bookings_service_1 = require("./bookings.service");
 const bookings_controller_1 = require("./bookings.controller");
+const bookings_cron_1 = require("./bookings.cron");
 const booking_entity_1 = require("./entities/booking.entity");
 const ads_module_1 = require("../ads/ads.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let BookingsModule = class BookingsModule {
 };
 exports.BookingsModule = BookingsModule;
@@ -21,9 +23,10 @@ exports.BookingsModule = BookingsModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([booking_entity_1.Booking]),
             ads_module_1.AdsModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [bookings_controller_1.BookingsController],
-        providers: [bookings_service_1.BookingsService],
+        providers: [bookings_service_1.BookingsService, bookings_cron_1.BookingsCronService],
         exports: [bookings_service_1.BookingsService],
     })
 ], BookingsModule);

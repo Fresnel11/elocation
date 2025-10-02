@@ -116,7 +116,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, ad 
       onClose();
       resetForm();
     } catch (error: any) {
-      showToast('error', error.response?.data?.message || 'Erreur lors de la réservation');
+      const errorMessage = error.response?.data?.message;
+      if (errorMessage === 'Vous ne pouvez pas réserver votre propre annonce') {
+        showToast('error', 'Vous ne pouvez pas réserver votre propre annonce. Vous êtes le propriétaire de cette annonce.');
+      } else {
+        showToast('error', errorMessage || 'Erreur lors de la réservation');
+      }
     } finally {
       setLoading(false);
     }

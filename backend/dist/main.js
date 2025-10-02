@@ -17,7 +17,10 @@ async function bootstrap() {
         whitelist: true,
         forbidNonWhitelisted: true,
     }));
-    app.enableCors();
+    app.enableCors({
+        origin: ['http://localhost:3001', 'http://localhost:5173'],
+        credentials: true,
+    });
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('eLocation API')
         .setDescription(`

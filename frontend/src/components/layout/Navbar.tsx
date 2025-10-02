@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
 
 export const Navbar: React.FC = () => {
@@ -159,6 +160,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
+                <NotificationBell />
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -221,78 +223,123 @@ export const Navbar: React.FC = () => {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="bg-white/30 backdrop-blur-xl rounded-3xl px-8 py-3 shadow-2xl border border-white/50">
-          <div className="flex items-center gap-6">
-            <Link
-              to="/ads"
-              className={`p-3 rounded-2xl transition-all duration-200 ${
-                location.pathname === '/ads' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
-              }`}
-            >
-              <Home className="h-5 w-5" />
-            </Link>
-            
-            <Link
-              to="/requests"
-              className={`p-3 rounded-2xl transition-all duration-200 ${
-                location.pathname === '/requests' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
-              }`}
-            >
-              <MessageSquare className="h-5 w-5" />
-            </Link>
-            
-            <Link
-              to="/messages"
-              className={`p-3 rounded-2xl transition-all duration-200 ${
-                location.pathname === '/messages' 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
-              }`}
-            >
-              <Mail className="h-5 w-5" />
-            </Link>
-            
-            {user && (
+      <div className="md:hidden fixed bottom-6 left-4 right-4 z-50">
+        <div className="bg-white/30 backdrop-blur-xl rounded-3xl py-3 shadow-2xl border border-white/50">
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-4 px-4 min-w-max">
               <Link
-                to="/bookings"
-                className={`p-3 rounded-2xl transition-all duration-200 ${
-                  location.pathname === '/bookings' 
+                to="/ads"
+                className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                  location.pathname === '/ads' 
                     ? 'bg-blue-600 text-white shadow-lg' 
                     : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <Calendar className="h-5 w-5" />
+                <Home className="h-5 w-5" />
               </Link>
-            )}
-            
-            {user ? (
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className={`p-3 rounded-2xl transition-all duration-200 ${
-                  isUserMenuOpen 
+              
+              <Link
+                to="/requests"
+                className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                  location.pathname === '/requests' 
                     ? 'bg-blue-600 text-white shadow-lg' 
                     : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  isUserMenuOpen ? 'bg-white/20' : getAvatarColor(user.firstName + user.lastName)
-                } ${isUserMenuOpen ? 'text-white' : 'text-white'}`}>
-                  {getInitials(user.firstName, user.lastName)}
-                </div>
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                className="p-3 rounded-2xl transition-all duration-200 text-gray-700 hover:text-gray-900 hover:bg-white/50"
-              >
-                <User className="h-5 w-5" />
+                <MessageSquare className="h-5 w-5" />
               </Link>
-            )}
+              
+              <Link
+                to="/messages"
+                className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                  location.pathname === '/messages' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                }`}
+              >
+                <Mail className="h-5 w-5" />
+              </Link>
+              
+              {user && (
+                <>
+                  <Link
+                    to="/bookings"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/bookings' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <Calendar className="h-5 w-5" />
+                  </Link>
+                  
+                  <div className="p-2.5 flex-shrink-0">
+                    <NotificationBell />
+                  </div>
+                </>
+              )}
+              
+              {!user && (
+                <>
+                  <Link
+                    to="/about"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/about' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <User className="h-5 w-5" />
+                  </Link>
+                  
+                  <Link
+                    to="/contact"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/contact' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <Mail className="h-5 w-5" />
+                  </Link>
+                  
+                  <Link
+                    to="/faq"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/faq' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Link>
+                </>
+              )}
+              
+              {user ? (
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                    isUserMenuOpen 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                    isUserMenuOpen ? 'bg-white/20' : getAvatarColor(user.firstName + user.lastName)
+                  } ${isUserMenuOpen ? 'text-white' : 'text-white'}`}>
+                    {getInitials(user.firstName, user.lastName)}
+                  </div>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="p-2.5 rounded-2xl transition-all duration-200 text-gray-700 hover:text-gray-900 hover:bg-white/50 flex-shrink-0"
+                >
+                  <User className="h-5 w-5" />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
         

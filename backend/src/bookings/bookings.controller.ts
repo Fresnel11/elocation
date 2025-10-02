@@ -51,13 +51,26 @@ export class BookingsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Récupérer mes réservations',
-    description: 'Récupère les réservations de l\'utilisateur connecté'
+    summary: 'Récupérer mes demandes de réservation',
+    description: 'Récupère les réservations que j\'ai demandées'
   })
   @ApiOkResponse({ description: 'Liste des réservations récupérée avec succès' })
   @ApiUnauthorizedResponse({ description: 'Token JWT invalide' })
   findMyBookings(@Request() req, @Query() paginationDto: PaginationDto) {
     return this.bookingsService.findUserBookings(req.user.id, paginationDto);
+  }
+
+  @Get('received-bookings')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Récupérer les demandes reçues',
+    description: 'Récupère les demandes de réservation pour mes propriétés'
+  })
+  @ApiOkResponse({ description: 'Liste des demandes reçues récupérée avec succès' })
+  @ApiUnauthorizedResponse({ description: 'Token JWT invalide' })
+  findReceivedBookings(@Request() req, @Query() paginationDto: PaginationDto) {
+    return this.bookingsService.findOwnerBookings(req.user.id, paginationDto);
   }
 
   @Get('ad/:adId/availability')

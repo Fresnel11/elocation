@@ -10,7 +10,7 @@ export declare class AuthService {
     constructor(usersService: UsersService, jwtService: JwtService, emailService: EmailService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
-        phone: string | null;
+        phone: string;
         expiresAt: Date;
     }>;
     requestOtp(email: string): Promise<{
@@ -25,10 +25,10 @@ export declare class AuthService {
         access_token: string;
         user: {
             id: string;
-            email: string | null;
+            email: string;
             firstName: string;
             lastName: string;
-            phone: string | null;
+            phone: string;
             role: import("../roles/entities/role.entity").Role;
         };
     }>;
@@ -36,10 +36,10 @@ export declare class AuthService {
         access_token: string;
         user: {
             id: string;
-            email: string | null;
+            email: string;
             firstName: string;
             lastName: string;
-            phone: string | null;
+            phone: string;
             role: import("../roles/entities/role.entity").Role;
         };
     }>;
@@ -48,10 +48,10 @@ export declare class AuthService {
         email: string;
         user: {
             id: string;
-            email: string | null;
+            email: string;
             firstName: string;
             lastName: string;
-            phone: string | null;
+            phone: string;
             role: import("../roles/entities/role.entity").Role;
         };
     }>;

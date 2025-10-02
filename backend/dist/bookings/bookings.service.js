@@ -18,10 +18,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const booking_entity_1 = require("./entities/booking.entity");
 const ads_service_1 = require("../ads/ads.service");
+const notifications_service_1 = require("../notifications/notifications.service");
 let BookingsService = class BookingsService {
-    constructor(bookingRepository, adsService) {
+    constructor(bookingRepository, adsService, notificationsService) {
         this.bookingRepository = bookingRepository;
         this.adsService = adsService;
+        this.notificationsService = notificationsService;
     }
     async create(createBookingDto, user) {
         const { adId, startDate, endDate, message, deposit } = createBookingDto;
@@ -85,7 +87,14 @@ let BookingsService = class BookingsService {
             message,
             status: booking_entity_1.BookingStatus.PENDING,
         });
-        return this.bookingRepository.save(booking);
+        const savedBooking = await this.bookingRepository.save(booking);
+        await this.notificationsService.notifyBookingRequest(ad.user.id, {
+            bookingId: savedBooking.id,
+            adId: ad.id,
+            adTitle: ad.title,
+            tenantName: `${user.firstName} ${user.lastName}`,
+        });
+        return savedBooking;
     }
     async findAll(paginationDto) {
         const { page = 1, limit = 10 } = paginationDto;
@@ -105,10 +114,23 @@ let BookingsService = class BookingsService {
     async findUserBookings(userId, paginationDto) {
         const { page = 1, limit = 10 } = paginationDto;
         const [bookings, total] = await this.bookingRepository.findAndCount({
-            where: [
-                { tenant: { id: userId } },
-                { owner: { id: userId } },
-            ],
+            where: { tenant: { id: userId } },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+        return {
+            data: bookings,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
+    async findOwnerBookings(userId, paginationDto) {
+        const { page = 1, limit = 10 } = paginationDto;
+        const [bookings, total] = await this.bookingRepository.findAndCount({
+            where: { owner: { id: userId } },
             skip: (page - 1) * limit,
             take: limit,
             order: { createdAt: 'DESC' },
@@ -139,7 +161,23 @@ let BookingsService = class BookingsService {
             throw new common_1.ForbiddenException('Seul le propriétaire peut confirmer une réservation');
         }
         Object.assign(booking, updateBookingDto);
-        return this.bookingRepository.save(booking);
+        const updatedBooking = await this.bookingRepository.save(booking);
+        if (updateBookingDto.status === booking_entity_1.BookingStatus.CONFIRMED) {
+            await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
+                bookingId: booking.id,
+                adId: booking.ad.id,
+                adTitle: booking.ad.title,
+            });
+        }
+        else if (updateBookingDto.status === booking_entity_1.BookingStatus.CANCELLED) {
+            const targetUserId = user.id === booking.owner.id ? booking.tenant.id : booking.owner.id;
+            await this.notificationsService.notifyBookingCancelled(targetUserId, {
+                bookingId: booking.id,
+                adId: booking.ad.id,
+                adTitle: booking.ad.title,
+            }, updateBookingDto.cancellationReason);
+        }
+        return updatedBooking;
     }
     async getAdAvailability(adId, startDate, endDate) {
         const query = this.bookingRepository.createQueryBuilder('booking')
@@ -160,6 +198,7 @@ exports.BookingsService = BookingsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(booking_entity_1.Booking)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        ads_service_1.AdsService])
+        ads_service_1.AdsService,
+        notifications_service_1.NotificationsService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map
