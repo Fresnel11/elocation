@@ -21,51 +21,93 @@ let MessagesController = class MessagesController {
     constructor(messagesService) {
         this.messagesService = messagesService;
     }
-    sendMessage(createMessageDto, req) {
-        return this.messagesService.sendMessage(createMessageDto, req.user.userId);
+    async sendMessage(req, createMessageDto) {
+        return this.messagesService.sendMessage(req.user.id, createMessageDto);
     }
-    getConversations(req) {
-        return this.messagesService.getConversations(req.user.userId);
+    async getConversations(req) {
+        return this.messagesService.getConversations(req.user.id);
     }
-    getMessages(conversationId, req) {
-        return this.messagesService.getMessages(conversationId, req.user.userId);
+    async getMessages(req, adId, otherUserId) {
+        const actualAdId = adId === 'direct' || adId === '' ? null : adId;
+        console.log('Regular endpoint called with adId:', adId, 'converted to:', actualAdId);
+        return this.messagesService.getMessages(req.user.id, actualAdId, otherUserId);
     }
-    markAsRead(conversationId, req) {
-        return this.messagesService.markAsRead(conversationId, req.user.userId);
+    async getDirectMessages(req, otherUserId) {
+        console.log('Direct messages endpoint called for:', otherUserId);
+        return this.messagesService.getMessages(req.user.id, null, otherUserId);
+    }
+    async markAsRead(req, adId, otherUserId) {
+        const actualAdId = adId === 'direct' || adId === '' ? null : adId;
+        console.log('Mark as read called with adId:', adId, 'converted to:', actualAdId);
+        await this.messagesService.markMessagesAsRead(req.user.id, otherUserId, actualAdId);
+        return { success: true };
+    }
+    async markDirectAsRead(req, otherUserId) {
+        console.log('Mark direct as read called for:', otherUserId);
+        await this.messagesService.markMessagesAsRead(req.user.id, otherUserId, null);
+        return { success: true };
+    }
+    async getUnreadCount(req) {
+        return this.messagesService.getUnreadCount(req.user.id);
     }
 };
 exports.MessagesController = MessagesController;
 __decorate([
     (0, common_1.Post)(),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Request)()),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_message_dto_1.CreateMessageDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, create_message_dto_1.CreateMessageDto]),
+    __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "sendMessage", null);
 __decorate([
     (0, common_1.Get)('conversations'),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "getConversations", null);
 __decorate([
-    (0, common_1.Get)('conversations/:id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Request)()),
+    (0, common_1.Get)('conversation/:adId/:otherUserId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('adId')),
+    __param(2, (0, common_1.Param)('otherUserId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "getMessages", null);
 __decorate([
-    (0, common_1.Patch)('conversations/:id/read'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Request)()),
+    (0, common_1.Get)('conversation/direct/:otherUserId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('otherUserId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "getDirectMessages", null);
+__decorate([
+    (0, common_1.Post)('mark-read/:adId/:otherUserId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('adId')),
+    __param(2, (0, common_1.Param)('otherUserId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "markAsRead", null);
+__decorate([
+    (0, common_1.Post)('mark-read/direct/:otherUserId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('otherUserId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "markDirectAsRead", null);
+__decorate([
+    (0, common_1.Get)('unread-count'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "getUnreadCount", null);
 exports.MessagesController = MessagesController = __decorate([
     (0, common_1.Controller)('messages'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

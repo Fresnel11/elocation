@@ -13,8 +13,13 @@ import { RolesModule } from './roles/roles.module';
 import { SubCategoriesModule } from './subcategories/subcategories.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { RequestsModule } from './requests/requests.module';
+import { ResponsesModule } from './responses/responses.module';
+import { BookingsModule } from './bookings/bookings.module';
 import { CommonModule } from './common/common.module';
 import { SeederModule } from './seeders/seeder.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -45,8 +50,13 @@ import { SeederModule } from './seeders/seeder.module';
     SubCategoriesModule,
     ReviewsModule,
     MessagesModule,
+    NotificationsModule,
+    RequestsModule,
+    ResponsesModule,
+    BookingsModule,
     CommonModule,
     SeederModule,
+    AiModule,
   ],
 })
 export class AppModule {}

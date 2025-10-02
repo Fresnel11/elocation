@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Message = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
-const conversation_entity_1 = require("./conversation.entity");
+const ad_entity_1 = require("../../ads/entities/ad.entity");
 let Message = class Message {
 };
 exports.Message = Message;
@@ -21,27 +21,53 @@ __decorate([
     __metadata("design:type", String)
 ], Message.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)('text'),
     __metadata("design:type", String)
 ], Message.prototype, "content", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 500, nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "imageUrl", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 10, default: 'text' }),
+    __metadata("design:type", String)
+], Message.prototype, "messageType", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)
 ], Message.prototype, "isRead", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
-    (0, typeorm_1.JoinColumn)({ name: 'senderId' }),
     __metadata("design:type", user_entity_1.User)
 ], Message.prototype, "sender", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => conversation_entity_1.Conversation, conversation => conversation.messages),
-    (0, typeorm_1.JoinColumn)({ name: 'conversationId' }),
-    __metadata("design:type", conversation_entity_1.Conversation)
-], Message.prototype, "conversation", void 0);
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Message.prototype, "senderId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
+    __metadata("design:type", user_entity_1.User)
+], Message.prototype, "receiver", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Message.prototype, "receiverId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => ad_entity_1.Ad, { nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "ad", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Object)
+], Message.prototype, "adId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Message.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)(),
+    __metadata("design:type", Date)
+], Message.prototype, "updatedAt", void 0);
 exports.Message = Message = __decorate([
     (0, typeorm_1.Entity)('messages')
 ], Message);

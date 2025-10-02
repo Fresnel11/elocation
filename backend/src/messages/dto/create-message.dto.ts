@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsUUID, IsNotEmpty, IsOptional, IsIn } from 'class-validator';
 
 export class CreateMessageDto {
   @IsString()
@@ -6,5 +6,17 @@ export class CreateMessageDto {
   content: string;
 
   @IsUUID()
-  recipientId: string;
+  receiverId: string;
+
+  @IsOptional()
+  @IsUUID()
+  adId?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsIn(['text', 'image'])
+  messageType?: 'text' | 'image';
 }

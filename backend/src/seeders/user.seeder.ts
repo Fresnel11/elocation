@@ -23,11 +23,10 @@ export class UserSeeder {
       return;
     }
 
-    const ownerRole = await this.roleRepository.findOne({ where: { name: UserRole.OWNER } });
-    const tenantRole = await this.roleRepository.findOne({ where: { name: UserRole.TENANT } });
+    const userRole = await this.roleRepository.findOne({ where: { name: UserRole.USER } });
 
-    if (!ownerRole || !tenantRole) {
-      console.log('Rôles non trouvés, seeding des utilisateurs ignoré');
+    if (!userRole) {
+      console.log('Rôle user non trouvé, seeding des utilisateurs ignoré');
       return;
     }
 
@@ -38,7 +37,7 @@ export class UserSeeder {
         email: 'marie.adjovi@example.com',
         phone: '+22997123456',
         password: await bcrypt.hash('password123', 10),
-        role: ownerRole,
+        role: userRole,
         isVerified: true,
       },
       {
@@ -47,7 +46,7 @@ export class UserSeeder {
         email: 'jean.koudjo@example.com',
         phone: '+22997234567',
         password: await bcrypt.hash('password123', 10),
-        role: ownerRole,
+        role: userRole,
         isVerified: true,
       },
       {
@@ -56,7 +55,7 @@ export class UserSeeder {
         email: 'fatou.sanni@example.com',
         phone: '+22997345678',
         password: await bcrypt.hash('password123', 10),
-        role: ownerRole,
+        role: userRole,
         isVerified: true,
       },
       {
@@ -65,7 +64,7 @@ export class UserSeeder {
         email: 'pierre.dossou@example.com',
         phone: '+22997456789',
         password: await bcrypt.hash('password123', 10),
-        role: ownerRole,
+        role: userRole,
         isVerified: true,
       },
       {
@@ -74,7 +73,7 @@ export class UserSeeder {
         email: 'aminata.traore@example.com',
         phone: '+22997567890',
         password: await bcrypt.hash('password123', 10),
-        role: tenantRole,
+        role: userRole,
         isVerified: true,
       },
     ];

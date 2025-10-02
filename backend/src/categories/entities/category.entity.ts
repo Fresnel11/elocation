@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Ad } from '../../ads/entities/ad.entity';
 import { SubCategory } from '../../subcategories/entities/subcategory.entity';
+import { Request } from '../../requests/entities/request.entity';
 
 @Entity('categories')
 export class Category {
@@ -21,6 +22,9 @@ export class Category {
 
   @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
   subCategories: SubCategory[];
+
+  @OneToMany(() => Request, (request) => request.category)
+  requests: Request[];
 
   @CreateDateColumn()
   createdAt: Date;

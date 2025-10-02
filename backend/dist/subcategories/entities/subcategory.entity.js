@@ -54,6 +54,7 @@ __decorate([
     __metadata("design:type", Date)
 ], SubCategory.prototype, "updatedAt", void 0);
 exports.SubCategory = SubCategory = __decorate([
-    (0, typeorm_1.Entity)('subcategories')
+    (0, typeorm_1.Entity)('subcategories'),
+    (0, typeorm_1.Unique)(['name', 'categoryId'])
 ], SubCategory);
 //# sourceMappingURL=subcategory.entity.js.map

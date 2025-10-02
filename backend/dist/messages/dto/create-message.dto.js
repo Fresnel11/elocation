@@ -22,5 +22,20 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], CreateMessageDto.prototype, "recipientId", void 0);
+], CreateMessageDto.prototype, "receiverId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateMessageDto.prototype, "adId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateMessageDto.prototype, "imageUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['text', 'image']),
+    __metadata("design:type", String)
+], CreateMessageDto.prototype, "messageType", void 0);
 //# sourceMappingURL=create-message.dto.js.map

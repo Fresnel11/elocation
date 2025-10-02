@@ -5,7 +5,9 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
 import { AdModal } from '../components/ui/AdModal';
+import { MessageModal } from '../components/ui/MessageModal';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface User {
   id: string;
@@ -13,6 +15,7 @@ interface User {
   lastName: string;
   email: string;
   phone?: string;
+  whatsappNumber?: string;
   createdAt: string;
   _count?: {
     ads: number;
@@ -64,6 +67,8 @@ export const UserProfilePage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedAd, setSelectedAd] = useState<UserAd | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (userId) {
@@ -123,6 +128,21 @@ export const UserProfilePage: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAd(null);
+  };
+
+  const handleContactUser = () => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    setIsMessageModalOpen(true);
+  };
+
+  const handleWhatsAppContact = () => {
+    if (user?.whatsappNumber) {
+      const message = encodeURIComponent(`Bonjour ${user.firstName}, je vous contacte via eLocation Bénin.`);
+      window.open(`https://wa.me/${user.whatsappNumber.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
+    }
   };
 
   if (loading) {
@@ -217,10 +237,26 @@ export const UserProfilePage: React.FC = () => {
 
                 {/* Actions */}
                 <div className="space-y-3">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Contacter
-                  </Button>
+                  {currentUser?.id !== user.id && (
+                    <>
+                      <Button 
+                        onClick={handleContactUser}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Contacter
+                      </Button>
+                      {user.whatsappNumber && (
+                        <Button 
+                          onClick={handleWhatsAppContact}
+                          className="w-full bg-green-600 hover:bg-green-700"
+                        >
+                          <Phone className="h-4 w-4 mr-2" />
+                          WhatsApp
+                        </Button>
+                      )}
+                    </>
+                  )}
                   <Button variant="outline" className="w-full">
                     Signaler le profil
                   </Button>
@@ -342,12 +378,23 @@ export const UserProfilePage: React.FC = () => {
         </div>
       </div>
       
-      {/* Modal */}
+      {/* Modals */}
       <AdModal 
         ad={selectedAd}
         isOpen={isModalOpen}
         onClose={closeModal}
       />
+      
+      {user && (
+        <MessageModal
+          isOpen={isMessageModalOpen}
+          onClose={() => setIsMessageModalOpen(false)}
+          adId="" // Pas d'annonce spécifique pour un contact direct
+          adTitle={`Contact avec ${user.firstName} ${user.lastName}`}
+          otherUserId={user.id}
+          otherUserName={`${user.firstName} ${user.lastName}`}
+        />
+      )}
     </div>
   );
 };

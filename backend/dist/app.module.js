@@ -23,8 +23,13 @@ const roles_module_1 = require("./roles/roles.module");
 const subcategories_module_1 = require("./subcategories/subcategories.module");
 const reviews_module_1 = require("./reviews/reviews.module");
 const messages_module_1 = require("./messages/messages.module");
+const notifications_module_1 = require("./notifications/notifications.module");
+const requests_module_1 = require("./requests/requests.module");
+const responses_module_1 = require("./responses/responses.module");
+const bookings_module_1 = require("./bookings/bookings.module");
 const common_module_1 = require("./common/common.module");
 const seeder_module_1 = require("./seeders/seeder.module");
+const ai_module_1 = require("./ai/ai.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -58,8 +63,13 @@ exports.AppModule = AppModule = __decorate([
             subcategories_module_1.SubCategoriesModule,
             reviews_module_1.ReviewsModule,
             messages_module_1.MessagesModule,
+            notifications_module_1.NotificationsModule,
+            requests_module_1.RequestsModule,
+            responses_module_1.ResponsesModule,
+            bookings_module_1.BookingsModule,
             common_module_1.CommonModule,
             seeder_module_1.SeederModule,
+            ai_module_1.AiModule,
         ],
     })
 ], AppModule);

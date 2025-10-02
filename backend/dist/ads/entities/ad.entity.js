@@ -15,6 +15,7 @@ const user_entity_1 = require("../../users/entities/user.entity");
 const category_entity_1 = require("../../categories/entities/category.entity");
 const subcategory_entity_1 = require("../../subcategories/entities/subcategory.entity");
 const review_entity_1 = require("../../reviews/entities/review.entity");
+const ad_publisher_role_enum_1 = require("../../common/enums/ad-publisher-role.enum");
 let Ad = class Ad {
 };
 exports.Ad = Ad;
@@ -35,6 +36,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Ad.prototype, "price", void 0);
 __decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ['monthly', 'daily', 'weekly', 'hourly', 'fixed'],
+        default: 'monthly'
+    }),
+    __metadata("design:type", String)
+], Ad.prototype, "paymentMode", void 0);
+__decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Ad.prototype, "location", void 0);
@@ -47,7 +56,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Ad.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.Column)('json', { nullable: true }),
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Ad.prototype, "allowBooking", void 0);
+__decorate([
+    (0, typeorm_1.Column)('json'),
     __metadata("design:type", Array)
 ], Ad.prototype, "photos", void 0);
 __decorate([
@@ -86,6 +99,66 @@ __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 11, scale: 8, nullable: true }),
     __metadata("design:type", Number)
 ], Ad.prototype, "longitude", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "brand", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "model", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
+], Ad.prototype, "year", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "condition", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "color", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "fuel", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "transmission", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
+], Ad.prototype, "mileage", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "size", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "weight", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Ad.prototype, "power", void 0);
+__decorate([
+    (0, typeorm_1.Column)('json', { nullable: true }),
+    __metadata("design:type", Array)
+], Ad.prototype, "specifications", void 0);
+__decorate([
+    (0, typeorm_1.Column)('json', { nullable: true }),
+    __metadata("design:type", Array)
+], Ad.prototype, "features", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ad_publisher_role_enum_1.AdPublisherRole,
+        default: ad_publisher_role_enum_1.AdPublisherRole.OWNER
+    }),
+    __metadata("design:type", String)
+], Ad.prototype, "publisherRole", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.ads),
     (0, typeorm_1.JoinColumn)({ name: 'userId' }),

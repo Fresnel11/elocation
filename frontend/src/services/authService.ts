@@ -6,7 +6,6 @@ export interface RegisterData {
   phone: string;
   email?: string;
   password: string;
-  role: 'owner' | 'tenant';
 }
 
 export interface LoginData {

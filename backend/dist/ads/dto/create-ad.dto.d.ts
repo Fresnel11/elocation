@@ -10,9 +10,25 @@ export declare class CreateAdDto {
     bathrooms?: number;
     area?: number;
     amenities?: string[];
-    photos?: string[];
+    photos: string[];
     video?: string;
     latitude?: number;
     longitude?: number;
     isAvailable?: boolean;
+    allowBooking?: boolean;
+    brand?: string;
+    model?: string;
+    year?: number;
+    condition?: string;
+    color?: string;
+    fuel?: string;
+    transmission?: string;
+    mileage?: number;
+    size?: string;
+    weight?: string;
+    power?: string;
+    specifications?: string[];
+    features?: string[];
+    publisherRole?: string;
+    paymentMode?: string;
 }

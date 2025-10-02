@@ -24,6 +24,7 @@ export const CreateAdPage: React.FC = () => {
     title: '',
     description: '',
     price: '',
+    paymentMode: 'monthly',
     location: '',
     bedrooms: '',
     bathrooms: '',
@@ -31,16 +32,71 @@ export const CreateAdPage: React.FC = () => {
     categoryId: '',
     subCategoryId: '',
     amenities: [] as string[],
-    whatsappNumber: ''
+    whatsappNumber: '',
+    allowBooking: false
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedMedia, setUploadedMedia] = useState<{photos: string[], video?: string}>({photos: []});
   const [loading, setLoading] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { success, error } = useToast();
+
+  const enhanceDescription = async () => {
+    const desc = (formData.description || '').toString().trim();
+    
+    if (desc.length < 10) {
+      error('Description trop courte', 'Veuillez écrire au moins 10 caractères avant d\'utiliser l\'IA.');
+      return;
+    }
+    
+    setEnhancing(true);
+    try {
+      const prompt = `Transforme cette description d'annonce immobilière en un texte plus attractif, professionnel et engageant pour le marché béninois. Utilise un vocabulaire commercial, ajoute des qualificatifs positifs et garde un ton chaleureux. IMPORTANT: Maximum 100 mots (environ 600 caractères).\n\nDescription: ${desc}\n\nDescription améliorée (max 100 mots):`;
+      
+      const response = await (window as any).puter.ai.chat(prompt, { model: "gpt-4o" });
+      
+      // Extraire le contenu de la réponse Puter.js
+      const aiText = response?.result?.message?.content || response?.content || response;
+      
+      if (!aiText || aiText.length < 10) {
+        error('Erreur IA', 'Impossible d\'améliorer la description. Veuillez réessayer.');
+        return;
+      }
+      
+      // S'assurer que la description respecte les contraintes
+      let cleanedResponse = aiText.trim();
+      
+      console.log('Longueur réponse IA:', cleanedResponse.length);
+      
+      if (cleanedResponse.length > 1000) {
+        // Tronquer intelligemment à la dernière phrase complète
+        const truncated = cleanedResponse.substring(0, 950);
+        const lastPeriod = truncated.lastIndexOf('.');
+        cleanedResponse = lastPeriod > 500 ? truncated.substring(0, lastPeriod + 1) : truncated + '...';
+      }
+      
+      if (cleanedResponse.length < 20) {
+        cleanedResponse = desc; // Garder l'original si trop court
+      }
+      
+      console.log('Longueur finale:', cleanedResponse.length);
+      
+      setFormData(prev => ({
+        ...prev,
+        description: cleanedResponse
+      }));
+      
+      success('Description améliorée !', 'Relisez attentivement le texte généré et modifiez-le si nécessaire avant de publier.');
+    } catch (err) {
+      error('Erreur', 'Impossible d\'améliorer la description pour le moment.');
+    } finally {
+      setEnhancing(false);
+    }
+  };
 
   const amenitiesList = [
     { value: 'wifi', label: 'WiFi' },
@@ -244,7 +300,17 @@ export const CreateAdPage: React.FC = () => {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <button
+                type="button"
+                onClick={enhanceDescription}
+                disabled={(formData.description || '').toString().trim().length < 10 || enhancing}
+                className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {enhancing ? '✨ Amélioration...' : '✨ Améliorer avec IA'}
+              </button>
+            </div>
             <textarea
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
@@ -255,15 +321,30 @@ export const CreateAdPage: React.FC = () => {
             />
           </div>
 
-          {/* Prix */}
-          <Input
-            label="Prix (FCFA/mois)"
-            type="number"
-            value={formData.price}
-            onChange={(e) => handleChange('price', e.target.value)}
-            required
-            placeholder="85000"
-          />
+          {/* Prix et Modalité */}
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Prix (FCFA)"
+              type="number"
+              value={formData.price}
+              onChange={(e) => handleChange('price', e.target.value)}
+              required
+              placeholder="85000"
+            />
+            <Select
+              label="Modalité de paiement"
+              options={[
+                { value: 'monthly', label: 'Par mois' },
+                { value: 'daily', label: 'Par jour' },
+                { value: 'weekly', label: 'Par semaine' },
+                { value: 'hourly', label: 'Par heure' },
+                { value: 'fixed', label: 'Prix fixe' }
+              ]}
+              value={formData.paymentMode}
+              onChange={(e) => handleChange('paymentMode', e.target.value)}
+              required
+            />
+          </div>
 
           {/* Localisation */}
           <Input
@@ -457,6 +538,25 @@ export const CreateAdPage: React.FC = () => {
             onChange={(e) => handleChange('whatsappNumber', e.target.value)}
             placeholder="+22999154678"
           />
+
+          {/* Réservation en ligne */}
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={formData.allowBooking}
+                onChange={(e) => setFormData(prev => ({ ...prev, allowBooking: e.target.checked }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-900">Autoriser les réservations en ligne</span>
+                <p className="text-xs text-gray-500 mt-1">
+                  Les utilisateurs pourront réserver directement avec des dates spécifiques. 
+                  Idéal pour les locations courte durée, véhicules, équipements, etc.
+                </p>
+              </div>
+            </label>
+          </div>
 
           {/* Bouton de soumission */}
           <div className="sticky bottom-0 bg-gray-50 p-4 -mx-4">

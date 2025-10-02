@@ -68,13 +68,25 @@ export class SubCategorySeeder {
     for (const subCatData of subCategories) {
       const categoryId = categoryMap[subCatData.categoryName];
       if (categoryId) {
-        const subCategory = this.subCategoryRepository.create({
-          name: subCatData.name,
-          description: subCatData.description,
-          categoryId: categoryId,
+        // Vérifier si la sous-catégorie existe déjà
+        const existingSubCategory = await this.subCategoryRepository.findOne({
+          where: { 
+            name: subCatData.name, 
+            categoryId: categoryId 
+          }
         });
-        await this.subCategoryRepository.save(subCategory);
-        console.log(`Sous-catégorie ${subCatData.name} créée avec succès`);
+
+        if (!existingSubCategory) {
+          const subCategory = this.subCategoryRepository.create({
+            name: subCatData.name,
+            description: subCatData.description,
+            categoryId: categoryId,
+          });
+          await this.subCategoryRepository.save(subCategory);
+          console.log(`Sous-catégorie ${subCatData.name} créée avec succès`);
+        } else {
+          console.log(`Sous-catégorie ${subCatData.name} existe déjà, ignorée`);
+        }
       }
     }
   }

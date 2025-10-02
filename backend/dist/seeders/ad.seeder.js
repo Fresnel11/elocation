@@ -30,11 +30,11 @@ let AdSeeder = class AdSeeder {
         console.log('Création des nouvelles annonces...');
         const users = await this.userRepository.find({
             relations: ['role'],
-            where: { role: { name: user_role_enum_1.UserRole.OWNER } }
+            where: { role: { name: user_role_enum_1.UserRole.USER } }
         });
         const categories = await this.categoryRepository.find();
         if (users.length === 0 || categories.length === 0) {
-            console.log('Aucun propriétaire ou catégorie trouvé, seeding des annonces ignoré');
+            console.log('Aucun utilisateur ou catégorie trouvé, seeding des annonces ignoré');
             return;
         }
         const locations = ['Cotonou, Littoral', 'Calavi, Atlantique', 'Abomey-Calavi, Atlantique', 'Porto-Novo, Ouémé', 'Parakou, Borgou'];

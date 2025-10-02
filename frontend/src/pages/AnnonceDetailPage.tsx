@@ -1,41 +1,44 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Heart, Share2, MapPin, Calendar, User, Star, MessageSquare, Phone } from 'lucide-react';
+import { Heart, Share2, MapPin, Calendar, User, Star, MessageSquare, Phone, Expand } from 'lucide-react';
+import { getCategoryIcon, getPropertyIcon } from '../utils/categoryIcons';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
+import { MediaViewer } from '../components/ui/MediaViewer';
 
 export const AnnonceDetailPage: React.FC = () => {
   const { id } = useParams();
   const [currentImage, setCurrentImage] = useState(0);
   const [comment, setComment] = useState('');
+  const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
 
-  // Mock data
+  // Mock data - TODO: Récupérer depuis l'API
   const annonce = {
     id: 1,
-    title: 'Appartement moderne 3 pièces avec balcon',
-    price: '85,000 F/mois',
-    location: 'Cotonou, Fidjrossè',
-    category: 'Immobilier',
-    images: [
-      'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg?auto=compress&cs=tinysrgb&w=800',
-      'https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=800'
+    title: 'Toyota Corolla 2020',
+    price: '25,000 F/jour',
+    location: 'Cotonou, Centre-ville',
+    category: 'Véhicules',
+    media: [
+      { url: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1200', type: 'image' as const },
+      { url: 'https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg?auto=compress&cs=tinysrgb&w=1200', type: 'image' as const },
+      { url: 'https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=1200', type: 'image' as const }
     ],
-    description: `Magnifique appartement de 3 pièces situé dans un quartier résidentiel calme de Fidjrossè. 
+    description: `Véhicule récent en excellent état, idéal pour vos déplacements en ville.
 
-L'appartement comprend :
-• 2 chambres spacieuses
-• 1 salon/salle à manger lumineux  
-• 1 cuisine équipée moderne
-• 1 salle de bain avec douche
-• 1 balcon avec vue dégagée
-• Parking sécurisé
+Caractéristiques :
+• Modèle 2020
+• Climatisation
+• Transmission automatique
+• GPS intégré
+• Bluetooth
+• Faible kilométrage
 
-Équipements inclus : climatisation, eau chaude, internet WiFi, gardiennage 24h/24.
+Véhicule entretenu régulièrement, assurance incluse.
 
-Idéalement situé près des commerces, écoles et transports en commun.`,
+Disponible pour location courte ou longue durée.`,
     owner: {
       name: 'Marie Adjovi',
       rating: 4.8,
@@ -49,7 +52,7 @@ Idéalement situé près des commerces, écoles et transports en commun.`,
       salleBain: '1 salle de bain',
       etage: '2ème étage'
     },
-    amenities: ['Climatisation', 'WiFi', 'Parking', 'Gardiennage', 'Eau chaude', 'Balcon'],
+    amenities: ['Climatisation', 'GPS', 'Bluetooth', 'Transmission auto', 'Assurance incluse'],
     rating: 4.8,
     reviews: 12
   };
@@ -74,27 +77,58 @@ Idéalement situé près des commerces, écoles et transports en commun.`,
   return (
     <div className="min-h-screen bg-gray-50 pt-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Image Gallery */}
+        {/* Media Gallery */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-            <div className="lg:col-span-2">
-              <img
-                src={annonce.images[currentImage]}
-                alt={annonce.title}
-                className="w-full h-96 lg:h-[500px] object-cover"
-              />
-            </div>
-            <div className="p-4 grid grid-cols-3 lg:grid-cols-1 gap-2 lg:gap-4">
-              {annonce.images.map((image, index) => (
+            <div className="lg:col-span-2 relative group">
+              {annonce.media[currentImage].type === 'image' ? (
                 <img
+                  src={annonce.media[currentImage].url}
+                  alt={annonce.title}
+                  className="w-full h-96 lg:h-[500px] object-contain bg-gray-100 cursor-pointer"
+                  onClick={() => setIsMediaViewerOpen(true)}
+                />
+              ) : (
+                <video
+                  src={annonce.media[currentImage].url}
+                  className="w-full h-96 lg:h-[500px] object-contain bg-gray-100"
+                  controls
+                  poster={annonce.media[currentImage].url}
+                />
+              )}
+              
+              {/* Bouton plein écran */}
+              <button
+                onClick={() => setIsMediaViewerOpen(true)}
+                className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all"
+              >
+                <Expand className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="p-4 grid grid-cols-3 lg:grid-cols-1 gap-2 lg:gap-4">
+              {annonce.media.map((media, index) => (
+                <div
                   key={index}
-                  src={image}
-                  alt={`Vue ${index + 1}`}
-                  className={`w-full h-24 lg:h-32 object-cover rounded cursor-pointer transition-all ${
+                  className={`relative w-full h-24 lg:h-32 rounded cursor-pointer transition-all overflow-hidden ${
                     index === currentImage ? 'ring-2 ring-blue-600' : 'opacity-70 hover:opacity-100'
                   }`}
                   onClick={() => setCurrentImage(index)}
-                />
+                >
+                  {media.type === 'image' ? (
+                    <img
+                      src={media.url}
+                      alt={`Vue ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                        <div className="w-0 h-0 border-l-[6px] border-l-white border-y-[4px] border-y-transparent ml-0.5"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -108,7 +142,10 @@ Idéalement situé près des commerces, écoles et transports en commun.`,
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <Badge className="mb-2">{annonce.category}</Badge>
+                    <Badge className="mb-2 flex items-center gap-1">
+                      {getCategoryIcon(annonce.category, 16)}
+                      {annonce.category}
+                    </Badge>
                     <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                       {annonce.title}
                     </h1>
@@ -128,27 +165,37 @@ Idéalement situé près des commerces, écoles et transports en commun.`,
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Surface</p>
-                    <p className="font-semibold">{annonce.details.surface}</p>
+                {annonce.category === 'Immobilier' && (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">Surface</p>
+                      <p className="font-semibold">{annonce.details.surface}</p>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 flex items-center justify-center gap-1">
+                        {getPropertyIcon('bedrooms', 1)}
+                        Chambres
+                      </p>
+                      <p className="font-semibold">{annonce.details.chambres}</p>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 flex items-center justify-center gap-1">
+                        {getPropertyIcon('bathrooms', 1)}
+                        Salle de bain
+                      </p>
+                      <p className="font-semibold">{annonce.details.salleBain}</p>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">Étage</p>
+                      <p className="font-semibold">{annonce.details.etage}</p>
+                    </div>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Chambres</p>
-                    <p className="font-semibold">{annonce.details.chambres}</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Salle de bain</p>
-                    <p className="font-semibold">{annonce.details.salleBain}</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Étage</p>
-                    <p className="font-semibold">{annonce.details.etage}</p>
-                  </div>
-                </div>
+                )}
 
                 <div className="mb-6">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-3">Équipements inclus</h3>
+                  <h3 className="font-semibold text-lg text-gray-900 mb-3">
+                    {annonce.category === 'Immobilier' ? 'Équipements inclus' : 'Options incluses'}
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {annonce.amenities.map((amenity) => (
                       <Badge key={amenity} variant="outline">
@@ -291,6 +338,14 @@ Idéalement situé près des commerces, écoles et transports en commun.`,
           </div>
         </div>
       </div>
+      
+      {/* Media Viewer */}
+      <MediaViewer
+        isOpen={isMediaViewerOpen}
+        onClose={() => setIsMediaViewerOpen(false)}
+        media={annonce.media}
+        initialIndex={currentImage}
+      />
     </div>
   );
 };

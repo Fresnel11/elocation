@@ -14,19 +14,22 @@ const common_1 = require("@nestjs/common");
 const role_seeder_1 = require("./role.seeder");
 const category_seeder_1 = require("./category.seeder");
 const subcategory_seeder_1 = require("./subcategory.seeder");
+const cleanup_subcategories_seeder_1 = require("./cleanup-subcategories.seeder");
 const user_seeder_1 = require("./user.seeder");
 const ad_seeder_1 = require("./ad.seeder");
 let SeederService = class SeederService {
-    constructor(roleSeeder, categorySeeder, subCategorySeeder, userSeeder, adSeeder) {
+    constructor(roleSeeder, categorySeeder, subCategorySeeder, cleanupSubCategoriesSeeder, userSeeder, adSeeder) {
         this.roleSeeder = roleSeeder;
         this.categorySeeder = categorySeeder;
         this.subCategorySeeder = subCategorySeeder;
+        this.cleanupSubCategoriesSeeder = cleanupSubCategoriesSeeder;
         this.userSeeder = userSeeder;
         this.adSeeder = adSeeder;
     }
     async onModuleInit() {
         await this.seedRoles();
         await this.seedCategories();
+        await this.cleanupSubCategories();
         await this.seedSubCategories();
         await this.seedUsers();
         await this.seedAds();
@@ -47,6 +50,15 @@ let SeederService = class SeederService {
         }
         catch (error) {
             console.error('Erreur lors du seeding des catégories:', error);
+        }
+    }
+    async cleanupSubCategories() {
+        try {
+            await this.cleanupSubCategoriesSeeder.cleanup();
+            console.log('Nettoyage des sous-catégories terminé');
+        }
+        catch (error) {
+            console.error('Erreur lors du nettoyage des sous-catégories:', error);
         }
     }
     async seedSubCategories() {
@@ -83,6 +95,7 @@ exports.SeederService = SeederService = __decorate([
     __metadata("design:paramtypes", [role_seeder_1.RoleSeeder,
         category_seeder_1.CategorySeeder,
         subcategory_seeder_1.SubCategorySeeder,
+        cleanup_subcategories_seeder_1.CleanupSubCategoriesSeeder,
         user_seeder_1.UserSeeder,
         ad_seeder_1.AdSeeder])
 ], SeederService);

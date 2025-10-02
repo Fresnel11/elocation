@@ -11,17 +11,23 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const messages_service_1 = require("./messages.service");
 const messages_controller_1 = require("./messages.controller");
-const conversation_entity_1 = require("./entities/conversation.entity");
 const message_entity_1 = require("./entities/message.entity");
+const conversation_entity_1 = require("./entities/conversation.entity");
+const user_entity_1 = require("../users/entities/user.entity");
+const ad_entity_1 = require("../ads/entities/ad.entity");
+const notifications_module_1 = require("../notifications/notifications.module");
 let MessagesModule = class MessagesModule {
 };
 exports.MessagesModule = MessagesModule;
 exports.MessagesModule = MessagesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([conversation_entity_1.Conversation, message_entity_1.Message])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([message_entity_1.Message, conversation_entity_1.Conversation, user_entity_1.User, ad_entity_1.Ad]),
+            notifications_module_1.NotificationsModule
+        ],
         controllers: [messages_controller_1.MessagesController],
         providers: [messages_service_1.MessagesService],
-        exports: [messages_service_1.MessagesService],
+        exports: [messages_service_1.MessagesService]
     })
 ], MessagesModule);
 //# sourceMappingURL=messages.module.js.map

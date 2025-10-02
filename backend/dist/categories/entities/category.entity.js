@@ -13,6 +13,7 @@ exports.Category = void 0;
 const typeorm_1 = require("typeorm");
 const ad_entity_1 = require("../../ads/entities/ad.entity");
 const subcategory_entity_1 = require("../../subcategories/entities/subcategory.entity");
+const request_entity_1 = require("../../requests/entities/request.entity");
 let Category = class Category {
 };
 exports.Category = Category;
@@ -40,6 +41,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => subcategory_entity_1.SubCategory, (subCategory) => subCategory.category),
     __metadata("design:type", Array)
 ], Category.prototype, "subCategories", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => request_entity_1.Request, (request) => request.category),
+    __metadata("design:type", Array)
+], Category.prototype, "requests", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

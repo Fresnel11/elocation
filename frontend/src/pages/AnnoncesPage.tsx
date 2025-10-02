@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { getCategoryIcon, getPropertyIcon } from '../utils/categoryIcons';
 
 const mockAnnonces = [
   {
@@ -149,7 +150,8 @@ export const AnnoncesPage: React.FC = () => {
               
               <CardContent className="p-4">
                 <div className="mb-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                    {getCategoryIcon(annonce.category, 12)}
                     {annonce.category}
                   </Badge>
                 </div>

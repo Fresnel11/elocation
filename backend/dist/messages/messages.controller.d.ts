@@ -3,8 +3,17 @@ import { CreateMessageDto } from './dto/create-message.dto';
 export declare class MessagesController {
     private readonly messagesService;
     constructor(messagesService: MessagesService);
-    sendMessage(createMessageDto: CreateMessageDto, req: any): Promise<import("./entities/message.entity").Message>;
+    sendMessage(req: any, createMessageDto: CreateMessageDto): Promise<import("./entities/message.entity").Message>;
     getConversations(req: any): Promise<import("./entities/conversation.entity").Conversation[]>;
-    getMessages(conversationId: string, req: any): Promise<import("./entities/message.entity").Message[]>;
-    markAsRead(conversationId: string, req: any): Promise<void>;
+    getMessages(req: any, adId: string, otherUserId: string): Promise<import("./entities/message.entity").Message[]>;
+    getDirectMessages(req: any, otherUserId: string): Promise<import("./entities/message.entity").Message[]>;
+    markAsRead(req: any, adId: string, otherUserId: string): Promise<{
+        success: boolean;
+    }>;
+    markDirectAsRead(req: any, otherUserId: string): Promise<{
+        success: boolean;
+    }>;
+    getUnreadCount(req: any): Promise<{
+        unreadCount: number;
+    }>;
 }

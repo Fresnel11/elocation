@@ -29,6 +29,7 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
     title: '',
     description: '',
     price: '',
+    paymentMode: 'monthly',
     location: '',
     bedrooms: '',
     bathrooms: '',
@@ -36,16 +37,81 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
     categoryId: '',
     subCategoryId: '',
     amenities: [] as string[],
-    whatsappNumber: ''
+    whatsappNumber: '',
+    allowBooking: false,
+    // Champs véhicules
+    brand: '',
+    model: '',
+    year: '',
+    fuel: '',
+    transmission: '',
+    mileage: '',
+    condition: '',
+    publisherRole: 'owner'
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedMedia, setUploadedMedia] = useState<{photos: string[], video?: string}>({photos: []});
   const [loading, setLoading] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { success, error } = useToast();
+
+  const enhanceDescription = async () => {
+    const desc = (formData.description || '').toString().trim();
+    
+    if (desc.length < 10) {
+      error('Description trop courte', 'Veuillez écrire au moins 10 caractères avant d\'utiliser l\'IA.');
+      return;
+    }
+    
+    setEnhancing(true);
+    try {
+      const adType = categories.find(cat => cat.id === formData.categoryId)?.name || 'immobilier';
+      const prompt = `Transforme cette description d'annonce ${adType.toLowerCase()} en un texte plus attractif, professionnel et engageant pour le marché béninois. Utilise un vocabulaire commercial, ajoute des qualificatifs positifs et garde un ton chaleureux. IMPORTANT: Maximum 100 mots (environ 600 caractères).\n\nDescription: ${desc}\n\nDescription améliorée (max 100 mots):`;
+      
+      const response = await (window as any).puter.ai.chat(prompt, { model: "gpt-4o" });
+      
+      // Extraire le contenu de la réponse Puter.js
+      const aiText = response?.result?.message?.content || response?.content || response;
+      
+      if (!aiText || aiText.length < 10) {
+        error('Erreur IA', 'Impossible d\'améliorer la description. Veuillez réessayer.');
+        return;
+      }
+      
+      // S'assurer que la description respecte les contraintes
+      let cleanedResponse = aiText.trim();
+      
+      console.log('Longueur réponse IA:', cleanedResponse.length);
+      
+      if (cleanedResponse.length > 1000) {
+        // Tronquer intelligemment à la dernière phrase complète
+        const truncated = cleanedResponse.substring(0, 950);
+        const lastPeriod = truncated.lastIndexOf('.');
+        cleanedResponse = lastPeriod > 500 ? truncated.substring(0, lastPeriod + 1) : truncated + '...';
+      }
+      
+      if (cleanedResponse.length < 20) {
+        cleanedResponse = desc; // Garder l'original si trop court
+      }
+      
+      console.log('Longueur finale:', cleanedResponse.length);
+      
+      setFormData(prev => ({
+        ...prev,
+        description: cleanedResponse
+      }));
+      
+      success('Description améliorée !', 'Relisez attentivement le texte généré et modifiez-le si nécessaire avant de publier.');
+    } catch (err) {
+      error('Erreur', 'Impossible d\'améliorer la description pour le moment.');
+    } finally {
+      setEnhancing(false);
+    }
+  };
 
   const amenitiesList = [
     { value: 'wifi', label: 'WiFi' },
@@ -114,31 +180,33 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
   };
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
-    // Validation du nombre de fichiers
-    if (selectedFiles.length > 5) {
-      error('Erreur', 'Maximum 5 fichiers autorisés');
-      return false;
-    }
-    
-    // Validation des types et tailles
     const videoFiles = selectedFiles.filter(f => f.type.startsWith('video/'));
     const photoFiles = selectedFiles.filter(f => f.type.startsWith('image/'));
     
+    // Validation: au moins 1 fichier requis
+    if (selectedFiles.length === 0) {
+      error('Erreur', 'Au moins une image ou vidéo est requise');
+      return false;
+    }
+    
+    // Validation vidéo: max 1, max 20MB
     if (videoFiles.length > 1) {
       error('Erreur', 'Une seule vidéo autorisée');
       return false;
     }
     
-    if (videoFiles.length === 1 && photoFiles.length > 4) {
-      error('Erreur', 'Maximum 4 photos avec une vidéo');
+    // Si vidéo: max 2 photos, sinon max 5 photos
+    const maxPhotos = videoFiles.length === 1 ? 2 : 5;
+    if (photoFiles.length > maxPhotos) {
+      error('Erreur', `Maximum ${maxPhotos} photos ${videoFiles.length === 1 ? 'avec une vidéo' : ''}`);
       return false;
     }
     
     // Validation des tailles
     for (const file of selectedFiles) {
-      const maxSize = file.type.startsWith('video/') ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
+      const maxSize = file.type.startsWith('video/') ? 20 * 1024 * 1024 : 2 * 1024 * 1024;
       if (file.size > maxSize) {
-        error('Erreur', `Fichier trop volumineux: ${file.name}. Taille max: ${file.type.startsWith('video/') ? '10MB' : '2MB'}`);
+        error('Erreur', `Fichier trop volumineux: ${file.name}. Taille max: ${file.type.startsWith('video/') ? '20MB' : '2MB'}`);
         return false;
       }
     }
@@ -188,15 +256,27 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (loading) return; // Éviter les soumissions multiples
+    
+    // Validation des fichiers avant soumission
+    if (files.length === 0) {
+      error('Erreur', 'Au moins une image ou vidéo est requise pour publier une annonce');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       const adData = {
         ...formData,
         price: parseFloat(formData.price),
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 1,
-        area: parseInt(formData.area) || 0,
+        bedrooms: parseInt(formData.bedrooms) || undefined,
+        bathrooms: parseInt(formData.bathrooms) || undefined,
+        area: parseInt(formData.area) || undefined,
+        year: parseInt(formData.year) || undefined,
+        mileage: parseInt(formData.mileage) || undefined,
         subCategoryId: formData.subCategoryId || undefined,
         photos: uploadedMedia.photos,
         video: uploadedMedia.video
@@ -232,6 +312,7 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
       title: '',
       description: '',
       price: '',
+      paymentMode: 'monthly',
       location: '',
       bedrooms: '',
       bathrooms: '',
@@ -239,7 +320,16 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
       categoryId: '',
       subCategoryId: '',
       amenities: [],
-      whatsappNumber: ''
+      whatsappNumber: '',
+      allowBooking: false,
+      brand: '',
+      model: '',
+      year: '',
+      fuel: '',
+      transmission: '',
+      mileage: '',
+      condition: '',
+      publisherRole: 'owner'
     });
     setFiles([]);
     setUploadedMedia({photos: []});
@@ -251,9 +341,20 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+        {/* Overlay de chargement */}
+        {loading && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-gray-700 font-medium">Publication en cours...</p>
+            </div>
+          </div>
+        )}
+        
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200"
+          disabled={loading}
+          className="absolute top-4 right-4 z-10 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="h-5 w-5 text-gray-600" />
         </button>
@@ -273,7 +374,17 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <button
+                  type="button"
+                  onClick={enhanceDescription}
+                  disabled={(formData.description || '').toString().trim().length < 10 || enhancing}
+                  className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {enhancing ? '✨ Amélioration...' : '✨ Améliorer avec IA'}
+                </button>
+              </div>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
@@ -284,15 +395,28 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
               />
             </div>
 
-            {/* Prix et Localisation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Prix, Modalité et Localisation */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
-                label="Prix (FCFA/mois)"
+                label="Prix (FCFA)"
                 type="number"
                 value={formData.price}
                 onChange={(e) => handleChange('price', e.target.value)}
                 required
                 placeholder="85000"
+              />
+              <Select
+                label="Modalité de paiement"
+                options={[
+                  { value: 'monthly', label: 'Par mois' },
+                  { value: 'daily', label: 'Par jour' },
+                  { value: 'weekly', label: 'Par semaine' },
+                  { value: 'hourly', label: 'Par heure' },
+                  { value: 'fixed', label: 'Prix fixe' }
+                ]}
+                value={formData.paymentMode}
+                onChange={(e) => handleChange('paymentMode', e.target.value)}
+                required
               />
               <Input
                 label="Localisation"
@@ -322,30 +446,126 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
               />
             </div>
 
-            {/* Détails du bien */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                label="Chambres"
-                type="number"
-                value={formData.bedrooms}
-                onChange={(e) => handleChange('bedrooms', e.target.value)}
-                placeholder="2"
-              />
-              <Input
-                label="Salles de bain"
-                type="number"
-                value={formData.bathrooms}
-                onChange={(e) => handleChange('bathrooms', e.target.value)}
-                placeholder="1"
-              />
-              <Input
-                label="Surface (m²)"
-                type="number"
-                value={formData.area}
-                onChange={(e) => handleChange('area', e.target.value)}
-                placeholder="65"
-              />
-            </div>
+            {/* Champs spécifiques selon la catégorie */}
+            {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Détails du bien</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Input
+                    label="Chambres"
+                    type="number"
+                    value={formData.bedrooms}
+                    onChange={(e) => handleChange('bedrooms', e.target.value)}
+                    placeholder="2"
+                  />
+                  <Input
+                    label="Salles de bain"
+                    type="number"
+                    value={formData.bathrooms}
+                    onChange={(e) => handleChange('bathrooms', e.target.value)}
+                    placeholder="1"
+                  />
+                  <Input
+                    label="Surface (m²)"
+                    type="number"
+                    value={formData.area}
+                    onChange={(e) => handleChange('area', e.target.value)}
+                    placeholder="65"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Champs spécifiques aux véhicules */}
+            {categories.find(cat => cat.id === formData.categoryId)?.name === 'Véhicules' && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Détails du véhicule</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Marque *"
+                    value={formData.brand}
+                    onChange={(e) => handleChange('brand', e.target.value)}
+                    placeholder="Toyota, Honda..."
+                    required
+                  />
+                  <Input
+                    label="Modèle *"
+                    value={formData.model}
+                    onChange={(e) => handleChange('model', e.target.value)}
+                    placeholder="Corolla, Civic..."
+                    required
+                  />
+                  <Input
+                    label="Année *"
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => handleChange('year', e.target.value)}
+                    placeholder="2020"
+                    required
+                  />
+                  <Select
+                    label="Carburant *"
+                    options={[
+                      { value: '', label: 'Sélectionner' },
+                      { value: 'essence', label: 'Essence' },
+                      { value: 'diesel', label: 'Diesel' },
+                      { value: 'hybride', label: 'Hybride' },
+                      { value: 'electrique', label: 'Électrique' }
+                    ]}
+                    value={formData.fuel}
+                    onChange={(e) => handleChange('fuel', e.target.value)}
+                    required
+                  />
+                  <Select
+                    label="Transmission *"
+                    options={[
+                      { value: '', label: 'Sélectionner' },
+                      { value: 'manuelle', label: 'Manuelle' },
+                      { value: 'automatique', label: 'Automatique' }
+                    ]}
+                    value={formData.transmission}
+                    onChange={(e) => handleChange('transmission', e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Kilométrage"
+                    type="number"
+                    value={formData.mileage}
+                    onChange={(e) => handleChange('mileage', e.target.value)}
+                    placeholder="50000"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Champs pour autres catégories */}
+            {categories.find(cat => cat.id === formData.categoryId)?.name && 
+             !['Immobilier', 'Véhicules'].includes(categories.find(cat => cat.id === formData.categoryId)?.name || '') && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Détails du produit</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Marque"
+                    value={formData.brand}
+                    onChange={(e) => handleChange('brand', e.target.value)}
+                    placeholder="Marque du produit"
+                  />
+                  <Select
+                    label="État *"
+                    options={[
+                      { value: '', label: 'Sélectionner' },
+                      { value: 'neuf', label: 'Neuf' },
+                      { value: 'tres-bon', label: 'Très bon état' },
+                      { value: 'bon', label: 'Bon état' },
+                      { value: 'correct', label: 'État correct' }
+                    ]}
+                    value={formData.condition}
+                    onChange={(e) => handleChange('condition', e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Photos et Vidéo */}
             <div>
@@ -384,7 +604,7 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
                       Glissez vos fichiers ici ou cliquez pour sélectionner
                     </p>
                     <p className="text-sm text-gray-500">
-                      Maximum 5 fichiers: 5 photos OU 4 photos + 1 vidéo
+                      <span className="text-red-500 font-medium">Requis:</span> 5 photos max OU 2 photos + 1 vidéo
                     </p>
                   </div>
                   
@@ -395,7 +615,7 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
                     </div>
                     <div className="flex items-center gap-1">
                       <Video className="h-4 w-4" />
-                      <span>Vidéo: max 10MB</span>
+                      <span>Vidéo: max 20MB</span>
                     </div>
                   </div>
                 </div>
@@ -461,23 +681,38 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
               )}
             </div>
 
-            {/* Équipements */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Équipements</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {amenitiesList.map((amenity) => (
-                  <label key={amenity.value} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.amenities.includes(amenity.value)}
-                      onChange={() => handleAmenityToggle(amenity.value)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">{amenity.label}</span>
-                  </label>
-                ))}
+            {/* Équipements - Seulement pour Immobilier */}
+            {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Équipements</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {amenitiesList.map((amenity) => (
+                    <label key={amenity.value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.amenities.includes(amenity.value)}
+                        onChange={() => handleAmenityToggle(amenity.value)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{amenity.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Rôle de publication */}
+            <Select
+              label="Vous publiez en tant que *"
+              options={[
+                { value: 'owner', label: 'Propriétaire' },
+                { value: 'tenant', label: 'Locataire' },
+                { value: 'middleman', label: 'Démarcheur/Intermédiaire' }
+              ]}
+              value={formData.publisherRole}
+              onChange={(e) => handleChange('publisherRole', e.target.value)}
+              required
+            />
 
             {/* WhatsApp */}
             <Input
@@ -487,6 +722,25 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
               placeholder="+22999154678"
             />
 
+            {/* Réservation en ligne */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <label className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={formData.allowBooking}
+                  onChange={(e) => setFormData(prev => ({ ...prev, allowBooking: e.target.checked }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Autoriser les réservations en ligne</span>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Les utilisateurs pourront réserver directement avec des dates spécifiques. 
+                    Idéal pour les locations courte durée, véhicules, équipements, etc.
+                  </p>
+                </div>
+              </label>
+            </div>
+
             {/* Boutons */}
             <div className="flex gap-3 pt-4">
               <Button
@@ -494,15 +748,23 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
                 variant="outline"
                 onClick={onClose}
                 className="flex-1"
+                disabled={loading}
               >
                 Annuler
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Publication...' : 'Publier l\'annonce'}
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Publication...
+                  </div>
+                ) : (
+                  'Publier l\'annonce'
+                )}
               </Button>
             </div>
           </form>

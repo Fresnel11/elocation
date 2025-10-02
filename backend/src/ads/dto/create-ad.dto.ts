@@ -112,14 +112,12 @@ export class CreateAdDto {
   amenities?: string[];
 
   @ApiProperty({
-    description: 'URLs des photos',
-    example: ['photo1.jpg', 'photo2.jpg'],
-    required: false
+    description: 'URLs des photos (au moins 1 requis)',
+    example: ['photo1.jpg', 'photo2.jpg']
   })
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  photos?: string[];
+  photos: string[];
 
   @ApiProperty({
     description: 'URL de la vidéo',
@@ -156,4 +154,99 @@ export class CreateAdDto {
   @IsOptional()
   @IsBoolean()
   isAvailable?: boolean;
+
+  @ApiProperty({
+    description: 'Autoriser les réservations en ligne',
+    default: false,
+    required: false
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowBooking?: boolean;
+
+  // Champs génériques pour différentes catégories
+  @ApiProperty({ description: 'Marque', required: false })
+  @IsOptional()
+  @IsString()
+  brand?: string;
+
+  @ApiProperty({ description: 'Modèle', required: false })
+  @IsOptional()
+  @IsString()
+  model?: string;
+
+  @ApiProperty({ description: 'Année', required: false })
+  @IsOptional()
+  @IsNumber()
+  year?: number;
+
+  @ApiProperty({ description: 'État', required: false })
+  @IsOptional()
+  @IsString()
+  condition?: string;
+
+  @ApiProperty({ description: 'Couleur', required: false })
+  @IsOptional()
+  @IsString()
+  color?: string;
+
+  @ApiProperty({ description: 'Carburant', required: false })
+  @IsOptional()
+  @IsString()
+  fuel?: string;
+
+  @ApiProperty({ description: 'Transmission', required: false })
+  @IsOptional()
+  @IsString()
+  transmission?: string;
+
+  @ApiProperty({ description: 'Kilométrage', required: false })
+  @IsOptional()
+  @IsNumber()
+  mileage?: number;
+
+  @ApiProperty({ description: 'Taille', required: false })
+  @IsOptional()
+  @IsString()
+  size?: string;
+
+  @ApiProperty({ description: 'Poids', required: false })
+  @IsOptional()
+  @IsString()
+  weight?: string;
+
+  @ApiProperty({ description: 'Puissance', required: false })
+  @IsOptional()
+  @IsString()
+  power?: string;
+
+  @ApiProperty({ description: 'Spécifications', required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  specifications?: string[];
+
+  @ApiProperty({ description: 'Caractéristiques', required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  features?: string[];
+
+  @ApiProperty({ 
+    description: 'Rôle de publication', 
+    enum: ['owner', 'tenant', 'middleman'],
+    default: 'owner'
+  })
+  @IsOptional()
+  @IsString()
+  publisherRole?: string;
+
+  @ApiProperty({
+    description: 'Modalité de paiement',
+    enum: ['monthly', 'daily', 'weekly', 'hourly', 'fixed'],
+    default: 'monthly'
+  })
+  @IsOptional()
+  @IsString()
+  paymentMode?: string;
 }

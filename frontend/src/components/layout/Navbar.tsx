@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import logoImage from '../../assets/elocation-512.png';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,48 +50,109 @@ export const Navbar: React.FC = () => {
   const isAdsPage = location.pathname === '/ads';
 
   return (
-    <nav className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <img src={logoImage} alt="eLocation Bénin" className="h-10 w-auto" />
+    <>
+      {/* Desktop Navbar */}
+      <nav className="hidden md:block bg-gradient-to-r from-white/90 via-white/80 to-white/90 backdrop-blur-xl shadow-lg sticky top-0 z-50 border-b border-gradient-to-r from-blue-200/30 to-purple-200/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-18">
+          {/* Brand */}
+          <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-2.5 rounded-xl">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="ml-3">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                eLocation
+              </span>
+              <div className="text-xs text-gray-500 font-medium -mt-1">Bénin</div>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-2">
             <Link 
               to="/ads" 
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                location.pathname === '/ads' ? 'text-blue-600' : 'text-gray-700'
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                location.pathname === '/ads' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
               }`}
             >
+              <Home className="h-4 w-4" />
               Annonces
             </Link>
             <Link 
-              to="/about" 
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                location.pathname === '/about' ? 'text-blue-600' : 'text-gray-700'
+              to="/requests" 
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                location.pathname === '/requests' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
               }`}
             >
-              À propos
+              <MessageSquare className="h-4 w-4" />
+              Demandes
             </Link>
             <Link 
-              to="/contact" 
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                location.pathname === '/contact' ? 'text-blue-600' : 'text-gray-700'
+              to="/messages" 
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                location.pathname === '/messages' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
               }`}
             >
-              Contact
+              <Mail className="h-4 w-4" />
+              Messages
             </Link>
-            <Link 
-              to="/faq" 
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                location.pathname === '/faq' ? 'text-blue-600' : 'text-gray-700'
-              }`}
-            >
-              FAQ
-            </Link>
+            {user && (
+              <Link 
+                to="/bookings" 
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                  location.pathname === '/bookings' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                Réservations
+              </Link>
+            )}
+            {!user && (
+              <>
+                <Link 
+                  to="/about" 
+                  className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/about' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  À propos
+                </Link>
+                <Link 
+                  to="/contact" 
+                  className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/contact' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  Contact
+                </Link>
+                <Link 
+                  to="/faq" 
+                  className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/faq' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  FAQ
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Actions */}
@@ -102,14 +162,19 @@ export const Navbar: React.FC = () => {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/60 transition-all duration-200 backdrop-blur-sm border border-white/30 shadow-sm"
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${getAvatarColor(user.firstName + user.lastName)}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg ${getAvatarColor(user.firstName + user.lastName)}`}>
                       {getInitials(user.firstName, user.lastName)}
                     </div>
-                    <span className="text-gray-700 font-medium text-sm">
-                      {user.firstName}
-                    </span>
+                    <div className="flex flex-col items-start">
+                      <span className="text-gray-800 font-semibold text-sm">
+                        {user.firstName}
+                      </span>
+                      <span className="text-gray-500 text-xs">
+                        {user.lastName}
+                      </span>
+                    </div>
                     <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${
                       isUserMenuOpen ? 'rotate-180' : ''
                     }`} />
@@ -117,20 +182,20 @@ export const Navbar: React.FC = () => {
 
                   {/* Menu déroulant */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 py-2 z-50">
                       <button
                         onClick={() => {
                           navigate('/settings');
                           setIsUserMenuOpen(false);
                         }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-white/60 transition-all duration-200 rounded-xl mx-2"
                       >
                         <Settings className="h-4 w-4 mr-3" />
                         Paramètres
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50/80 transition-all duration-200 rounded-xl mx-2"
                       >
                         <LogOut className="h-4 w-4 mr-3" />
                         Déconnexion
@@ -141,119 +206,122 @@ export const Navbar: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" className="rounded-xl hover:bg-white/60" asChild>
                   <Link to="/login">Connexion</Link>
                 </Button>
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700" asChild>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg" asChild>
                   <Link to="/register">S'inscrire</Link>
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 bg-white/95 backdrop-blur-md">
-            <div className="flex flex-col space-y-4">
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-white/30 backdrop-blur-xl rounded-3xl px-8 py-3 shadow-2xl border border-white/50">
+          <div className="flex items-center gap-6">
+            <Link
+              to="/ads"
+              className={`p-3 rounded-2xl transition-all duration-200 ${
+                location.pathname === '/ads' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+              }`}
+            >
+              <Home className="h-5 w-5" />
+            </Link>
+            
+            <Link
+              to="/requests"
+              className={`p-3 rounded-2xl transition-all duration-200 ${
+                location.pathname === '/requests' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+              }`}
+            >
+              <MessageSquare className="h-5 w-5" />
+            </Link>
+            
+            <Link
+              to="/messages"
+              className={`p-3 rounded-2xl transition-all duration-200 ${
+                location.pathname === '/messages' 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+              }`}
+            >
+              <Mail className="h-5 w-5" />
+            </Link>
+            
+            {user && (
               <Link
-                to="/ads"
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  location.pathname === '/ads' ? 'text-blue-600' : 'text-gray-700'
+                to="/bookings"
+                className={`p-3 rounded-2xl transition-all duration-200 ${
+                  location.pathname === '/bookings' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
                 }`}
-                onClick={() => setIsMenuOpen(false)}
               >
-                Annonces
+                <Calendar className="h-5 w-5" />
               </Link>
-              <Link
-                to="/about"
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  location.pathname === '/about' ? 'text-blue-600' : 'text-gray-700'
+            )}
+            
+            {user ? (
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className={`p-3 rounded-2xl transition-all duration-200 ${
+                  isUserMenuOpen 
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
                 }`}
-                onClick={() => setIsMenuOpen(false)}
               >
-                À propos
-              </Link>
-              <Link
-                to="/contact"
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  location.pathname === '/contact' ? 'text-blue-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <Link
-                to="/faq"
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  location.pathname === '/faq' ? 'text-blue-600' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                FAQ
-              </Link>
-              
-              {user ? (
-                <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <div className="flex items-center space-x-3 p-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${getAvatarColor(user.firstName + user.lastName)}`}>
-                      {getInitials(user.firstName, user.lastName)}
-                    </div>
-                    <span className="text-gray-700 font-medium">
-                      {user.firstName} {user.lastName}
-                    </span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start" 
-                    onClick={() => {
-                      navigate('/settings');
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Paramètres
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }} 
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Déconnexion
-                  </Button>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                  isUserMenuOpen ? 'bg-white/20' : getAvatarColor(user.firstName + user.lastName)
+                } ${isUserMenuOpen ? 'text-white' : 'text-white'}`}>
+                  {getInitials(user.firstName, user.lastName)}
                 </div>
-              ) : (
-                <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <Button variant="ghost" className="w-full" asChild>
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                      Connexion
-                    </Link>
-                  </Button>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700" asChild>
-                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                      S'inscrire
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </div>
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="p-3 rounded-2xl transition-all duration-200 text-gray-700 hover:text-gray-900 hover:bg-white/50"
+              >
+                <User className="h-5 w-5" />
+              </Link>
+            )}
+          </div>
+        </div>
+        
+        {/* User Menu Mobile */}
+        {user && isUserMenuOpen && (
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-xl rounded-2xl p-3 shadow-xl min-w-[160px]">
+            <button
+              onClick={() => {
+                navigate('/settings');
+                setIsUserMenuOpen(false);
+              }}
+              className="flex items-center w-full p-2 text-sm text-gray-700 hover:bg-gray-100/60 rounded-xl transition-all duration-200"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Paramètres
+            </button>
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsUserMenuOpen(false);
+              }}
+              className="flex items-center w-full p-2 text-sm text-red-600 hover:bg-red-50/80 rounded-xl transition-all duration-200"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Déconnexion
+            </button>
           </div>
         )}
       </div>
-    </nav>
+    </>
   );
 };

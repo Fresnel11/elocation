@@ -16,79 +16,179 @@ exports.MessagesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const conversation_entity_1 = require("./entities/conversation.entity");
 const message_entity_1 = require("./entities/message.entity");
+const conversation_entity_1 = require("./entities/conversation.entity");
+const user_entity_1 = require("../users/entities/user.entity");
+const ad_entity_1 = require("../ads/entities/ad.entity");
+const notifications_service_1 = require("../notifications/notifications.service");
+const notification_entity_1 = require("../notifications/entities/notification.entity");
 let MessagesService = class MessagesService {
-    constructor(conversationRepository, messageRepository) {
-        this.conversationRepository = conversationRepository;
+    constructor(messageRepository, conversationRepository, userRepository, adRepository, notificationsService) {
         this.messageRepository = messageRepository;
+        this.conversationRepository = conversationRepository;
+        this.userRepository = userRepository;
+        this.adRepository = adRepository;
+        this.notificationsService = notificationsService;
     }
-    async sendMessage(createMessageDto, senderId) {
-        let conversation = await this.findOrCreateConversation(senderId, createMessageDto.recipientId);
+    async sendMessage(senderId, createMessageDto) {
+        const { content, receiverId, adId, imageUrl, messageType } = createMessageDto;
+        let ad = null;
+        if (adId) {
+            ad = await this.adRepository.findOne({ where: { id: adId } });
+            if (!ad) {
+                throw new common_1.NotFoundException('Annonce non trouvée');
+            }
+        }
+        const receiver = await this.userRepository.findOne({ where: { id: receiverId } });
+        if (!receiver) {
+            throw new common_1.NotFoundException('Destinataire non trouvé');
+        }
         const message = this.messageRepository.create({
-            content: createMessageDto.content,
-            sender: { id: senderId },
-            conversation: { id: conversation.id }
+            content,
+            senderId,
+            receiverId,
+            adId: adId || null,
+            imageUrl: imageUrl || null,
+            messageType: messageType || 'text',
         });
-        return this.messageRepository.save(message);
+        const savedMessage = await this.messageRepository.save(message);
+        const messageWithRelations = await this.messageRepository.findOne({
+            where: { id: savedMessage.id },
+            relations: ['sender', 'receiver', 'ad']
+        });
+        await this.updateConversation(senderId, receiverId, adId || null, content);
+        const sender = await this.userRepository.findOne({ where: { id: senderId } });
+        if (sender) {
+            const notificationMessage = ad
+                ? `${sender.firstName} vous a envoyé un message concernant "${ad.title}"`
+                : `${sender.firstName} vous a envoyé un message`;
+            await this.notificationsService.createNotification(receiverId, notification_entity_1.NotificationType.NEW_MESSAGE, 'Nouveau message', notificationMessage, adId || undefined);
+        }
+        return messageWithRelations || savedMessage;
     }
     async getConversations(userId) {
-        return this.conversationRepository
-            .createQueryBuilder('conversation')
-            .leftJoinAndSelect('conversation.user1', 'user1')
-            .leftJoinAndSelect('conversation.user2', 'user2')
-            .leftJoinAndSelect('conversation.messages', 'message')
-            .leftJoinAndSelect('message.sender', 'sender')
-            .where('conversation.user1Id = :userId OR conversation.user2Id = :userId', { userId })
-            .orderBy('conversation.updatedAt', 'DESC')
-            .addOrderBy('message.createdAt', 'ASC')
-            .getMany();
-    }
-    async getMessages(conversationId, userId) {
-        const conversation = await this.conversationRepository.findOne({
-            where: { id: conversationId },
-            relations: ['user1', 'user2']
+        const conversations = await this.conversationRepository.find({
+            where: [
+                { user1Id: userId },
+                { user2Id: userId }
+            ],
+            relations: ['user1', 'user2', 'ad'],
+            order: { lastMessageAt: 'DESC' }
         });
-        if (!conversation || (conversation.user1.id !== userId && conversation.user2.id !== userId)) {
-            throw new Error('Conversation non trouvée ou accès non autorisé');
-        }
-        return this.messageRepository.find({
-            where: { conversation: { id: conversationId } },
-            relations: ['sender'],
+        return conversations;
+    }
+    async getMessages(userId, adId, otherUserId) {
+        console.log('getMessages called with:', { userId, adId, otherUserId });
+        const whereConditions = adId
+            ? [
+                { user1Id: userId, user2Id: otherUserId, adId },
+                { user1Id: otherUserId, user2Id: userId, adId }
+            ]
+            : [
+                { user1Id: userId, user2Id: otherUserId, adId: (0, typeorm_2.IsNull)() },
+                { user1Id: otherUserId, user2Id: userId, adId: (0, typeorm_2.IsNull)() }
+            ];
+        const conversation = await this.conversationRepository.findOne({
+            where: whereConditions
+        });
+        const messageWhereConditions = adId
+            ? [
+                { senderId: userId, receiverId: otherUserId, adId },
+                { senderId: otherUserId, receiverId: userId, adId }
+            ]
+            : [
+                { senderId: userId, receiverId: otherUserId, adId: (0, typeorm_2.IsNull)() },
+                { senderId: otherUserId, receiverId: userId, adId: (0, typeorm_2.IsNull)() }
+            ];
+        const messages = await this.messageRepository.find({
+            where: messageWhereConditions,
+            relations: ['sender', 'receiver', 'ad'],
             order: { createdAt: 'ASC' }
         });
+        console.log('Messages found:', messages.length);
+        console.log('Message conditions:', messageWhereConditions);
+        await this.markMessagesAsRead(userId, otherUserId, adId);
+        return messages;
     }
-    async markAsRead(conversationId, userId) {
-        await this.messageRepository
-            .createQueryBuilder()
-            .update(message_entity_1.Message)
-            .set({ isRead: true })
-            .where('conversationId = :conversationId', { conversationId })
-            .andWhere('senderId != :userId', { userId })
-            .execute();
+    async markMessagesAsRead(userId, otherUserId, adId) {
+        const messageWhere = adId
+            ? { senderId: otherUserId, receiverId: userId, adId, isRead: false }
+            : { senderId: otherUserId, receiverId: userId, adId: (0, typeorm_2.IsNull)(), isRead: false };
+        await this.messageRepository.update(messageWhere, { isRead: true });
+        const conversationWhere1 = adId
+            ? { user1Id: otherUserId, user2Id: userId, adId }
+            : { user1Id: otherUserId, user2Id: userId, adId: (0, typeorm_2.IsNull)() };
+        const conversationWhere2 = adId
+            ? { user1Id: userId, user2Id: otherUserId, adId }
+            : { user1Id: userId, user2Id: otherUserId, adId: (0, typeorm_2.IsNull)() };
+        await this.conversationRepository.update(conversationWhere1, { unreadCountUser2: 0 });
+        await this.conversationRepository.update(conversationWhere2, { unreadCountUser1: 0 });
     }
-    async findOrCreateConversation(user1Id, user2Id) {
-        let conversation = await this.conversationRepository
-            .createQueryBuilder('conversation')
-            .where('(conversation.user1Id = :user1Id AND conversation.user2Id = :user2Id)', { user1Id, user2Id })
-            .orWhere('(conversation.user1Id = :user2Id AND conversation.user2Id = :user1Id)', { user1Id: user2Id, user2Id: user1Id })
-            .getOne();
+    async getUnreadCount(userId) {
+        const conversations = await this.conversationRepository.find({
+            where: [
+                { user1Id: userId },
+                { user2Id: userId }
+            ]
+        });
+        let totalUnread = 0;
+        conversations.forEach(conv => {
+            if (conv.user1Id === userId) {
+                totalUnread += conv.unreadCountUser1;
+            }
+            else {
+                totalUnread += conv.unreadCountUser2;
+            }
+        });
+        return { unreadCount: totalUnread };
+    }
+    async updateConversation(senderId, receiverId, adId, content) {
+        const whereConditions = adId
+            ? [
+                { user1Id: senderId, user2Id: receiverId, adId },
+                { user1Id: receiverId, user2Id: senderId, adId }
+            ]
+            : [
+                { user1Id: senderId, user2Id: receiverId, adId: (0, typeorm_2.IsNull)() },
+                { user1Id: receiverId, user2Id: senderId, adId: (0, typeorm_2.IsNull)() }
+            ];
+        let conversation = await this.conversationRepository.findOne({
+            where: whereConditions
+        });
         if (!conversation) {
             conversation = this.conversationRepository.create({
-                user1: { id: user1Id },
-                user2: { id: user2Id }
+                user1Id: senderId,
+                user2Id: receiverId,
+                adId,
+                lastMessageContent: content,
+                lastMessageAt: new Date(),
+                unreadCountUser2: 1
             });
-            conversation = await this.conversationRepository.save(conversation);
         }
-        return conversation;
+        else {
+            conversation.lastMessageContent = content;
+            conversation.lastMessageAt = new Date();
+            if (conversation.user1Id === senderId) {
+                conversation.unreadCountUser2++;
+            }
+            else {
+                conversation.unreadCountUser1++;
+            }
+        }
+        await this.conversationRepository.save(conversation);
     }
 };
 exports.MessagesService = MessagesService;
 exports.MessagesService = MessagesService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(conversation_entity_1.Conversation)),
-    __param(1, (0, typeorm_1.InjectRepository)(message_entity_1.Message)),
+    __param(0, (0, typeorm_1.InjectRepository)(message_entity_1.Message)),
+    __param(1, (0, typeorm_1.InjectRepository)(conversation_entity_1.Conversation)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(3, (0, typeorm_1.InjectRepository)(ad_entity_1.Ad)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        notifications_service_1.NotificationsService])
 ], MessagesService);
 //# sourceMappingURL=messages.service.js.map
