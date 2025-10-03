@@ -21,6 +21,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { CommonModule } from './common/common.module';
 import { SeederModule } from './seeders/seeder.module';
 import { AiModule } from './ai/ai.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { AiModule } from './ai/ai.module';
     CommonModule,
     SeederModule,
     AiModule,
+    PermissionsModule,
   ],
 })
 export class AppModule {}

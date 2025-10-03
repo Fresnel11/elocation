@@ -1,10 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index, ManyToMany, JoinTable } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
 import { Response } from '../../responses/entities/response.entity';
+import { Permission } from '../../permissions/entities/permission.entity';
 
 @Entity('users')
 export class User {
@@ -78,6 +79,8 @@ export class User {
 
   @OneToMany(() => Response, (response) => response.user)
   responses: Response[];
+
+
 
   @CreateDateColumn()
   createdAt: Date;

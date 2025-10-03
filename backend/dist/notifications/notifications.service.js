@@ -69,7 +69,7 @@ let NotificationsService = class NotificationsService {
             user: { id: userId }
         });
         if (result.affected === 0) {
-            throw new NotFoundException('Notification non trouvée');
+            throw new common_1.NotFoundException('Notification non trouvée');
         }
     }
     async getUnreadCount(userId) {

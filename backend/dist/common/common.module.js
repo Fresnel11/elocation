@@ -10,12 +10,15 @@ exports.CommonModule = void 0;
 const common_1 = require("@nestjs/common");
 const upload_service_1 = require("./services/upload.service");
 const upload_controller_1 = require("./controllers/upload.controller");
+const common_controller_1 = require("./common.controller");
+const admin_module_1 = require("../admin/admin.module");
 let CommonModule = class CommonModule {
 };
 exports.CommonModule = CommonModule;
 exports.CommonModule = CommonModule = __decorate([
     (0, common_1.Module)({
-        controllers: [upload_controller_1.UploadController],
+        imports: [admin_module_1.AdminModule],
+        controllers: [upload_controller_1.UploadController, common_controller_1.CommonController],
         providers: [upload_service_1.UploadService],
         exports: [upload_service_1.UploadService],
     })

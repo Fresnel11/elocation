@@ -14,20 +14,36 @@ const common_1 = require("@nestjs/common");
 const category_seeder_1 = require("./category.seeder");
 const subcategory_seeder_1 = require("./subcategory.seeder");
 const update_coordinates_seeder_1 = require("./update-coordinates.seeder");
+const user_seeder_1 = require("./user.seeder");
+const role_seeder_1 = require("./role.seeder");
 let InitDataController = class InitDataController {
-    constructor(categorySeeder, subCategorySeeder, updateCoordinatesSeeder) {
+    constructor(categorySeeder, subCategorySeeder, updateCoordinatesSeeder, userSeeder, roleSeeder) {
         this.categorySeeder = categorySeeder;
         this.subCategorySeeder = subCategorySeeder;
         this.updateCoordinatesSeeder = updateCoordinatesSeeder;
+        this.userSeeder = userSeeder;
+        this.roleSeeder = roleSeeder;
     }
     async seedData() {
         try {
+            await this.roleSeeder.seed();
             await this.categorySeeder.seed();
             await this.subCategorySeeder.seed();
+            await this.userSeeder.seed();
             return { message: 'Données initialisées avec succès' };
         }
         catch (error) {
             return { error: 'Erreur lors de l\'initialisation', details: error.message };
+        }
+    }
+    async seedAdmin() {
+        try {
+            await this.roleSeeder.seed();
+            await this.userSeeder.seed();
+            return { message: 'Super admin créé avec succès' };
+        }
+        catch (error) {
+            return { error: 'Erreur lors de la création du super admin', details: error.message };
         }
     }
     async updateCoordinates() {
@@ -48,6 +64,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], InitDataController.prototype, "seedData", null);
 __decorate([
+    (0, common_1.Post)('seed-admin'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], InitDataController.prototype, "seedAdmin", null);
+__decorate([
     (0, common_1.Post)('update-coordinates'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -57,6 +79,8 @@ exports.InitDataController = InitDataController = __decorate([
     (0, common_1.Controller)('init'),
     __metadata("design:paramtypes", [category_seeder_1.CategorySeeder,
         subcategory_seeder_1.SubCategorySeeder,
-        update_coordinates_seeder_1.UpdateCoordinatesSeeder])
+        update_coordinates_seeder_1.UpdateCoordinatesSeeder,
+        user_seeder_1.UserSeeder,
+        role_seeder_1.RoleSeeder])
 ], InitDataController);
 //# sourceMappingURL=init-data.controller.js.map

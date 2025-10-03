@@ -13,6 +13,7 @@ exports.Role = void 0;
 const typeorm_1 = require("typeorm");
 const user_role_enum_1 = require("../../common/enums/user-role.enum");
 const user_entity_1 = require("../../users/entities/user.entity");
+const permission_entity_1 = require("../../permissions/entities/permission.entity");
 let Role = class Role {
 };
 exports.Role = Role;
@@ -36,6 +37,15 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => user_entity_1.User, (user) => user.role),
     __metadata("design:type", Array)
 ], Role.prototype, "users", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => permission_entity_1.Permission, permission => permission.roles),
+    (0, typeorm_1.JoinTable)({
+        name: 'role_permissions',
+        joinColumn: { name: 'roleId', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'permissionId', referencedColumnName: 'id' }
+    }),
+    __metadata("design:type", Array)
+], Role.prototype, "permissions", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

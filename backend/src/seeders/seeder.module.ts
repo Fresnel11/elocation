@@ -14,11 +14,14 @@ import { AdSeeder } from './ad.seeder';
 import { SeederService } from './seeder.service';
 import { InitDataController } from './init-data.controller';
 import { UpdateCoordinatesSeeder } from './update-coordinates.seeder';
+import { PermissionSeeder } from './permission.seeder';
+import { RolePermissionSeeder } from './role-permission.seeder';
+import { Permission } from '../permissions/entities/permission.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Role, Category, SubCategory, Ad, User])],
+  imports: [TypeOrmModule.forFeature([Role, Category, SubCategory, Ad, User, Permission])],
   controllers: [InitDataController],
-  providers: [RoleSeeder, CategorySeeder, SubCategorySeeder, CleanupSubCategoriesSeeder, UserSeeder, AdSeeder, SeederService, UpdateCoordinatesSeeder],
+  providers: [RoleSeeder, CategorySeeder, SubCategorySeeder, CleanupSubCategoriesSeeder, UserSeeder, AdSeeder, PermissionSeeder, RolePermissionSeeder, SeederService, UpdateCoordinatesSeeder],
   exports: [SeederService, UpdateCoordinatesSeeder],
 })
 export class SeederModule {}

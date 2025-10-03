@@ -11,6 +11,7 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   isInitialized: boolean;
+  isAuthenticated: boolean;
   error: string | null;
   clearError: () => void;
 }
@@ -77,6 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     loading: isLoading,
     isInitialized,
+    isAuthenticated: !!user,
     error,
     clearError
   };
