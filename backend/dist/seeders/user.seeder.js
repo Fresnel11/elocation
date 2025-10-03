@@ -26,6 +26,24 @@ let UserSeeder = class UserSeeder {
         this.roleRepository = roleRepository;
     }
     async seed() {
+        const existingSuperAdmin = await this.userRepository.findOne({ where: { email: 'fresnel@superadmin.com' } });
+        if (!existingSuperAdmin) {
+            const superAdminRole = await this.roleRepository.findOne({ where: { name: user_role_enum_1.UserRole.SUPER_ADMIN } });
+            if (superAdminRole) {
+                const superAdminData = {
+                    firstName: 'Fresnel',
+                    lastName: 'SuperAdmin',
+                    email: 'fresnel@superadmin.com',
+                    phone: '+22900000000',
+                    password: await bcrypt.hash('superadmin2003', 10),
+                    role: superAdminRole,
+                    isActive: true,
+                };
+                const superAdmin = this.userRepository.create(superAdminData);
+                await this.userRepository.save(superAdmin);
+                console.log('Super Admin Fresnel créé avec succès');
+            }
+        }
         const existingTestUser = await this.userRepository.findOne({ where: { email: 'marie.adjovi@example.com' } });
         if (existingTestUser) {
             console.log('Les utilisateurs de test existent déjà, seeding ignoré');
@@ -44,7 +62,7 @@ let UserSeeder = class UserSeeder {
                 phone: '+22997123456',
                 password: await bcrypt.hash('password123', 10),
                 role: userRole,
-                isVerified: true,
+                isActive: true,
             },
             {
                 firstName: 'Jean',
@@ -53,7 +71,7 @@ let UserSeeder = class UserSeeder {
                 phone: '+22997234567',
                 password: await bcrypt.hash('password123', 10),
                 role: userRole,
-                isVerified: true,
+                isActive: true,
             },
             {
                 firstName: 'Fatou',
@@ -62,7 +80,7 @@ let UserSeeder = class UserSeeder {
                 phone: '+22997345678',
                 password: await bcrypt.hash('password123', 10),
                 role: userRole,
-                isVerified: true,
+                isActive: true,
             },
             {
                 firstName: 'Pierre',
@@ -71,7 +89,7 @@ let UserSeeder = class UserSeeder {
                 phone: '+22997456789',
                 password: await bcrypt.hash('password123', 10),
                 role: userRole,
-                isVerified: true,
+                isActive: true,
             },
             {
                 firstName: 'Aminata',
@@ -80,7 +98,7 @@ let UserSeeder = class UserSeeder {
                 phone: '+22997567890',
                 password: await bcrypt.hash('password123', 10),
                 role: userRole,
-                isVerified: true,
+                isActive: true,
             },
         ];
         for (const userData of usersData) {

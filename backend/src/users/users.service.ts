@@ -95,6 +95,7 @@ export class UsersService {
     if (!email) return null;
     return this.userRepository.findOne({
       where: { email: email.toLowerCase() },
+      relations: ['role'],
     });
   }
 

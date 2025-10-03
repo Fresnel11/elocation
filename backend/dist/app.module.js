@@ -31,6 +31,7 @@ const bookings_module_1 = require("./bookings/bookings.module");
 const common_module_1 = require("./common/common.module");
 const seeder_module_1 = require("./seeders/seeder.module");
 const ai_module_1 = require("./ai/ai.module");
+const permissions_module_1 = require("./permissions/permissions.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -72,6 +73,7 @@ exports.AppModule = AppModule = __decorate([
             common_module_1.CommonModule,
             seeder_module_1.SeederModule,
             ai_module_1.AiModule,
+            permissions_module_1.PermissionsModule,
         ],
     })
 ], AppModule);

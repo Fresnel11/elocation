@@ -14,6 +14,10 @@ export class RoleSeeder {
   async seed() {
     const roles = [
       {
+        name: UserRole.SUPER_ADMIN,
+        description: 'Super administrateur avec tous les privilèges système',
+      },
+      {
         name: UserRole.ADMIN,
         description: 'Administrateur système avec tous les privilèges',
       },

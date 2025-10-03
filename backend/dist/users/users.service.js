@@ -92,6 +92,7 @@ let UsersService = class UsersService {
             return null;
         return this.userRepository.findOne({
             where: { email: email.toLowerCase() },
+            relations: ['role'],
         });
     }
     async findByPhone(phone) {

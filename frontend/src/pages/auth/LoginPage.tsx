@@ -13,11 +13,12 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{email?: string; password?: string}>({});
-  const { login, loading } = useAuth();
+  const { login, loading, user } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [successMessage, setSuccessMessage] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   useEffect(() => {
     if (location.state?.verified) {
@@ -37,6 +38,17 @@ export const LoginPage: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Redirection après connexion réussie
+  useEffect(() => {
+    if (loginSuccess && user) {
+      if (user.role?.name === 'super_admin' || user.role?.name === 'admin') {
+        setTimeout(() => navigate('/admin'), 100);
+      } else {
+        navigate('/ads');
+      }
+    }
+  }, [loginSuccess, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +74,7 @@ export const LoginPage: React.FC = () => {
     
     try {
       await login(email, password);
-      navigate('/ads');
+      setLoginSuccess(true);
     } catch (err: any) {
       error(
         'Erreur de connexion',

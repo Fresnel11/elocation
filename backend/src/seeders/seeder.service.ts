@@ -5,6 +5,8 @@ import { SubCategorySeeder } from './subcategory.seeder';
 import { CleanupSubCategoriesSeeder } from './cleanup-subcategories.seeder';
 import { UserSeeder } from './user.seeder';
 import { AdSeeder } from './ad.seeder';
+import { PermissionSeeder } from './permission.seeder';
+import { RolePermissionSeeder } from './role-permission.seeder';
 
 @Injectable()
 export class SeederService implements OnModuleInit {
@@ -15,11 +17,15 @@ export class SeederService implements OnModuleInit {
     private readonly cleanupSubCategoriesSeeder: CleanupSubCategoriesSeeder,
     private readonly userSeeder: UserSeeder,
     private readonly adSeeder: AdSeeder,
+    private readonly permissionSeeder: PermissionSeeder,
+    private readonly rolePermissionSeeder: RolePermissionSeeder,
   ) {}
 
   async onModuleInit() {
     // Force l'exécution des seeders
     await this.seedRoles();
+    await this.seedPermissions();
+    await this.seedRolePermissions();
     await this.seedCategories();
     await this.cleanupSubCategories();
     await this.seedSubCategories();
@@ -69,6 +75,24 @@ export class SeederService implements OnModuleInit {
       console.log('Seeding des utilisateurs terminé');
     } catch (error) {
       console.error('Erreur lors du seeding des utilisateurs:', error);
+    }
+  }
+
+  private async seedPermissions() {
+    try {
+      await this.permissionSeeder.seed();
+      console.log('Seeding des permissions terminé');
+    } catch (error) {
+      console.error('Erreur lors du seeding des permissions:', error);
+    }
+  }
+
+  private async seedRolePermissions() {
+    try {
+      await this.rolePermissionSeeder.seed();
+      console.log('Attribution des permissions aux rôles terminée');
+    } catch (error) {
+      console.error('Erreur lors de l\'attribution des permissions:', error);
     }
   }
 

@@ -17,17 +17,23 @@ const subcategory_seeder_1 = require("./subcategory.seeder");
 const cleanup_subcategories_seeder_1 = require("./cleanup-subcategories.seeder");
 const user_seeder_1 = require("./user.seeder");
 const ad_seeder_1 = require("./ad.seeder");
+const permission_seeder_1 = require("./permission.seeder");
+const role_permission_seeder_1 = require("./role-permission.seeder");
 let SeederService = class SeederService {
-    constructor(roleSeeder, categorySeeder, subCategorySeeder, cleanupSubCategoriesSeeder, userSeeder, adSeeder) {
+    constructor(roleSeeder, categorySeeder, subCategorySeeder, cleanupSubCategoriesSeeder, userSeeder, adSeeder, permissionSeeder, rolePermissionSeeder) {
         this.roleSeeder = roleSeeder;
         this.categorySeeder = categorySeeder;
         this.subCategorySeeder = subCategorySeeder;
         this.cleanupSubCategoriesSeeder = cleanupSubCategoriesSeeder;
         this.userSeeder = userSeeder;
         this.adSeeder = adSeeder;
+        this.permissionSeeder = permissionSeeder;
+        this.rolePermissionSeeder = rolePermissionSeeder;
     }
     async onModuleInit() {
         await this.seedRoles();
+        await this.seedPermissions();
+        await this.seedRolePermissions();
         await this.seedCategories();
         await this.cleanupSubCategories();
         await this.seedSubCategories();
@@ -79,6 +85,24 @@ let SeederService = class SeederService {
             console.error('Erreur lors du seeding des utilisateurs:', error);
         }
     }
+    async seedPermissions() {
+        try {
+            await this.permissionSeeder.seed();
+            console.log('Seeding des permissions terminé');
+        }
+        catch (error) {
+            console.error('Erreur lors du seeding des permissions:', error);
+        }
+    }
+    async seedRolePermissions() {
+        try {
+            await this.rolePermissionSeeder.seed();
+            console.log('Attribution des permissions aux rôles terminée');
+        }
+        catch (error) {
+            console.error('Erreur lors de l\'attribution des permissions:', error);
+        }
+    }
     async seedAds() {
         try {
             await this.adSeeder.seed();
@@ -97,6 +121,8 @@ exports.SeederService = SeederService = __decorate([
         subcategory_seeder_1.SubCategorySeeder,
         cleanup_subcategories_seeder_1.CleanupSubCategoriesSeeder,
         user_seeder_1.UserSeeder,
-        ad_seeder_1.AdSeeder])
+        ad_seeder_1.AdSeeder,
+        permission_seeder_1.PermissionSeeder,
+        role_permission_seeder_1.RolePermissionSeeder])
 ], SeederService);
 //# sourceMappingURL=seeder.service.js.map
