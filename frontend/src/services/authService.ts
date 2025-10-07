@@ -6,6 +6,7 @@ export interface RegisterData {
   phone: string;
   email?: string;
   password: string;
+  referralCode?: string;
 }
 
 export interface LoginData {

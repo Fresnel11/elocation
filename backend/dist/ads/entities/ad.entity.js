@@ -16,6 +16,7 @@ const category_entity_1 = require("../../categories/entities/category.entity");
 const subcategory_entity_1 = require("../../subcategories/entities/subcategory.entity");
 const review_entity_1 = require("../../reviews/entities/review.entity");
 const ad_publisher_role_enum_1 = require("../../common/enums/ad-publisher-role.enum");
+const favorite_entity_1 = require("../../favorites/entities/favorite.entity");
 let Ad = class Ad {
 };
 exports.Ad = Ad;
@@ -152,6 +153,10 @@ __decorate([
     __metadata("design:type", Array)
 ], Ad.prototype, "features", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'int', default: 0 }),
+    __metadata("design:type", Number)
+], Ad.prototype, "views", void 0);
+__decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
         enum: ad_publisher_role_enum_1.AdPublisherRole,
@@ -190,6 +195,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => review_entity_1.Review, review => review.ad),
     __metadata("design:type", Array)
 ], Ad.prototype, "reviews", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => favorite_entity_1.Favorite, (favorite) => favorite.ad),
+    __metadata("design:type", Array)
+], Ad.prototype, "favorites", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

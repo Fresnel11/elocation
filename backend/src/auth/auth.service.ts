@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../common/services/email.service';
+import { ReferralsService } from '../referrals/referrals.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UserRole } from '../common/enums/user-role.enum';
@@ -13,6 +14,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private referralsService: ReferralsService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -28,6 +30,15 @@ export class AuthService {
     }
 
     const user = await this.usersService.create(registerDto);
+
+    // Traiter le code de parrainage si fourni
+    if (registerDto.referralCode) {
+      try {
+        await this.referralsService.useReferralCode(registerDto.referralCode, user.id);
+      } catch (error) {
+        console.log('Erreur code parrainage:', error.message);
+      }
+    }
 
     // generate OTP (6 digits) for phone verification
     const code = (Math.floor(100000 + Math.random() * 900000)).toString();

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Users, Home, Calendar, TrendingUp, Activity, Target } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StatsCard } from '../../components/admin/StatsCard';
 import { SimpleChart } from '../../components/admin/SimpleChart';
 import { api } from '../../services/api';
@@ -51,25 +50,22 @@ export const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="animate-pulse space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 h-24 sm:h-32 rounded-xl"></div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 h-48 sm:h-64 rounded-xl"></div>
-            ))}
-          </div>
+      <div className="animate-pulse space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-gray-200 h-24 sm:h-32 rounded-xl"></div>
+          ))}
         </div>
-      </AdminLayout>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-gray-200 h-48 sm:h-64 rounded-xl"></div>
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="mb-6 lg:mb-8">
@@ -179,6 +175,5 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 };

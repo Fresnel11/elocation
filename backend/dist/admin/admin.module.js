@@ -19,13 +19,19 @@ const activity_log_entity_1 = require("./entities/activity-log.entity");
 const permissions_module_1 = require("../permissions/permissions.module");
 const role_entity_1 = require("../roles/entities/role.entity");
 const permission_entity_1 = require("../permissions/entities/permission.entity");
+const category_entity_1 = require("../categories/entities/category.entity");
+const subcategory_entity_1 = require("../subcategories/entities/subcategory.entity");
+const review_entity_1 = require("../reviews/entities/review.entity");
+const report_entity_1 = require("../reports/entities/report.entity");
+const email_template_entity_1 = require("../email-templates/entities/email-template.entity");
+const support_ticket_entity_1 = require("../support/entities/support-ticket.entity");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
 exports.AdminModule = AdminModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, ad_entity_1.Ad, booking_entity_1.Booking, system_setting_entity_1.SystemSetting, activity_log_entity_1.ActivityLog, role_entity_1.Role, permission_entity_1.Permission]),
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, ad_entity_1.Ad, booking_entity_1.Booking, system_setting_entity_1.SystemSetting, activity_log_entity_1.ActivityLog, role_entity_1.Role, permission_entity_1.Permission, category_entity_1.Category, subcategory_entity_1.SubCategory, review_entity_1.Review, report_entity_1.Report, email_template_entity_1.EmailTemplate, support_ticket_entity_1.SupportTicket, support_ticket_entity_1.TicketMessage]),
             permissions_module_1.PermissionsModule,
         ],
         controllers: [admin_controller_1.AdminController],

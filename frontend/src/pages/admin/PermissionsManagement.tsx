@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Shield, Users } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
+
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
@@ -68,17 +68,14 @@ export const PermissionsManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestion des Permissions</h1>
@@ -209,7 +206,7 @@ export const PermissionsManagement: React.FC = () => {
           />
         )}
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../../hooks/useAdminAuth';
 import { useAuth } from '../../context/AuthContext';
+import { AdminLayout } from './AdminLayout';
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -27,5 +28,5 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     return <Navigate to="/ads" replace />;
   }
 
-  return <>{children}</>;
+  return <AdminLayout>{children}</AdminLayout>;
 };

@@ -55,5 +55,13 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
-
+  @ApiProperty({
+    description: 'Code de parrainage (optionnel)',
+    example: 'JEA123ABC',
+    required: false,
+    maxLength: 10
+  })
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }

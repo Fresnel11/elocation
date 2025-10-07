@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Check, X, Trash2, AlertTriangle, Image } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
+
 import { DataTable } from '../../components/admin/DataTable';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -240,7 +240,7 @@ export const AdsManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Gestion des Annonces</h1>
@@ -260,60 +260,60 @@ export const AdsManagement: React.FC = () => {
           filters={renderFilters()}
           actions={renderActions}
         />
+      </div>
 
-        {/* Modal de modération */}
-        {moderationModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setModerationModal(null)} />
-              
-              <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                <div className="flex items-center mb-4">
-                  <AlertTriangle className="h-6 w-6 text-orange-500 mr-2" />
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {moderationModal.action === 'approve' ? 'Activer' : 'Désactiver'} l'annonce
-                  </h3>
+      {/* Modal de modération */}
+      {moderationModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setModerationModal(null)} />
+            
+            <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+              <div className="flex items-center mb-4">
+                <AlertTriangle className="h-6 w-6 text-orange-500 mr-2" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {moderationModal.action === 'approve' ? 'Activer' : 'Désactiver'} l'annonce
+                </h3>
+              </div>
+
+              {moderationModal.action === 'reject' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Raison de la désactivation (optionnel)
+                  </label>
+                  <textarea
+                    value={moderationReason}
+                    onChange={(e) => setModerationReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Expliquez pourquoi cette annonce est désactivée..."
+                  />
                 </div>
+              )}
 
-                {moderationModal.action === 'reject' && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Raison de la désactivation (optionnel)
-                    </label>
-                    <textarea
-                      value={moderationReason}
-                      onChange={(e) => setModerationReason(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={3}
-                      placeholder="Expliquez pourquoi cette annonce est désactivée..."
-                    />
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setModerationModal(null)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleModeration}
-                    disabled={actionLoading === moderationModal.adId}
-                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
-                      moderationModal.action === 'approve' 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-red-600 hover:bg-red-700'
-                    }`}
-                  >
-                    {moderationModal.action === 'approve' ? 'Activer' : 'Désactiver'}
-                  </button>
-                </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setModerationModal(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleModeration}
+                  disabled={actionLoading === moderationModal.adId}
+                  className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
+                    moderationModal.action === 'approve' 
+                      ? 'bg-green-600 hover:bg-green-700' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
+                >
+                  {moderationModal.action === 'approve' ? 'Activer' : 'Désactiver'}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </AdminLayout>
+        </div>
+      )}
+    </>
   );
 };

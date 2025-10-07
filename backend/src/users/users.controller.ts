@@ -32,12 +32,17 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { ReviewsService } from '../reviews/reviews.service';
 
 @ApiTags('Utilisateurs')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly reviewsService: ReviewsService
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -206,5 +211,81 @@ export class UsersController {
   })
   toggleStatus(@Param('id') id: string) {
     return this.usersService.toggleUserStatus(id);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
+  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.id, updateProfileDto);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Obtenir le profil utilisateur' })
+  async getProfile(@Request() req) {
+    return this.usersService.getProfile(req.user.id);
+  }
+
+  @Post('avatar')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Uploader un avatar' })
+  async uploadAvatar(@Request() req, @Body('avatarUrl') avatarUrl: string) {
+    return this.usersService.uploadAvatar(req.user.id, avatarUrl);
+  }
+
+  @Get(':id/reputation')
+  @ApiOperation({ 
+    summary: 'Récupérer la réputation d\'un utilisateur',
+    description: 'Récupère les statistiques de réputation basées sur les avis reçus.'
+  })
+  @ApiParam({ name: 'id', description: 'ID de l\'utilisateur' })
+  @ApiOkResponse({ 
+    description: 'Réputation récupérée avec succès' 
+  })
+  @ApiNotFoundResponse({ 
+    description: 'Utilisateur non trouvé' 
+  })
+  async getUserReputation(@Param('id') id: string) {
+    const reviews = await this.reviewsService.getUserReviews(id);
+    
+    if (reviews.length === 0) {
+      return {
+        averageRating: 0,
+        totalReviews: 0,
+        reputationLevel: 'Nouveau',
+        reputationScore: 0
+      };
+    }
+
+    const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+    const totalReviews = reviews.length;
+    
+    let reputationLevel = 'Nouveau';
+    let reputationScore = 0;
+    
+    if (averageRating >= 4.5 && totalReviews >= 10) {
+      reputationLevel = 'Excellent';
+      reputationScore = 90 + Math.min(10, totalReviews - 10);
+    } else if (averageRating >= 4 && totalReviews >= 5) {
+      reputationLevel = 'Très bon';
+      reputationScore = 70 + (averageRating - 4) * 40;
+    } else if (averageRating >= 3.5 && totalReviews >= 3) {
+      reputationLevel = 'Bon';
+      reputationScore = 50 + (averageRating - 3.5) * 40;
+    } else if (totalReviews > 0) {
+      reputationLevel = 'Moyen';
+      reputationScore = Math.max(20, averageRating * 20);
+    }
+    
+    return {
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews,
+      reputationLevel,
+      reputationScore: Math.min(100, Math.round(reputationScore))
+    };
   }
 }

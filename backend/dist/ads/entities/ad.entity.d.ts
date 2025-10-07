@@ -3,6 +3,7 @@ import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../subcategories/entities/subcategory.entity';
 import { Review } from '../../reviews/entities/review.entity';
 import { AdPublisherRole } from '../../common/enums/ad-publisher-role.enum';
+import { Favorite } from '../../favorites/entities/favorite.entity';
 export declare class Ad {
     id: string;
     title: string;
@@ -36,6 +37,7 @@ export declare class Ad {
     power: string;
     specifications: string[];
     features: string[];
+    views: number;
     publisherRole: AdPublisherRole;
     user: User;
     userId: string;
@@ -44,6 +46,7 @@ export declare class Ad {
     subCategory: SubCategory;
     subCategoryId: string;
     reviews: Review[];
+    favorites: Favorite[];
     createdAt: Date;
     updatedAt: Date;
 }

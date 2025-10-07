@@ -22,10 +22,13 @@ const user_role_enum_1 = require("../common/enums/user-role.enum");
 const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const update_profile_dto_1 = require("./dto/update-profile.dto");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
+const reviews_service_1 = require("../reviews/reviews.service");
 let UsersController = class UsersController {
-    constructor(usersService) {
+    constructor(usersService, reviewsService) {
         this.usersService = usersService;
+        this.reviewsService = reviewsService;
     }
     create(createUserDto) {
         return this.usersService.create(createUserDto);
@@ -47,6 +50,52 @@ let UsersController = class UsersController {
     }
     toggleStatus(id) {
         return this.usersService.toggleUserStatus(id);
+    }
+    async updateProfile(req, updateProfileDto) {
+        return this.usersService.updateProfile(req.user.id, updateProfileDto);
+    }
+    async getProfile(req) {
+        return this.usersService.getProfile(req.user.id);
+    }
+    async uploadAvatar(req, avatarUrl) {
+        return this.usersService.uploadAvatar(req.user.id, avatarUrl);
+    }
+    async getUserReputation(id) {
+        const reviews = await this.reviewsService.getUserReviews(id);
+        if (reviews.length === 0) {
+            return {
+                averageRating: 0,
+                totalReviews: 0,
+                reputationLevel: 'Nouveau',
+                reputationScore: 0
+            };
+        }
+        const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+        const totalReviews = reviews.length;
+        let reputationLevel = 'Nouveau';
+        let reputationScore = 0;
+        if (averageRating >= 4.5 && totalReviews >= 10) {
+            reputationLevel = 'Excellent';
+            reputationScore = 90 + Math.min(10, totalReviews - 10);
+        }
+        else if (averageRating >= 4 && totalReviews >= 5) {
+            reputationLevel = 'Très bon';
+            reputationScore = 70 + (averageRating - 4) * 40;
+        }
+        else if (averageRating >= 3.5 && totalReviews >= 3) {
+            reputationLevel = 'Bon';
+            reputationScore = 50 + (averageRating - 3.5) * 40;
+        }
+        else if (totalReviews > 0) {
+            reputationLevel = 'Moyen';
+            reputationScore = Math.max(20, averageRating * 20);
+        }
+        return {
+            averageRating: Math.round(averageRating * 10) / 10,
+            totalReviews,
+            reputationLevel,
+            reputationScore: Math.min(100, Math.round(reputationScore))
+        };
     }
 };
 exports.UsersController = UsersController;
@@ -235,9 +284,60 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "toggleStatus", null);
+__decorate([
+    (0, common_1.Patch)('profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Mettre à jour le profil utilisateur' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_profile_dto_1.UpdateProfileDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Get)('profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obtenir le profil utilisateur' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Post)('avatar'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Uploader un avatar' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)('avatarUrl')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "uploadAvatar", null);
+__decorate([
+    (0, common_1.Get)(':id/reputation'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Récupérer la réputation d\'un utilisateur',
+        description: 'Récupère les statistiques de réputation basées sur les avis reçus.'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID de l\'utilisateur' }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Réputation récupérée avec succès'
+    }),
+    (0, swagger_1.ApiNotFoundResponse)({
+        description: 'Utilisateur non trouvé'
+    }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getUserReputation", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('Utilisateurs'),
     (0, common_1.Controller)('users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        reviews_service_1.ReviewsService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { MediaViewer } from '../components/ui/MediaViewer';
+import { ShareButton } from '../components/ui/ShareButton';
+import { RecommendationsSection } from '../components/ui/RecommendationsSection';
 
 export const AnnonceDetailPage: React.FC = () => {
   const { id } = useParams();
@@ -159,9 +161,12 @@ Disponible pour location courte ou longue durée.`,
                     <Button variant="outline" size="icon">
                       <Heart className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon">
-                      <Share2 className="h-4 w-4" />
-                    </Button>
+                    <ShareButton
+                      adId={id || ''}
+                      title={annonce.title}
+                      description={annonce.description}
+                      imageUrl={annonce.media[0]?.url}
+                    />
                   </div>
                 </div>
 
@@ -336,6 +341,11 @@ Disponible pour location courte ou longue durée.`,
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Recommendations */}
+        <div className="mt-12">
+          <RecommendationsSection />
         </div>
       </div>
       

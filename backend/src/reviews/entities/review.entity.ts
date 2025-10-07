@@ -2,6 +2,12 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Up
 import { User } from '../../users/entities/user.entity';
 import { Ad } from '../../ads/entities/ad.entity';
 
+export enum ReviewStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected'
+}
+
 @Entity('reviews')
 export class Review {
   @PrimaryGeneratedColumn('uuid')
@@ -12,6 +18,9 @@ export class Review {
 
   @Column({ type: 'text' })
   comment: string;
+
+  @Column({ type: 'enum', enum: ReviewStatus, default: ReviewStatus.PENDING })
+  status: ReviewStatus;
 
   @ManyToOne(() => User)
   user: User;

@@ -17,6 +17,8 @@ const payment_entity_1 = require("../../payments/entities/payment.entity");
 const role_entity_1 = require("../../roles/entities/role.entity");
 const request_entity_1 = require("../../requests/entities/request.entity");
 const response_entity_1 = require("../../responses/entities/response.entity");
+const favorite_entity_1 = require("../../favorites/entities/favorite.entity");
+const user_profile_entity_1 = require("./user-profile.entity");
 let User = class User {
 };
 exports.User = User;
@@ -85,6 +87,11 @@ __decorate([
     __metadata("design:type", Date)
 ], User.prototype, "resetPasswordOtpExpiresAt", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 10, nullable: true, unique: true }),
+    (0, typeorm_1.Index)({ unique: true }),
+    __metadata("design:type", String)
+], User.prototype, "referralCode", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => role_entity_1.Role, (role) => role.users),
     (0, typeorm_1.JoinColumn)({ name: 'roleId' }),
     __metadata("design:type", role_entity_1.Role)
@@ -113,6 +120,18 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => response_entity_1.Response, (response) => response.user),
     __metadata("design:type", Array)
 ], User.prototype, "responses", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => favorite_entity_1.Favorite, (favorite) => favorite.user),
+    __metadata("design:type", Array)
+], User.prototype, "favorites", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => user_profile_entity_1.UserProfile, profile => profile.user, { cascade: true }),
+    __metadata("design:type", user_profile_entity_1.UserProfile)
+], User.prototype, "profile", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'loyalty_points', default: 0 }),
+    __metadata("design:type", Number)
+], User.prototype, "loyaltyPoints", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

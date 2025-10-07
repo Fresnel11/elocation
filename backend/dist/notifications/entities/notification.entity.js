@@ -18,9 +18,12 @@ var NotificationType;
     NotificationType["BOOKING_CONFIRMED"] = "booking_confirmed";
     NotificationType["BOOKING_CANCELLED"] = "booking_cancelled";
     NotificationType["BOOKING_EXPIRED"] = "booking_expired";
+    NotificationType["BOOKING_REMINDER"] = "booking_reminder";
     NotificationType["NEW_MESSAGE"] = "new_message";
+    NotificationType["NEW_AD_MATCH"] = "new_ad_match";
     NotificationType["AD_APPROVED"] = "ad_approved";
     NotificationType["AD_REJECTED"] = "ad_rejected";
+    NotificationType["PRICE_CHANGE"] = "price_change";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
 let Notification = class Notification {
 };

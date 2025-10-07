@@ -13,6 +13,7 @@ import { Category } from '../../categories/entities/category.entity';
 import { SubCategory } from '../../subcategories/entities/subcategory.entity';
 import { Review } from '../../reviews/entities/review.entity';
 import { AdPublisherRole } from '../../common/enums/ad-publisher-role.enum';
+import { Favorite } from '../../favorites/entities/favorite.entity';
 
 @Entity('ads')
 export class Ad {
@@ -117,6 +118,9 @@ export class Ad {
   @Column('json', { nullable: true })
   features: string[]; // Caractéristiques/Options
 
+  @Column({ type: 'int', default: 0 })
+  views: number;
+
   @Column({
     type: 'enum',
     enum: AdPublisherRole,
@@ -147,6 +151,9 @@ export class Ad {
 
   @OneToMany(() => Review, review => review.ad)
   reviews: Review[];
+
+  @OneToMany(() => Favorite, (favorite) => favorite.ad)
+  favorites: Favorite[];
 
   @CreateDateColumn()
   createdAt: Date;

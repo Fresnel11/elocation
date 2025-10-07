@@ -15,11 +15,13 @@ const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcrypt");
 const users_service_1 = require("../users/users.service");
 const email_service_1 = require("../common/services/email.service");
+const referrals_service_1 = require("../referrals/referrals.service");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService, emailService) {
+    constructor(usersService, jwtService, emailService, referralsService) {
         this.usersService = usersService;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.referralsService = referralsService;
     }
     async register(registerDto) {
         if (!registerDto.email && !registerDto.phone) {
@@ -32,6 +34,14 @@ let AuthService = class AuthService {
             }
         }
         const user = await this.usersService.create(registerDto);
+        if (registerDto.referralCode) {
+            try {
+                await this.referralsService.useReferralCode(registerDto.referralCode, user.id);
+            }
+            catch (error) {
+                console.log('Erreur code parrainage:', error.message);
+            }
+        }
         const code = (Math.floor(100000 + Math.random() * 900000)).toString();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
         if (user.phone) {
@@ -166,6 +176,7 @@ exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
         jwt_1.JwtService,
-        email_service_1.EmailService])
+        email_service_1.EmailService,
+        referrals_service_1.ReferralsService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { PriceAlertsService } from '../price-alerts/price-alerts.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Ad } from './entities/ad.entity';
@@ -7,14 +8,16 @@ import { UpdateAdDto } from './dto/update-ad.dto';
 import { SearchAdsDto } from './dto/search-ads.dto';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../common/enums/user-role.enum';
-import { GeocodingService } from '../common/services/geocoding.service';
+import { NotificationsService } from '../notifications/notifications.service';
+
 
 @Injectable()
 export class AdsService {
   constructor(
     @InjectRepository(Ad)
     private readonly adRepository: Repository<Ad>,
-    private readonly geocodingService: GeocodingService,
+    private readonly priceAlertsService: PriceAlertsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createAdDto: CreateAdDto, user: User): Promise<Ad> {
@@ -22,18 +25,20 @@ export class AdsService {
       ? `https://wa.me/${createAdDto.whatsappNumber.replace(/\D/g, '')}`
       : undefined;
 
-    // Géocodage automatique de la localisation
-    const coordinates = this.geocodingService.extractCoordinates(createAdDto.location);
-
     const ad = this.adRepository.create({
       ...createAdDto,
       whatsappLink,
-      latitude: coordinates?.latitude || null,
-      longitude: coordinates?.longitude || null,
       userId: user.id,
     } as Partial<Ad>);
 
-    return this.adRepository.save(ad);
+    const savedAd = await this.adRepository.save(ad);
+    
+    // Vérifier les alertes de recherche après création
+    this.checkSearchAlerts(savedAd).catch(err => 
+      console.error('Erreur vérification alertes:', err)
+    );
+    
+    return savedAd;
   }
 
   async findAll(searchAdsDto: SearchAdsDto) {
@@ -62,48 +67,7 @@ export class AdsService {
       .leftJoinAndSelect('ad.subCategory', 'subCategory')
       .where('ad.isActive = :isActive', { isActive: true });
 
-    // Filtre par géolocalisation avec formule de Haversine
-    if (userLatitude && userLongitude) {
-      // Pour les villes, on utilise un rayon large (200km) pour couvrir toute la zone urbaine
-      const searchRadius = radius > 100 ? 200 : radius;
-      
-      queryBuilder.andWhere(
-        `(
-          ad.latitude IS NULL OR ad.longitude IS NULL OR
-          (
-            6371 * acos(
-              cos(radians(:userLat)) * 
-              cos(radians(ad.latitude)) * 
-              cos(radians(ad.longitude) - radians(:userLng)) + 
-              sin(radians(:userLat)) * 
-              sin(radians(ad.latitude))
-            )
-          ) <= :radius
-        )`,
-        {
-          userLat: userLatitude,
-          userLng: userLongitude,
-          radius: searchRadius,
-        }
-      );
-      
-      // Ajouter la distance calculée pour le tri (NULL pour les annonces sans coordonnées)
-      queryBuilder.addSelect(
-        `CASE 
-          WHEN ad.latitude IS NULL OR ad.longitude IS NULL THEN 999999
-          ELSE (
-            6371 * acos(
-              cos(radians(:userLat)) * 
-              cos(radians(ad.latitude)) * 
-              cos(radians(ad.longitude) - radians(:userLng)) + 
-              sin(radians(:userLat)) * 
-              sin(radians(ad.latitude))
-            )
-          )
-        END`,
-        'distance'
-      );
-    }
+
 
     if (search) {
       queryBuilder.andWhere(
@@ -132,14 +96,10 @@ export class AdsService {
       queryBuilder.andWhere('ad.isAvailable = :isAvailable', { isAvailable });
     }
 
-    const validSortFields = ['createdAt', 'price', 'title', 'distance'];
+    const validSortFields = ['createdAt', 'price', 'title'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     
-    if (sortField === 'distance' && userLatitude && userLongitude) {
-      queryBuilder.orderBy('distance', sortOrder as any);
-    } else {
-      queryBuilder.orderBy(`ad.${sortField}` as any, sortOrder as any);
-    }
+    queryBuilder.orderBy(`ad.${sortField}` as any, sortOrder as any);
     
     queryBuilder.skip(skip).take(limit);
 
@@ -203,12 +163,19 @@ export class AdsService {
       throw new ForbiddenException('You can only update your own ads');
     }
 
+    const previousPrice = ad.price;
     const whatsappLink = updateAdDto.whatsappNumber
       ? `https://wa.me/${updateAdDto.whatsappNumber.replace(/\D/g, '')}`
       : ad.whatsappLink;
 
     Object.assign(ad, { ...updateAdDto, whatsappLink });
-    return this.adRepository.save(ad);
+    const updatedAd = await this.adRepository.save(ad);
+    
+    if (updateAdDto.price && updateAdDto.price !== previousPrice) {
+      await this.priceAlertsService.checkPriceChanges(id, updateAdDto.price, previousPrice);
+    }
+    
+    return updatedAd;
   }
 
   async remove(id: string, user: User): Promise<void> {
@@ -255,5 +222,10 @@ export class AdsService {
 
     ad.photos = photos;
     return this.adRepository.save(ad);
+  }
+
+  private async checkSearchAlerts(ad: Ad): Promise<void> {
+    // Cette méthode sera appelée par le service cron
+    // Pas besoin d'implémentation ici car gérée par NotificationCronService
   }
 }

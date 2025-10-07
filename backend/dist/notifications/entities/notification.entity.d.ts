@@ -4,9 +4,12 @@ export declare enum NotificationType {
     BOOKING_CONFIRMED = "booking_confirmed",
     BOOKING_CANCELLED = "booking_cancelled",
     BOOKING_EXPIRED = "booking_expired",
+    BOOKING_REMINDER = "booking_reminder",
     NEW_MESSAGE = "new_message",
+    NEW_AD_MATCH = "new_ad_match",
     AD_APPROVED = "ad_approved",
-    AD_REJECTED = "ad_rejected"
+    AD_REJECTED = "ad_rejected",
+    PRICE_CHANGE = "price_change"
 }
 export declare class Notification {
     id: string;

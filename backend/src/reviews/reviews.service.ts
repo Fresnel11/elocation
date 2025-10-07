@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Review } from './entities/review.entity';
+import { Review, ReviewStatus } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { Ad } from '../ads/entities/ad.entity';
 import { User } from '../users/entities/user.entity';
@@ -43,7 +43,7 @@ export class ReviewsService {
 
   async findByAd(adId: string): Promise<Review[]> {
     return this.reviewRepository.find({
-      where: { ad: { id: adId } },
+      where: { ad: { id: adId }, status: ReviewStatus.APPROVED },
       relations: ['user'],
       select: {
         id: true,
@@ -66,12 +66,82 @@ export class ReviewsService {
       .createQueryBuilder('review')
       .select('AVG(review.rating)', 'averageRating')
       .addSelect('COUNT(review.id)', 'totalReviews')
-      .where('review.adId = :adId', { adId })
+      .where('review.adId = :adId AND review.status = :status', { adId, status: ReviewStatus.APPROVED })
       .getRawOne();
 
     return {
       averageRating: parseFloat(result.averageRating) || 0,
       totalReviews: parseInt(result.totalReviews) || 0
     };
+  }
+
+  async getPendingReviews(): Promise<Review[]> {
+    return this.reviewRepository.find({
+      where: { status: ReviewStatus.PENDING },
+      relations: ['user', 'ad'],
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        status: true,
+        createdAt: true,
+        user: {
+          id: true,
+          firstName: true,
+          lastName: true
+        },
+        ad: {
+          id: true,
+          title: true
+        }
+      },
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  async approveReview(id: string): Promise<Review> {
+    const review = await this.reviewRepository.findOne({ where: { id } });
+    if (!review) {
+      throw new NotFoundException('Avis non trouvé');
+    }
+    
+    review.status = ReviewStatus.APPROVED;
+    return this.reviewRepository.save(review);
+  }
+
+  async rejectReview(id: string): Promise<Review> {
+    const review = await this.reviewRepository.findOne({ where: { id } });
+    if (!review) {
+      throw new NotFoundException('Avis non trouvé');
+    }
+    
+    review.status = ReviewStatus.REJECTED;
+    return this.reviewRepository.save(review);
+  }
+
+  async getUserReviews(userId: string): Promise<Review[]> {
+    return this.reviewRepository.find({
+      where: { 
+        ad: { user: { id: userId } },
+        status: ReviewStatus.APPROVED 
+      },
+      relations: ['user', 'ad'],
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        user: {
+          id: true,
+          firstName: true,
+          lastName: true
+        },
+        ad: {
+          id: true,
+          title: true
+        }
+      },
+      order: { createdAt: 'DESC' }
+    });
   }
 }

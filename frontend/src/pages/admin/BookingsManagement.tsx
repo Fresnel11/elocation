@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Check, X, Calendar, User, Home } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
+
 import { DataTable } from '../../components/admin/DataTable';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -237,7 +237,7 @@ export const BookingsManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Gestion des Réservations</h1>
@@ -257,99 +257,99 @@ export const BookingsManagement: React.FC = () => {
           filters={renderFilters()}
           actions={renderActions}
         />
+      </div>
 
-        {/* Modal de détails */}
-        {selectedBooking && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setSelectedBooking(null)} />
-              
-              <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Détails de la réservation</h3>
-                  <button
-                    onClick={() => setSelectedBooking(null)}
-                    className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+      {/* Modal de détails */}
+      {selectedBooking && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setSelectedBooking(null)} />
+            
+            <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Détails de la réservation</h3>
+                <button
+                  onClick={() => setSelectedBooking(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Informations de l'annonce */}
+                <div className="flex items-start space-x-3">
+                  <Home className="h-5 w-5 text-gray-400 mt-1" />
+                  <div>
+                    <p className="text-sm text-gray-500">Annonce</p>
+                    <p className="font-medium">{selectedBooking.ad.title}</p>
+                    <p className="text-sm text-gray-600">{selectedBooking.ad.location}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-6">
-                  {/* Informations de l'annonce */}
+                {/* Dates et prix */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-start space-x-3">
-                    <Home className="h-5 w-5 text-gray-400 mt-1" />
+                    <Calendar className="h-5 w-5 text-gray-400 mt-1" />
                     <div>
-                      <p className="text-sm text-gray-500">Annonce</p>
-                      <p className="font-medium">{selectedBooking.ad.title}</p>
-                      <p className="text-sm text-gray-600">{selectedBooking.ad.location}</p>
+                      <p className="text-sm text-gray-500">Période</p>
+                      <p className="font-medium">{formatDateRange(selectedBooking.startDate, selectedBooking.endDate)}</p>
                     </div>
                   </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-500">Prix total</p>
+                    <p className="font-medium text-lg text-green-600">{selectedBooking.totalPrice}€</p>
+                  </div>
+                </div>
 
-                  {/* Dates et prix */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3">
-                      <Calendar className="h-5 w-5 text-gray-400 mt-1" />
-                      <div>
-                        <p className="text-sm text-gray-500">Période</p>
-                        <p className="font-medium">{formatDateRange(selectedBooking.startDate, selectedBooking.endDate)}</p>
-                      </div>
-                    </div>
-                    
+                {/* Participants */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-start space-x-3">
+                    <User className="h-5 w-5 text-gray-400 mt-1" />
                     <div>
-                      <p className="text-sm text-gray-500">Prix total</p>
-                      <p className="font-medium text-lg text-green-600">{selectedBooking.totalPrice}€</p>
+                      <p className="text-sm text-gray-500">Locataire</p>
+                      <p className="font-medium">{selectedBooking.tenant.firstName} {selectedBooking.tenant.lastName}</p>
+                      <p className="text-sm text-gray-600">{selectedBooking.tenant.email}</p>
                     </div>
                   </div>
-
-                  {/* Participants */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3">
-                      <User className="h-5 w-5 text-gray-400 mt-1" />
-                      <div>
-                        <p className="text-sm text-gray-500">Locataire</p>
-                        <p className="font-medium">{selectedBooking.tenant.firstName} {selectedBooking.tenant.lastName}</p>
-                        <p className="text-sm text-gray-600">{selectedBooking.tenant.email}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <User className="h-5 w-5 text-gray-400 mt-1" />
-                      <div>
-                        <p className="text-sm text-gray-500">Propriétaire</p>
-                        <p className="font-medium">{selectedBooking.owner.firstName} {selectedBooking.owner.lastName}</p>
-                        <p className="text-sm text-gray-600">{selectedBooking.owner.email}</p>
-                      </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <User className="h-5 w-5 text-gray-400 mt-1" />
+                    <div>
+                      <p className="text-sm text-gray-500">Propriétaire</p>
+                      <p className="font-medium">{selectedBooking.owner.firstName} {selectedBooking.owner.lastName}</p>
+                      <p className="text-sm text-gray-600">{selectedBooking.owner.email}</p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Message */}
-                  {selectedBooking.message && (
-                    <div>
-                      <p className="text-sm text-gray-500 mb-2">Message du locataire</p>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-700">{selectedBooking.message}</p>
-                      </div>
+                {/* Message */}
+                {selectedBooking.message && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Message du locataire</p>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-sm text-gray-700">{selectedBooking.message}</p>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Statut */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Statut actuel</p>
-                      {getStatusBadge(selectedBooking.status)}
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">Créé le</p>
-                      <p className="text-sm font-medium">{new Date(selectedBooking.createdAt).toLocaleDateString('fr-FR')}</p>
-                    </div>
+                {/* Statut */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Statut actuel</p>
+                    {getStatusBadge(selectedBooking.status)}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">Créé le</p>
+                    <p className="text-sm font-medium">{new Date(selectedBooking.createdAt).toLocaleDateString('fr-FR')}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </AdminLayout>
+        </div>
+      )}
+    </>
   );
 };

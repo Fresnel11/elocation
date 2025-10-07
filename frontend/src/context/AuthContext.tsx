@@ -5,7 +5,7 @@ import { User } from '../services/authService';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (firstName: string, lastName: string, phone: string, password: string, email?: string) => Promise<{ phone: string; otpPreview: string }>;
+  register: (firstName: string, lastName: string, phone: string, password: string, email?: string, referralCode?: string) => Promise<{ phone: string; otpPreview: string }>;
   requestOtp: (email: string) => Promise<void>;
   verifyOtp: (email: string, code: string) => Promise<void>;
   logout: () => void;
@@ -53,8 +53,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await storeLogin({ email, password });
   };
 
-  const register = async (firstName: string, lastName: string, phone: string, password: string, email?: string) => {
-    return await storeRegister({ firstName, lastName, phone, password, email });
+  const register = async (firstName: string, lastName: string, phone: string, password: string, email?: string, referralCode?: string) => {
+    return await storeRegister({ firstName, lastName, phone, password, email, referralCode });
   };
 
   const requestOtp = async (email: string) => {

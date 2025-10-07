@@ -72,3 +72,20 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Sidebar scrollbar - only visible on hover */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.hover\:scrollbar-thumb-gray-400:hover::-webkit-scrollbar-thumb {
+  @apply bg-gray-400;
+}

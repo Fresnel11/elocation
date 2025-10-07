@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar } from 'lucide-react';
+import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar, Heart, Download, BarChart3 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
@@ -85,6 +85,7 @@ export const Navbar: React.FC = () => {
               <Home className="h-4 w-4" />
               Annonces
             </Link>
+
             <Link 
               to="/requests" 
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
@@ -108,17 +109,52 @@ export const Navbar: React.FC = () => {
               Messages
             </Link>
             {user && (
-              <Link 
-                to="/bookings" 
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
-                  location.pathname === '/bookings' 
-                    ? 'bg-blue-600 text-white shadow-lg' 
-                    : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
-                }`}
-              >
-                <Calendar className="h-4 w-4" />
-                Réservations
-              </Link>
+              <>
+                <Link 
+                  to="/bookings" 
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/bookings' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Réservations
+                </Link>
+                <Link 
+                  to="/favorites" 
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/favorites' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  <Heart className="h-4 w-4" />
+                  Favoris
+                </Link>
+                <Link 
+                  to="/offline-ads" 
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/offline-ads' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  <Download className="h-4 w-4" />
+                  Hors ligne
+                </Link>
+                <Link 
+                  to="/analytics" 
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                    location.pathname === '/analytics' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-white/60 hover:text-blue-600'
+                  }`}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Statistiques
+                </Link>
+              </>
             )}
             {!user && (
               <>
@@ -238,6 +274,8 @@ export const Navbar: React.FC = () => {
                 <Home className="h-5 w-5" />
               </Link>
               
+
+              
               <Link
                 to="/requests"
                 className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
@@ -271,6 +309,39 @@ export const Navbar: React.FC = () => {
                     }`}
                   >
                     <Calendar className="h-5 w-5" />
+                  </Link>
+                  
+                  <Link
+                    to="/favorites"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/favorites' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <Heart className="h-5 w-5" />
+                  </Link>
+                  
+                  <Link
+                    to="/offline-ads"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/offline-ads' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <Download className="h-5 w-5" />
+                  </Link>
+                  
+                  <Link
+                    to="/analytics"
+                    className={`p-2.5 rounded-2xl transition-all duration-200 flex-shrink-0 ${
+                      location.pathname === '/analytics' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <BarChart3 className="h-5 w-5" />
                   </Link>
                   
                   <div className="p-2.5 flex-shrink-0">

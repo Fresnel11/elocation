@@ -46,7 +46,7 @@ let ReviewsService = class ReviewsService {
     }
     async findByAd(adId) {
         return this.reviewRepository.find({
-            where: { ad: { id: adId } },
+            where: { ad: { id: adId }, status: review_entity_1.ReviewStatus.APPROVED },
             relations: ['user'],
             select: {
                 id: true,
@@ -68,12 +68,76 @@ let ReviewsService = class ReviewsService {
             .createQueryBuilder('review')
             .select('AVG(review.rating)', 'averageRating')
             .addSelect('COUNT(review.id)', 'totalReviews')
-            .where('review.adId = :adId', { adId })
+            .where('review.adId = :adId AND review.status = :status', { adId, status: review_entity_1.ReviewStatus.APPROVED })
             .getRawOne();
         return {
             averageRating: parseFloat(result.averageRating) || 0,
             totalReviews: parseInt(result.totalReviews) || 0
         };
+    }
+    async getPendingReviews() {
+        return this.reviewRepository.find({
+            where: { status: review_entity_1.ReviewStatus.PENDING },
+            relations: ['user', 'ad'],
+            select: {
+                id: true,
+                rating: true,
+                comment: true,
+                status: true,
+                createdAt: true,
+                user: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                },
+                ad: {
+                    id: true,
+                    title: true
+                }
+            },
+            order: { createdAt: 'DESC' }
+        });
+    }
+    async approveReview(id) {
+        const review = await this.reviewRepository.findOne({ where: { id } });
+        if (!review) {
+            throw new common_1.NotFoundException('Avis non trouvé');
+        }
+        review.status = review_entity_1.ReviewStatus.APPROVED;
+        return this.reviewRepository.save(review);
+    }
+    async rejectReview(id) {
+        const review = await this.reviewRepository.findOne({ where: { id } });
+        if (!review) {
+            throw new common_1.NotFoundException('Avis non trouvé');
+        }
+        review.status = review_entity_1.ReviewStatus.REJECTED;
+        return this.reviewRepository.save(review);
+    }
+    async getUserReviews(userId) {
+        return this.reviewRepository.find({
+            where: {
+                ad: { user: { id: userId } },
+                status: review_entity_1.ReviewStatus.APPROVED
+            },
+            relations: ['user', 'ad'],
+            select: {
+                id: true,
+                rating: true,
+                comment: true,
+                createdAt: true,
+                user: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                },
+                ad: {
+                    id: true,
+                    title: true
+                }
+            },
+            order: { createdAt: 'DESC' }
+        });
     }
 };
 exports.ReviewsService = ReviewsService;
