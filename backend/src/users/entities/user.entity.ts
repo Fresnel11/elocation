@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index, ManyToMany, JoinTable, OneToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Ad } from '../../ads/entities/ad.entity';
 import { Payment } from '../../payments/entities/payment.entity';
@@ -6,6 +6,8 @@ import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
 import { Response } from '../../responses/entities/response.entity';
 import { Permission } from '../../permissions/entities/permission.entity';
+import { Favorite } from '../../favorites/entities/favorite.entity';
+import { UserProfile } from './user-profile.entity';
 
 @Entity('users')
 export class User {
@@ -58,6 +60,10 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   resetPasswordOtpExpiresAt: Date | null;
 
+  @Column({ type: 'varchar', length: 10, nullable: true, unique: true })
+  @Index({ unique: true })
+  referralCode: string | null;
+
   @ManyToOne(() => Role, (role) => role.users)
   @JoinColumn({ name: 'roleId' })
   role: Role;
@@ -80,7 +86,14 @@ export class User {
   @OneToMany(() => Response, (response) => response.user)
   responses: Response[];
 
+  @OneToMany(() => Favorite, (favorite) => favorite.user)
+  favorites: Favorite[];
 
+  @OneToOne(() => UserProfile, profile => profile.user, { cascade: true })
+  profile: UserProfile;
+
+  @Column({ name: 'loyalty_points', default: 0 })
+  loyaltyPoints: number;
 
   @CreateDateColumn()
   createdAt: Date;

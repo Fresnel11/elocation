@@ -17,9 +17,13 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const notifications_service_1 = require("./notifications.service");
+const push_notification_service_1 = require("./services/push-notification.service");
+const create_search_alert_dto_1 = require("./dto/create-search-alert.dto");
+const update_notification_preference_dto_1 = require("./dto/update-notification-preference.dto");
 let NotificationsController = class NotificationsController {
-    constructor(notificationsService) {
+    constructor(notificationsService, pushNotificationService) {
         this.notificationsService = notificationsService;
+        this.pushNotificationService = pushNotificationService;
     }
     async getNotifications(req, page = 1, limit = 20) {
         return this.notificationsService.getUserNotifications(req.user.id, page, limit);
@@ -38,6 +42,30 @@ let NotificationsController = class NotificationsController {
     }
     async markAllAsRead(req) {
         await this.notificationsService.markAllAsRead(req.user.id);
+        return { success: true };
+    }
+    async createSearchAlert(req, createSearchAlertDto) {
+        return this.notificationsService.createSearchAlert(req.user.id, createSearchAlertDto);
+    }
+    async getUserSearchAlerts(req) {
+        return this.notificationsService.getUserSearchAlerts(req.user.id);
+    }
+    async updateSearchAlert(req, id, updateData) {
+        return this.notificationsService.updateSearchAlert(id, req.user.id, updateData);
+    }
+    async deleteSearchAlert(req, id) {
+        return this.notificationsService.deleteSearchAlert(id, req.user.id);
+    }
+    async getNotificationPreferences(req) {
+        return this.notificationsService.getNotificationPreferences(req.user.id);
+    }
+    async updateNotificationPreference(req, updateDto) {
+        return this.notificationsService.updateNotificationPreference(req.user.id, updateDto);
+    }
+    async subscribeToPush(req, subscriptionData) {
+        return { success: true };
+    }
+    async unsubscribeFromPush(req) {
         return { success: true };
     }
 };
@@ -86,11 +114,82 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "markAllAsRead", null);
+__decorate([
+    (0, common_1.Post)('search-alerts'),
+    (0, swagger_1.ApiOperation)({ summary: 'Créer une alerte de recherche' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, create_search_alert_dto_1.CreateSearchAlertDto]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "createSearchAlert", null);
+__decorate([
+    (0, common_1.Get)('search-alerts'),
+    (0, swagger_1.ApiOperation)({ summary: 'Récupérer les alertes de recherche' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getUserSearchAlerts", null);
+__decorate([
+    (0, common_1.Patch)('search-alerts/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Modifier une alerte de recherche' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "updateSearchAlert", null);
+__decorate([
+    (0, common_1.Delete)('search-alerts/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Supprimer une alerte de recherche' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "deleteSearchAlert", null);
+__decorate([
+    (0, common_1.Get)('preferences'),
+    (0, swagger_1.ApiOperation)({ summary: 'Récupérer les préférences de notifications' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getNotificationPreferences", null);
+__decorate([
+    (0, common_1.Patch)('preferences'),
+    (0, swagger_1.ApiOperation)({ summary: 'Modifier les préférences de notifications' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_notification_preference_dto_1.UpdateNotificationPreferenceDto]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "updateNotificationPreference", null);
+__decorate([
+    (0, common_1.Post)('push-subscription'),
+    (0, swagger_1.ApiOperation)({ summary: 'S\'abonner aux notifications push' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "subscribeToPush", null);
+__decorate([
+    (0, common_1.Delete)('push-subscription'),
+    (0, swagger_1.ApiOperation)({ summary: 'Se désabonner des notifications push' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "unsubscribeFromPush", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, swagger_1.ApiTags)('Notifications'),
     (0, common_1.Controller)('notifications'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    __metadata("design:paramtypes", [notifications_service_1.NotificationsService])
+    __metadata("design:paramtypes", [notifications_service_1.NotificationsService,
+        push_notification_service_1.PushNotificationService])
 ], NotificationsController);
 //# sourceMappingURL=notifications.controller.js.map

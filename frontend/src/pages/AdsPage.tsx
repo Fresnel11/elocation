@@ -10,11 +10,12 @@ import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
 import { LocationSelector } from '../components/ui/LocationSelector';
 import { PriceRangeSlider } from '../components/ui/PriceRangeSlider';
 import { MobileSearchFilter } from '../components/ui/MobileSearchFilter';
+import { FavoriteButton } from '../components/ui/FavoriteButton';
+import { AddReviewModal } from '../components/ui/AddReviewModal';
 import { adsService, Ad } from '../services/adsService';
 import { api } from '../services/api';
 
 interface AdWithUI extends Ad {
-  isLiked: boolean;
   averageRating?: number;
   reviewsCount?: number;
   imageLoading?: boolean;
@@ -39,6 +40,8 @@ export const AdsPage: React.FC = () => {
 
   const [selectedAd, setSelectedAd] = useState<AdWithUI | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reviewModalAd, setReviewModalAd] = useState<AdWithUI | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -89,7 +92,6 @@ export const AdsPage: React.FC = () => {
             const ratingResponse = await api.get(`/reviews/ad/${ad.id}/rating`);
             return {
               ...ad,
-              isLiked: false,
               averageRating: ratingResponse.data.averageRating,
               reviewsCount: ratingResponse.data.totalReviews,
               imageLoading: true
@@ -97,7 +99,6 @@ export const AdsPage: React.FC = () => {
           } catch (error) {
             return {
               ...ad,
-              isLiked: false,
               averageRating: 0,
               reviewsCount: 0,
               imageLoading: true
@@ -197,14 +198,7 @@ export const AdsPage: React.FC = () => {
     }));
   };
 
-  const toggleLike = (adId: string) => {
-    setAds(prev => prev.map(ad => 
-      ad.id === adId ? { ...ad, isLiked: !ad.isLiked } : ad
-    ));
-    setFilteredAds(prev => prev.map(ad => 
-      ad.id === adId ? { ...ad, isLiked: !ad.isLiked } : ad
-    ));
-  };
+
 
   const handleImageLoad = (adId: string) => {
     setImageLoadingStates(prev => ({ ...prev, [adId]: false }));
@@ -222,6 +216,21 @@ export const AdsPage: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAd(null);
+  };
+
+  const openReviewModal = (ad: AdWithUI) => {
+    setReviewModalAd(ad);
+    setIsReviewModalOpen(true);
+  };
+
+  const closeReviewModal = () => {
+    setIsReviewModalOpen(false);
+    setReviewModalAd(null);
+  };
+
+  const handleReviewAdded = () => {
+    // Recharger les données des annonces pour mettre à jour les ratings
+    fetchAds(currentPage);
   };
 
   const hasActiveFilters = () => {
@@ -271,6 +280,8 @@ export const AdsPage: React.FC = () => {
                 onLocationChange={setUserLocation}
                 currentLocation={userLocation}
               />
+              
+
               
               <Button
                 variant="outline"
@@ -478,15 +489,12 @@ export const AdsPage: React.FC = () => {
                     />
                     
                     {/* Heart Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleLike(ad.id);
-                      }}
-                      className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all duration-200 shadow-sm"
-                    >
-                      <Heart className={`h-4 w-4 ${ad.isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-400'}`} />
-                    </button>
+                    <div className="absolute top-3 right-3">
+                      <FavoriteButton 
+                        adId={ad.id} 
+                        className="w-8 h-8 bg-white/90 backdrop-blur-sm hover:bg-white shadow-sm" 
+                      />
+                    </div>
                     
                     {/* Category Badge */}
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md">
@@ -572,16 +580,29 @@ export const AdsPage: React.FC = () => {
                           <span className="text-xs text-gray-500">Propriétaire</span>
                         </div>
                       </div>
-                      <Button 
-                        size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal(ad);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
-                      >
-                        Voir détails
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openModal(ad);
+                          }}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
+                        >
+                          Voir détails
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openReviewModal(ad);
+                          }}
+                          className="px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
+                        >
+                          <Star className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -645,12 +666,22 @@ export const AdsPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Modal */}
+      {/* Modals */}
       <AdModal 
         ad={selectedAd}
         isOpen={isModalOpen}
         onClose={closeModal}
       />
+      
+      {reviewModalAd && (
+        <AddReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={closeReviewModal}
+          adId={reviewModalAd.id}
+          adTitle={reviewModalAd.title}
+          onReviewAdded={handleReviewAdded}
+        />
+      )}
       
       {/* Mobile Filter Bottom Sheet */}
       <MobileSearchFilter 

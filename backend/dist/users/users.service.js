@@ -18,11 +18,13 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = require("bcrypt");
 const user_entity_1 = require("./entities/user.entity");
+const user_profile_entity_1 = require("./entities/user-profile.entity");
 const role_entity_1 = require("../roles/entities/role.entity");
 const user_role_enum_1 = require("../common/enums/user-role.enum");
 let UsersService = class UsersService {
-    constructor(userRepository, roleRepository) {
+    constructor(userRepository, profileRepository, roleRepository) {
         this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
         this.roleRepository = roleRepository;
     }
     async create(createUserDto) {
@@ -80,7 +82,7 @@ let UsersService = class UsersService {
     async findOne(id) {
         const user = await this.userRepository.findOne({
             where: { id },
-            relations: ['ads', 'payments'],
+            relations: ['ads', 'payments', 'profile'],
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');
@@ -223,12 +225,39 @@ let UsersService = class UsersService {
             resetPasswordOtpExpiresAt: null
         });
     }
+    async updateProfile(userId, updateProfileDto) {
+        const user = await this.findOne(userId);
+        let profile = user.profile;
+        if (!profile) {
+            profile = this.profileRepository.create({ userId });
+        }
+        Object.assign(profile, updateProfileDto);
+        return this.profileRepository.save(profile);
+    }
+    async uploadAvatar(userId, avatarUrl) {
+        return this.updateProfile(userId, { avatar: avatarUrl });
+    }
+    async getProfile(userId) {
+        const user = await this.findOne(userId);
+        return user.profile || this.profileRepository.create({ userId });
+    }
+    async addBadge(userId, badge) {
+        const profile = await this.getProfile(userId);
+        if (!profile.badges) {
+            profile.badges = [];
+        }
+        if (!profile.badges.includes(badge)) {
+            profile.badges.push(badge);
+            return this.profileRepository.save(profile);
+        }
+        return profile;
+    }
     async getPublicProfile(id) {
         var _a;
         const user = await this.userRepository.findOne({
             where: { id },
             select: ['id', 'firstName', 'lastName', 'email', 'phone', 'createdAt'],
-            relations: ['ads'],
+            relations: ['ads', 'profile'],
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');
@@ -240,6 +269,7 @@ let UsersService = class UsersService {
             email: user.email,
             phone: user.phone,
             createdAt: user.createdAt,
+            profile: user.profile,
             _count: {
                 ads: ((_a = user.ads) === null || _a === void 0 ? void 0 : _a.length) || 0
             }
@@ -250,8 +280,10 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(1, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_profile_entity_1.UserProfile)),
+    __param(2, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

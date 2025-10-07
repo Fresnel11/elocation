@@ -32,6 +32,13 @@ const common_module_1 = require("./common/common.module");
 const seeder_module_1 = require("./seeders/seeder.module");
 const ai_module_1 = require("./ai/ai.module");
 const permissions_module_1 = require("./permissions/permissions.module");
+const favorites_module_1 = require("./favorites/favorites.module");
+const price_alerts_module_1 = require("./price-alerts/price-alerts.module");
+const reports_module_1 = require("./reports/reports.module");
+const referrals_module_1 = require("./referrals/referrals.module");
+const social_module_1 = require("./social/social.module");
+const support_module_1 = require("./support/support.module");
+const analytics_module_1 = require("./analytics/analytics.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -74,6 +81,13 @@ exports.AppModule = AppModule = __decorate([
             seeder_module_1.SeederModule,
             ai_module_1.AiModule,
             permissions_module_1.PermissionsModule,
+            favorites_module_1.FavoritesModule,
+            price_alerts_module_1.PriceAlertsModule,
+            reports_module_1.ReportsModule,
+            referrals_module_1.ReferralsModule,
+            social_module_1.SocialModule,
+            support_module_1.SupportModule,
+            analytics_module_1.AnalyticsModule,
         ],
     })
 ], AppModule);

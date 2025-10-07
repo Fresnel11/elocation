@@ -3,8 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
+import { UserProfile } from './entities/user-profile.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Role } from '../roles/entities/role.entity';
 import { UserRole } from '../common/enums/user-role.enum';
@@ -14,6 +16,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(UserProfile)
+    private readonly profileRepository: Repository<UserProfile>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
   ) {}
@@ -81,7 +85,7 @@ export class UsersService {
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['ads', 'payments'],
+      relations: ['ads', 'payments', 'profile'],
     });
 
     if (!user) {
@@ -234,11 +238,44 @@ export class UsersService {
     });
   }
 
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<UserProfile> {
+    const user = await this.findOne(userId);
+    
+    let profile = user.profile;
+    if (!profile) {
+      profile = this.profileRepository.create({ userId });
+    }
+    
+    Object.assign(profile, updateProfileDto);
+    return this.profileRepository.save(profile);
+  }
+
+  async uploadAvatar(userId: string, avatarUrl: string): Promise<UserProfile> {
+    return this.updateProfile(userId, { avatar: avatarUrl });
+  }
+
+  async getProfile(userId: string): Promise<UserProfile> {
+    const user = await this.findOne(userId);
+    return user.profile || this.profileRepository.create({ userId });
+  }
+
+  async addBadge(userId: string, badge: string): Promise<UserProfile> {
+    const profile = await this.getProfile(userId);
+    if (!profile.badges) {
+      profile.badges = [];
+    }
+    if (!profile.badges.includes(badge)) {
+      profile.badges.push(badge);
+      return this.profileRepository.save(profile);
+    }
+    return profile;
+  }
+
   async getPublicProfile(id: string) {
     const user = await this.userRepository.findOne({
       where: { id },
       select: ['id', 'firstName', 'lastName', 'email', 'phone', 'createdAt'],
-      relations: ['ads'],
+      relations: ['ads', 'profile'],
     });
 
     if (!user) {
@@ -252,6 +289,7 @@ export class UsersService {
       email: user.email,
       phone: user.phone,
       createdAt: user.createdAt,
+      profile: user.profile,
       _count: {
         ads: user.ads?.length || 0
       }

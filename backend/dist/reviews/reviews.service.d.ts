@@ -14,4 +14,8 @@ export declare class ReviewsService {
         averageRating: number;
         totalReviews: number;
     }>;
+    getPendingReviews(): Promise<Review[]>;
+    approveReview(id: string): Promise<Review>;
+    rejectReview(id: string): Promise<Review>;
+    getUserReviews(userId: string): Promise<Review[]>;
 }

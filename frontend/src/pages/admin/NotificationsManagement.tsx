@@ -1,5 +1,5 @@
 import React from 'react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
+
 import { useNotifications } from '../../context/NotificationContext';
 import { X, Bell } from 'lucide-react';
 
@@ -7,8 +7,7 @@ export const NotificationsManagement: React.FC = () => {
   const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications();
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
@@ -79,6 +78,5 @@ export const NotificationsManagement: React.FC = () => {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 };

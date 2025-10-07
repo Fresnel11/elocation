@@ -30,6 +30,18 @@ let ReviewsController = class ReviewsController {
     getAdRating(adId) {
         return this.reviewsService.getAdRating(adId);
     }
+    getUserReviews(userId) {
+        return this.reviewsService.getUserReviews(userId);
+    }
+    getPendingReviews(req) {
+        return this.reviewsService.getPendingReviews();
+    }
+    approveReview(id, req) {
+        return this.reviewsService.approveReview(id);
+    }
+    rejectReview(id, req) {
+        return this.reviewsService.rejectReview(id);
+    }
 };
 exports.ReviewsController = ReviewsController;
 __decorate([
@@ -55,6 +67,39 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ReviewsController.prototype, "getAdRating", null);
+__decorate([
+    (0, common_1.Get)('user/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ReviewsController.prototype, "getUserReviews", null);
+__decorate([
+    (0, common_1.Get)('admin/pending'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ReviewsController.prototype, "getPendingReviews", null);
+__decorate([
+    (0, common_1.Post)('admin/:id/approve'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ReviewsController.prototype, "approveReview", null);
+__decorate([
+    (0, common_1.Post)('admin/:id/reject'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ReviewsController.prototype, "rejectReview", null);
 exports.ReviewsController = ReviewsController = __decorate([
     (0, common_1.Controller)('reviews'),
     __metadata("design:paramtypes", [reviews_service_1.ReviewsService])

@@ -3,6 +3,8 @@ import { Payment } from '../../payments/entities/payment.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
 import { Response } from '../../responses/entities/response.entity';
+import { Favorite } from '../../favorites/entities/favorite.entity';
+import { UserProfile } from './user-profile.entity';
 export declare class User {
     id: string;
     email: string | null;
@@ -19,6 +21,7 @@ export declare class User {
     otpExpiresAt: Date | null;
     resetPasswordOtp: string | null;
     resetPasswordOtpExpiresAt: Date | null;
+    referralCode: string | null;
     role: Role;
     roleId: string;
     isActive: boolean;
@@ -26,6 +29,9 @@ export declare class User {
     payments: Payment[];
     requests: Request[];
     responses: Response[];
+    favorites: Favorite[];
+    profile: UserProfile;
+    loyaltyPoints: number;
     createdAt: Date;
     updatedAt: Date;
 }

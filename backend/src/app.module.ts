@@ -22,6 +22,13 @@ import { CommonModule } from './common/common.module';
 import { SeederModule } from './seeders/seeder.module';
 import { AiModule } from './ai/ai.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { PriceAlertsModule } from './price-alerts/price-alerts.module';
+import { ReportsModule } from './reports/reports.module';
+import { ReferralsModule } from './referrals/referrals.module';
+import { SocialModule } from './social/social.module';
+import { SupportModule } from './support/support.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -61,6 +68,13 @@ import { PermissionsModule } from './permissions/permissions.module';
     SeederModule,
     AiModule,
     PermissionsModule,
+    FavoritesModule,
+    PriceAlertsModule,
+    ReportsModule,
+    ReferralsModule,
+    SocialModule,
+    SupportModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}

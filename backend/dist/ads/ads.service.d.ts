@@ -1,14 +1,16 @@
+import { PriceAlertsService } from '../price-alerts/price-alerts.service';
 import { Repository } from 'typeorm';
 import { Ad } from './entities/ad.entity';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { SearchAdsDto } from './dto/search-ads.dto';
 import { User } from '../users/entities/user.entity';
-import { GeocodingService } from '../common/services/geocoding.service';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class AdsService {
     private readonly adRepository;
-    private readonly geocodingService;
-    constructor(adRepository: Repository<Ad>, geocodingService: GeocodingService);
+    private readonly priceAlertsService;
+    private readonly notificationsService;
+    constructor(adRepository: Repository<Ad>, priceAlertsService: PriceAlertsService, notificationsService: NotificationsService);
     create(createAdDto: CreateAdDto, user: User): Promise<Ad>;
     findAll(searchAdsDto: SearchAdsDto): Promise<{
         ads: Ad[];
@@ -36,4 +38,5 @@ export declare class AdsService {
         whatsappLink: string;
     }>;
     uploadPhotos(id: string, photos: string[], user: User): Promise<Ad>;
+    private checkSearchAlerts;
 }

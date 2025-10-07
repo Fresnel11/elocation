@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
 import { Users, FileText, Calendar, TrendingUp } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
+
 import { api } from '../../services/api';
 
 interface AnalyticsData {
@@ -54,17 +54,14 @@ export const Analytics: React.FC = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics</h1>
           <p className="text-gray-600">Tableau de bord des performances et statistiques de la plateforme</p>
@@ -229,6 +226,5 @@ export const Analytics: React.FC = () => {
           </div>
         )}
       </div>
-    </AdminLayout>
   );
 };

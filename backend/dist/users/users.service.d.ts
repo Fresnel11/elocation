@@ -1,13 +1,16 @@
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { UserProfile } from './entities/user-profile.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Role } from '../roles/entities/role.entity';
 export declare class UsersService {
     private readonly userRepository;
+    private readonly profileRepository;
     private readonly roleRepository;
-    constructor(userRepository: Repository<User>, roleRepository: Repository<Role>);
+    constructor(userRepository: Repository<User>, profileRepository: Repository<UserProfile>, roleRepository: Repository<Role>);
     create(createUserDto: CreateUserDto): Promise<User>;
     findAll(paginationDto: PaginationDto): Promise<{
         users: User[];
@@ -33,6 +36,10 @@ export declare class UsersService {
     createGoogleUser(googleData: any): Promise<User>;
     verifyOtpForPasswordReset(email: string, code: string): Promise<boolean>;
     resetPassword(email: string, newPassword: string): Promise<void>;
+    updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<UserProfile>;
+    uploadAvatar(userId: string, avatarUrl: string): Promise<UserProfile>;
+    getProfile(userId: string): Promise<UserProfile>;
+    addBadge(userId: string, badge: string): Promise<UserProfile>;
     getPublicProfile(id: string): Promise<{
         id: string;
         firstName: string;
@@ -40,6 +47,7 @@ export declare class UsersService {
         email: string;
         phone: string;
         createdAt: Date;
+        profile: UserProfile;
         _count: {
             ads: number;
         };

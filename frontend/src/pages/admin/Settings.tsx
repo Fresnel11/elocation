@@ -1,106 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { Save, RefreshCw, Settings as SettingsIcon, Activity, Database } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { api } from '../../services/api';
+import { Settings as SettingsIcon, Save, RotateCcw } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 
 interface SystemSetting {
   id: string;
   key: string;
   value: string;
   description: string;
-  type: string;
+  type: 'string' | 'number' | 'boolean';
   isPublic: boolean;
 }
 
-interface ActivityLog {
-  id: string;
-  action: string;
-  entity: string;
-  entityId: string;
-  createdAt: string;
-  user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
-
 export const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState<SystemSetting[]>([]);
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [systemStats, setSystemStats] = useState({ totalLogs: 0, recentLogs: 0 });
+  const [saving, setSaving] = useState<string | null>(null);
   const { success, error } = useToast();
 
   useEffect(() => {
-    fetchData();
+    fetchSettings();
   }, []);
 
-  const fetchData = async () => {
+  const fetchSettings = async () => {
     try {
-      setLoading(true);
-      const [settingsRes, logsRes, statsRes] = await Promise.all([
-        api.get('/admin/settings'),
-        api.get('/admin/logs?limit=10'),
-        api.get('/admin/system/stats')
-      ]);
-      
-      setSettings(settingsRes.data);
-      setLogs(logsRes.data.data);
-      setSystemStats(statsRes.data);
+      const response = await api.get('/admin/settings');
+      setSettings(response.data);
     } catch (err) {
-      error('Erreur', 'Impossible de charger les données');
+      error('Erreur', 'Impossible de charger les paramètres');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSettingChange = (key: string, value: string) => {
+  const handleSave = async (setting: SystemSetting) => {
+    setSaving(setting.key);
+    try {
+      await api.put(`/admin/settings/${setting.key}`, {
+        value: setting.value,
+        type: setting.type
+      });
+      success('Paramètre sauvegardé', `${setting.description} mis à jour`);
+    } catch (err) {
+      error('Erreur', 'Impossible de sauvegarder le paramètre');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleInitialize = async () => {
+    setSaving('init');
+    try {
+      await api.post('/admin/settings/initialize');
+      await fetchSettings();
+      success('Paramètres initialisés', 'Les paramètres par défaut ont été créés');
+    } catch (err) {
+      error('Erreur', 'Impossible d\'initialiser les paramètres');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const updateSetting = (key: string, value: string) => {
     setSettings(prev => prev.map(setting => 
       setting.key === key ? { ...setting, value } : setting
     ));
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      
-      for (const setting of settings) {
-        await api.put(`/admin/settings/${setting.key}`, {
-          value: setting.value,
-          type: setting.type
-        });
-      }
-      
-      success('Succès', 'Paramètres sauvegardés avec succès');
-    } catch (err) {
-      error('Erreur', 'Impossible de sauvegarder les paramètres');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const initializeDefaults = async () => {
-    try {
-      await api.post('/admin/settings/initialize');
-      success('Succès', 'Paramètres par défaut initialisés');
-      fetchData();
-    } catch (err) {
-      error('Erreur', 'Impossible d\'initialiser les paramètres');
-    }
-  };
-
-  const renderSettingInput = (setting: SystemSetting) => {
+  const renderInput = (setting: SystemSetting) => {
     switch (setting.type) {
       case 'boolean':
         return (
           <select
             value={setting.value}
-            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={(e) => updateSetting(setting.key, e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="true">Activé</option>
             <option value="false">Désactivé</option>
@@ -108,203 +84,113 @@ export const Settings: React.FC = () => {
         );
       case 'number':
         return (
-          <input
+          <Input
             type="number"
             value={setting.value}
-            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={(e) => updateSetting(setting.key, e.target.value)}
+            className="w-full"
           />
         );
       default:
         return (
-          <input
+          <Input
             type="text"
             value={setting.value}
-            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={(e) => updateSetting(setting.key, e.target.value)}
+            className="w-full"
           />
         );
     }
   };
 
-  const tabs = [
-    { id: 'general', label: 'Général', icon: SettingsIcon },
-    { id: 'logs', label: 'Logs', icon: Activity },
-    { id: 'system', label: 'Système', icon: Database },
-  ];
-
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Paramètres</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
-            Configuration et monitoring du système
-          </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <SettingsIcon className="w-6 h-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Paramètres de la Plateforme</h1>
         </div>
-
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Content */}
-        {activeTab === 'general' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-lg font-semibold text-gray-900">Paramètres généraux</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={initializeDefaults}
-                  className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Réinitialiser
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {settings.map((setting) => (
-                <div key={setting.id} className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      {setting.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </label>
-                    {setting.description && (
-                      <p className="text-xs text-gray-500 mb-2">{setting.description}</p>
-                    )}
-                    {renderSettingInput(setting)}
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Type: {setting.type}</span>
-                    <span className={`px-2 py-1 rounded-full ${
-                      setting.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {setting.isPublic ? 'Public' : 'Privé'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'logs' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-gray-900">Logs d'activité récents</h2>
-            
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entité</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {logs.map((log) => (
-                      <tr key={log.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            log.action === 'CREATE' ? 'bg-green-100 text-green-800' :
-                            log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
-                            log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {log.action}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.entity}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {log.user ? `${log.user.firstName} ${log.user.lastName}` : 'Système'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(log.createdAt).toLocaleString('fr-FR')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'system' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-gray-900">Statistiques système</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-6 rounded-xl border border-gray-200">
-                <div className="flex items-center">
-                  <Activity className="h-8 w-8 text-blue-500" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Logs</p>
-                    <p className="text-2xl font-bold text-gray-900">{systemStats.totalLogs}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white p-6 rounded-xl border border-gray-200">
-                <div className="flex items-center">
-                  <Database className="h-8 w-8 text-green-500" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Logs 24h</p>
-                    <p className="text-2xl font-bold text-gray-900">{systemStats.recentLogs}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <Button
+          onClick={handleInitialize}
+          disabled={saving === 'init'}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="w-4 h-4" />
+          {saving === 'init' ? 'Initialisation...' : 'Initialiser par défaut'}
+        </Button>
       </div>
-    </AdminLayout>
+
+      {settings.length === 0 ? (
+        <div className="text-center py-12">
+          <SettingsIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun paramètre configuré</h3>
+          <p className="text-gray-500 mb-4">Cliquez sur "Initialiser par défaut" pour créer les paramètres de base</p>
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {settings.map((setting) => (
+            <div key={setting.id} className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {setting.description || setting.key}
+                  </h3>
+                  <p className="text-sm text-gray-500">Clé: {setting.key}</p>
+                  {setting.isPublic && (
+                    <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                      Public
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {setting.type}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Valeur
+                  </label>
+                  {renderInput(setting)}
+                </div>
+                <Button
+                  onClick={() => handleSave(setting)}
+                  disabled={saving === setting.key}
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {saving === setting.key ? 'Sauvegarde...' : 'Sauvegarder'}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-blue-900 mb-2">Paramètres disponibles :</h4>
+        <ul className="text-sm text-blue-800 space-y-1">
+          <li>• <strong>commission_rate</strong> : Taux de commission sur les transactions (%)</li>
+          <li>• <strong>max_photos_per_ad</strong> : Nombre maximum de photos par annonce</li>
+          <li>• <strong>auto_approve_ads</strong> : Approbation automatique des annonces</li>
+          <li>• <strong>maintenance_mode</strong> : Mode maintenance de la plateforme</li>
+          <li>• <strong>contact_email</strong> : Email de contact principal</li>
+          <li>• <strong>app_name</strong> : Nom de l'application</li>
+          <li>• <strong>app_description</strong> : Description de l'application</li>
+        </ul>
+      </div>
+    </div>
   );
 };

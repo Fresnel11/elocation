@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Edit, Trash2, UserCheck, UserX, Shield, MoreVertical, Plus } from 'lucide-react';
-import { AdminLayout } from '../../components/admin/AdminLayout';
 import { DataTable } from '../../components/admin/DataTable';
 import { UserDetailsModal } from '../../components/admin/UserDetailsModal';
 import { CreateUserModal } from '../../components/admin/CreateUserModal';
@@ -237,7 +236,7 @@ export const UsersManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -268,22 +267,22 @@ export const UsersManagement: React.FC = () => {
           filters={renderFilters()}
           actions={renderActions}
         />
-
-        <UserDetailsModal
-          userId={selectedUserId || ''}
-          isOpen={!!selectedUserId}
-          onClose={() => setSelectedUserId(null)}
-        />
-
-        <CreateUserModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            setShowCreateModal(false);
-            fetchUsers();
-          }}
-        />
       </div>
-    </AdminLayout>
+
+      <UserDetailsModal
+        userId={selectedUserId || ''}
+        isOpen={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+      />
+
+      <CreateUserModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          setShowCreateModal(false);
+          fetchUsers();
+        }}
+      />
+    </>
   );
 };

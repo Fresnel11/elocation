@@ -41,5 +41,5 @@ export declare class AdsController {
     update(id: string, updateAdDto: UpdateAdDto, req: any): Promise<import("./entities/ad.entity").Ad>;
     remove(id: string, req: any): Promise<void>;
     toggleStatus(id: string, req: any): Promise<import("./entities/ad.entity").Ad>;
-    uploadPhotos(id: string, files: Express.Multer.File[], req: any): Promise<import("./entities/ad.entity").Ad>;
+    uploadPhotos(id: string, files: any[], req: any): Promise<import("./entities/ad.entity").Ad>;
 }

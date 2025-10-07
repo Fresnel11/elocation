@@ -11,7 +11,21 @@ import {
   X,
   BarChart3,
   Bell,
-  Shield
+  Shield,
+  Folder,
+  MessageSquare,
+  Flag,
+  Mail,
+  Wrench,
+  FileText,
+  DollarSign,
+  HardDrive,
+  MessageCircle,
+  Activity,
+  Monitor,
+  Database,
+  Trash2,
+  TestTube
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -40,6 +54,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { path: '/admin/bookings', icon: Calendar, label: 'Réservations' },
     { path: '/admin/notifications', icon: Bell, label: 'Notifications', badge: unreadCount },
     ...(user?.role?.name === 'super_admin' ? [{ path: '/admin/permissions', icon: Shield, label: 'Permissions' }] : []),
+    { path: '/admin/categories', icon: Folder, label: 'Catégories' },
+    { path: '/admin/reviews', icon: MessageSquare, label: 'Modération Avis' },
+    { path: '/admin/reports', icon: Flag, label: 'Signalements' },
+    { path: '/admin/emails', icon: Mail, label: 'Templates Emails' },
+    { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
+    { path: '/admin/logs', icon: FileText, label: 'Logs d\'Activité' },
+    { path: '/admin/financial', icon: DollarSign, label: 'Rapports Financiers' },
+    { path: '/admin/media', icon: HardDrive, label: 'Gestion Médias' },
+    { path: '/admin/support', icon: MessageCircle, label: 'Support Client' },
+    { path: '/admin/audit', icon: Shield, label: 'Audit Trail' },
+    { path: '/admin/monitoring', icon: Activity, label: 'Monitoring' },
+    { path: '/admin/sessions', icon: Monitor, label: 'Sessions' },
+    { path: '/admin/data-import-export', icon: Database, label: 'Import/Export' },
+    { path: '/admin/data-cleanup', icon: Trash2, label: 'Nettoyage' },
+    { path: '/admin/system-tests', icon: TestTube, label: 'Tests Système' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/admin/settings', icon: Settings, label: 'Paramètres' },
   ];
@@ -56,7 +85,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Sidebar - Always Fixed */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
+      } transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col`}>
         
         {/* Header */}
         <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
@@ -75,8 +104,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </div>
 
         {/* Navigation - Scrollable */}
-        <nav className="flex-1 overflow-y-auto mt-4 sm:mt-6 px-2 sm:px-3 pb-40">
-          <div className="space-y-2">
+        <nav className="flex-1 overflow-y-auto mt-4 sm:mt-6 px-2 sm:px-3">
+          <div className="space-y-2 pb-4">
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -88,7 +117,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() => window.innerWidth < 1024 && setSidebarOpen(false)}
                 >
                   <div className="flex items-center">
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -106,7 +135,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </nav>
 
         {/* User Info - Fixed at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 sm:p-4">
+        <div className="flex-shrink-0 bg-white border-t border-gray-200 p-3 sm:p-4">
           <div className="flex items-center mb-3">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-white text-sm font-medium">

@@ -187,6 +187,8 @@ export class AdsController {
     return this.adsService.findOne(id);
   }
 
+
+
   @Get(':id/whatsapp')
   @ApiOperation({ 
     summary: 'Rediriger vers WhatsApp',
@@ -346,7 +348,7 @@ export class AdsController {
   )
   uploadPhotos(
     @Param('id') id: string,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: any[],
     @Request() req,
   ) {
     if (!files || files.length === 0) {

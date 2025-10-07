@@ -1,13 +1,15 @@
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../common/services/email.service';
+import { ReferralsService } from '../referrals/referrals.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 export declare class AuthService {
     private usersService;
     private jwtService;
     private emailService;
-    constructor(usersService: UsersService, jwtService: JwtService, emailService: EmailService);
+    private referralsService;
+    constructor(usersService: UsersService, jwtService: JwtService, emailService: EmailService, referralsService: ReferralsService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
         phone: string;

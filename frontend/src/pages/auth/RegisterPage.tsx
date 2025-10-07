@@ -17,7 +17,8 @@ export const RegisterPage: React.FC = () => {
     phone: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    referralCode: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -89,7 +90,7 @@ export const RegisterPage: React.FC = () => {
     if (!validateStep(3)) return;
     
     try {
-      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined);
+      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined, formData.referralCode || undefined);
       success(
         'Inscription réussie !', 
         'Votre compte a été créé avec succès. Vérifiez votre téléphone pour activer votre compte.'
@@ -169,6 +170,14 @@ export const RegisterPage: React.FC = () => {
               onChange={(e) => handleChange('email', e.target.value)}
               error={errors.email}
               placeholder="votre@email.com"
+            />
+            <Input
+              label="Code de parrainage (optionnel)"
+              type="text"
+              value={formData.referralCode}
+              onChange={(e) => handleChange('referralCode', e.target.value.toUpperCase())}
+              placeholder="JEA123ABC"
+              maxLength={10}
             />
 
           </div>

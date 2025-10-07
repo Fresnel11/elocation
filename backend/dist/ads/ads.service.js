@@ -14,23 +14,26 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdsService = void 0;
 const common_1 = require("@nestjs/common");
+const price_alerts_service_1 = require("../price-alerts/price-alerts.service");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const ad_entity_1 = require("./entities/ad.entity");
 const user_role_enum_1 = require("../common/enums/user-role.enum");
-const geocoding_service_1 = require("../common/services/geocoding.service");
+const notifications_service_1 = require("../notifications/notifications.service");
 let AdsService = class AdsService {
-    constructor(adRepository, geocodingService) {
+    constructor(adRepository, priceAlertsService, notificationsService) {
         this.adRepository = adRepository;
-        this.geocodingService = geocodingService;
+        this.priceAlertsService = priceAlertsService;
+        this.notificationsService = notificationsService;
     }
     async create(createAdDto, user) {
         const whatsappLink = createAdDto.whatsappNumber
             ? `https://wa.me/${createAdDto.whatsappNumber.replace(/\D/g, '')}`
             : undefined;
-        const coordinates = this.geocodingService.extractCoordinates(createAdDto.location);
-        const ad = this.adRepository.create(Object.assign(Object.assign({}, createAdDto), { whatsappLink, latitude: (coordinates === null || coordinates === void 0 ? void 0 : coordinates.latitude) || null, longitude: (coordinates === null || coordinates === void 0 ? void 0 : coordinates.longitude) || null, userId: user.id }));
-        return this.adRepository.save(ad);
+        const ad = this.adRepository.create(Object.assign(Object.assign({}, createAdDto), { whatsappLink, userId: user.id }));
+        const savedAd = await this.adRepository.save(ad);
+        this.checkSearchAlerts(savedAd).catch(err => console.error('Erreur vérification alertes:', err));
+        return savedAd;
     }
     async findAll(searchAdsDto) {
         const { page = 1, limit = 10, search, categoryId, minPrice, maxPrice, location, isAvailable, sortBy = 'createdAt', sortOrder = 'DESC', userLatitude, userLongitude, radius = 50, } = searchAdsDto;
@@ -41,37 +44,6 @@ let AdsService = class AdsService {
             .leftJoinAndSelect('ad.category', 'category')
             .leftJoinAndSelect('ad.subCategory', 'subCategory')
             .where('ad.isActive = :isActive', { isActive: true });
-        if (userLatitude && userLongitude) {
-            const searchRadius = radius > 100 ? 200 : radius;
-            queryBuilder.andWhere(`(
-          ad.latitude IS NULL OR ad.longitude IS NULL OR
-          (
-            6371 * acos(
-              cos(radians(:userLat)) * 
-              cos(radians(ad.latitude)) * 
-              cos(radians(ad.longitude) - radians(:userLng)) + 
-              sin(radians(:userLat)) * 
-              sin(radians(ad.latitude))
-            )
-          ) <= :radius
-        )`, {
-                userLat: userLatitude,
-                userLng: userLongitude,
-                radius: searchRadius,
-            });
-            queryBuilder.addSelect(`CASE 
-          WHEN ad.latitude IS NULL OR ad.longitude IS NULL THEN 999999
-          ELSE (
-            6371 * acos(
-              cos(radians(:userLat)) * 
-              cos(radians(ad.latitude)) * 
-              cos(radians(ad.longitude) - radians(:userLng)) + 
-              sin(radians(:userLat)) * 
-              sin(radians(ad.latitude))
-            )
-          )
-        END`, 'distance');
-        }
         if (search) {
             queryBuilder.andWhere('(ad.title ILIKE :search OR ad.description ILIKE :search OR ad.location ILIKE :search)', { search: `%${search}%` });
         }
@@ -90,14 +62,9 @@ let AdsService = class AdsService {
         if (isAvailable !== undefined) {
             queryBuilder.andWhere('ad.isAvailable = :isAvailable', { isAvailable });
         }
-        const validSortFields = ['createdAt', 'price', 'title', 'distance'];
+        const validSortFields = ['createdAt', 'price', 'title'];
         const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-        if (sortField === 'distance' && userLatitude && userLongitude) {
-            queryBuilder.orderBy('distance', sortOrder);
-        }
-        else {
-            queryBuilder.orderBy(`ad.${sortField}`, sortOrder);
-        }
+        queryBuilder.orderBy(`ad.${sortField}`, sortOrder);
         queryBuilder.skip(skip).take(limit);
         const [ads, total] = await queryBuilder.getManyAndCount();
         return {
@@ -149,11 +116,16 @@ let AdsService = class AdsService {
         if (ad.userId !== user.id && user.role.name !== user_role_enum_1.UserRole.ADMIN) {
             throw new common_1.ForbiddenException('You can only update your own ads');
         }
+        const previousPrice = ad.price;
         const whatsappLink = updateAdDto.whatsappNumber
             ? `https://wa.me/${updateAdDto.whatsappNumber.replace(/\D/g, '')}`
             : ad.whatsappLink;
         Object.assign(ad, Object.assign(Object.assign({}, updateAdDto), { whatsappLink }));
-        return this.adRepository.save(ad);
+        const updatedAd = await this.adRepository.save(ad);
+        if (updateAdDto.price && updateAdDto.price !== previousPrice) {
+            await this.priceAlertsService.checkPriceChanges(id, updateAdDto.price, previousPrice);
+        }
+        return updatedAd;
     }
     async remove(id, user) {
         const ad = await this.findOne(id);
@@ -188,12 +160,15 @@ let AdsService = class AdsService {
         ad.photos = photos;
         return this.adRepository.save(ad);
     }
+    async checkSearchAlerts(ad) {
+    }
 };
 exports.AdsService = AdsService;
 exports.AdsService = AdsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(ad_entity_1.Ad)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        geocoding_service_1.GeocodingService])
+        price_alerts_service_1.PriceAlertsService,
+        notifications_service_1.NotificationsService])
 ], AdsService);
 //# sourceMappingURL=ads.service.js.map

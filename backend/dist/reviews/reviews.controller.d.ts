@@ -9,4 +9,8 @@ export declare class ReviewsController {
         averageRating: number;
         totalReviews: number;
     }>;
+    getUserReviews(userId: string): Promise<import("./entities/review.entity").Review[]>;
+    getPendingReviews(req: any): Promise<import("./entities/review.entity").Review[]>;
+    approveReview(id: string, req: any): Promise<import("./entities/review.entity").Review>;
+    rejectReview(id: string, req: any): Promise<import("./entities/review.entity").Review>;
 }

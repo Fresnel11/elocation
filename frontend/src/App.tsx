@@ -30,59 +30,116 @@ import { BookingsManagement } from './pages/admin/BookingsManagement';
 import { NotificationsManagement } from './pages/admin/NotificationsManagement';
 import { RolePermissionsManagement } from './pages/admin/RolePermissionsManagement';
 import { Analytics } from './pages/admin/Analytics';
+import { CategoriesManagement } from './pages/admin/CategoriesManagement';
+import { ReviewsModeration } from './pages/admin/ReviewsModeration';
+import { ReportsManagement } from './pages/admin/ReportsManagement';
+import { EmailTemplates } from './pages/admin/EmailTemplates';
+import { Maintenance } from './pages/admin/Maintenance';
+import { ActivityLogs } from './pages/admin/ActivityLogs';
+import { FinancialReports } from './pages/admin/FinancialReports';
+import { MediaManagement } from './pages/admin/MediaManagement';
+import { SupportTickets } from './pages/admin/SupportTickets';
+import { AuditTrail } from './pages/admin/AuditTrail';
+import { SystemMonitoring } from './pages/admin/SystemMonitoring';
+import { SessionManagement } from './pages/admin/SessionManagement';
+import { DataImportExport } from './pages/admin/DataImportExport';
+import { DataCleanup } from './pages/admin/DataCleanup';
+import { SystemTests } from './pages/admin/SystemTests';
+import { FavoritesPage } from './pages/FavoritesPage';
+
 import { Settings } from './pages/admin/Settings';
 import { AdminRoute } from './components/admin/AdminRoute';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { HelpButton } from './components/ui/HelpButton';
+import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
+import { ReferralPage } from './pages/ReferralPage';
+import { SupportPage } from './pages/SupportPage';
+import { SupportTicketsPage } from './pages/SupportTicketsPage';
+import OfflineIndicator from './components/OfflineIndicator';
+import OfflineAdsPage from './pages/OfflineAdsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
-function App() {
+function AppContent() {
   const location = useLocation();
-  const hideFooter = location.pathname === '/messages' || location.pathname.startsWith('/admin');
+  const { user } = useAuth();
+  const hideFooter = location.pathname === '/messages' || location.pathname.startsWith('/admin') || !!user;
   const isAdminRoute = location.pathname.startsWith('/admin');
   
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {!isAdminRoute && <Navbar />}
+      <main>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-otp" element={<VerifyOtpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password-otp" element={<ResetPasswordOtpPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
+          <Route path="/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
+          <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+          <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+          <Route path="/offline-ads" element={<ProtectedRoute><OfflineAdsPage /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/notification-settings" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
+          <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/support/tickets" element={<ProtectedRoute><SupportTicketsPage /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><UsersManagement /></AdminRoute>} />
+          <Route path="/admin/ads" element={<AdminRoute><AdsManagement /></AdminRoute>} />
+          <Route path="/admin/bookings" element={<AdminRoute><BookingsManagement /></AdminRoute>} />
+          <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
+          <Route path="/admin/permissions" element={<AdminRoute><RolePermissionsManagement /></AdminRoute>} />
+          <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
+          <Route path="/admin/categories" element={<AdminRoute><CategoriesManagement /></AdminRoute>} />
+          <Route path="/admin/reviews" element={<AdminRoute><ReviewsModeration /></AdminRoute>} />
+          <Route path="/admin/reports" element={<AdminRoute><ReportsManagement /></AdminRoute>} />
+          <Route path="/admin/emails" element={<AdminRoute><EmailTemplates /></AdminRoute>} />
+          <Route path="/admin/maintenance" element={<AdminRoute><Maintenance /></AdminRoute>} />
+          <Route path="/admin/logs" element={<AdminRoute><ActivityLogs /></AdminRoute>} />
+          <Route path="/admin/financial" element={<AdminRoute><FinancialReports /></AdminRoute>} />
+          <Route path="/admin/media" element={<AdminRoute><MediaManagement /></AdminRoute>} />
+          <Route path="/admin/support" element={<AdminRoute><SupportTickets /></AdminRoute>} />
+          <Route path="/admin/audit" element={<AdminRoute><AuditTrail /></AdminRoute>} />
+          <Route path="/admin/monitoring" element={<AdminRoute><SystemMonitoring /></AdminRoute>} />
+          <Route path="/admin/sessions" element={<AdminRoute><SessionManagement /></AdminRoute>} />
+          <Route path="/admin/data-import-export" element={<AdminRoute><DataImportExport /></AdminRoute>} />
+          <Route path="/admin/data-cleanup" element={<AdminRoute><DataCleanup /></AdminRoute>} />
+          <Route path="/admin/system-tests" element={<AdminRoute><SystemTests /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
+          <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
+          <Route path="/user/:userId" element={<UserProfilePage />} />
+          <Route path="/annonces" element={<AnnoncesPage />} />
+          <Route path="/annonce/:id" element={<AnnonceDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+        </Routes>
+      </main>
+      {!hideFooter && <Footer />}
+      <HelpButton />
+      <OfflineIndicator />
+    </div>
+  );
+}
+
+function App() {
   return (
     <ToastProvider>
       <AuthProvider>
         <NotificationProvider>
-          <div className="min-h-screen bg-gray-50">
-          {!isAdminRoute && <Navbar />}
-          <main>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/verify-otp" element={<VerifyOtpPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password-otp" element={<ResetPasswordOtpPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
-              <Route path="/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
-              <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
-              <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-              <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
-              <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/users" element={<AdminRoute><UsersManagement /></AdminRoute>} />
-              <Route path="/admin/ads" element={<AdminRoute><AdsManagement /></AdminRoute>} />
-              <Route path="/admin/bookings" element={<AdminRoute><BookingsManagement /></AdminRoute>} />
-              <Route path="/admin/notifications" element={<AdminRoute><NotificationsManagement /></AdminRoute>} />
-              <Route path="/admin/permissions" element={<AdminRoute><RolePermissionsManagement /></AdminRoute>} />
-              <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
-              <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
-              <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
-              <Route path="/user/:userId" element={<UserProfilePage />} />
-              <Route path="/annonces" element={<AnnoncesPage />} />
-              <Route path="/annonce/:id" element={<AnnonceDetailPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-            </Routes>
-          </main>
-          {!hideFooter && <Footer />}
-          </div>
+          <AppContent />
         </NotificationProvider>
       </AuthProvider>
     </ToastProvider>
