@@ -67,6 +67,10 @@ __decorate([
     __metadata("design:type", Date)
 ], User.prototype, "birthDate", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'enum', enum: ['masculin', 'féminin'], nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "gender", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
     __metadata("design:type", Date)
 ], User.prototype, "lastLogin", void 0);
@@ -132,6 +136,14 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'loyalty_points', default: 0 }),
     __metadata("design:type", Number)
 ], User.prototype, "loyaltyPoints", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'accepted_terms', default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "acceptedTerms", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'terms_accepted_at', type: 'timestamp', nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "termsAcceptedAt", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
