@@ -10,7 +10,7 @@ export class ReviewsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() createReviewDto: CreateReviewDto, @Request() req) {
-    return this.reviewsService.create(createReviewDto, req.user.userId);
+    return this.reviewsService.create(createReviewDto, req.user.id);
   }
 
   @Get('ad/:adId')

@@ -12,7 +12,7 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 
 import { AdsPage } from './pages/AdsPage';
-import { AnnonceDetailPage } from './pages/AnnonceDetailPage';
+import AnnonceDetailPage from './pages/AnnonceDetailPage';
 import { CreateAdPage } from './pages/CreateAdPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';

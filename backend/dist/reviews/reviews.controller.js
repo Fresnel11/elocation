@@ -22,7 +22,7 @@ let ReviewsController = class ReviewsController {
         this.reviewsService = reviewsService;
     }
     create(createReviewDto, req) {
-        return this.reviewsService.create(createReviewDto, req.user.userId);
+        return this.reviewsService.create(createReviewDto, req.user.id);
     }
     findByAd(adId) {
         return this.reviewsService.findByAd(adId);

@@ -1,361 +1,392 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Heart, Share2, MapPin, Calendar, User, Star, MessageSquare, Phone, Expand } from 'lucide-react';
-import { getCategoryIcon, getPropertyIcon } from '../utils/categoryIcons';
-import { Button } from '../components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { Input } from '../components/ui/Input';
-import { MediaViewer } from '../components/ui/MediaViewer';
-import { ShareButton } from '../components/ui/ShareButton';
-import { RecommendationsSection } from '../components/ui/RecommendationsSection';
+// elocation/frontend/src/pages/AnnonceDetailPage.tsx
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { adsService, Ad } from '../services/adsService';
+import { api } from '../services/api';
+import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, User, MessageCircle, Plus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
-export const AnnonceDetailPage: React.FC = () => {
-  const { id } = useParams();
-  const [currentImage, setCurrentImage] = useState(0);
-  const [comment, setComment] = useState('');
-  const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  } | null;
+}
 
-  // Mock data - TODO: Récupérer depuis l'API
-  const annonce = {
-    id: 1,
-    title: 'Toyota Corolla 2020',
-    price: '25,000 F/jour',
-    location: 'Cotonou, Centre-ville',
-    category: 'Véhicules',
-    media: [
-      { url: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1200', type: 'image' as const },
-      { url: 'https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg?auto=compress&cs=tinysrgb&w=1200', type: 'image' as const },
-      { url: 'https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=1200', type: 'image' as const }
-    ],
-    description: `Véhicule récent en excellent état, idéal pour vos déplacements en ville.
+const AnnonceDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const [ad, setAd] = useState<Ad | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [rating, setRating] = useState({ averageRating: 0, totalReviews: 0 });
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [showAddReview, setShowAddReview] = useState(false);
+  const [newReview, setNewReview] = useState({ rating: 0, comment: '' });
 
-Caractéristiques :
-• Modèle 2020
-• Climatisation
-• Transmission automatique
-• GPS intégré
-• Bluetooth
-• Faible kilométrage
+  useEffect(() => {
+    if (id) {
+      const fetchAd = async () => {
+        try {
+          setLoading(true);
+          const [adData, ratingData, reviewsData] = await Promise.all([
+            adsService.getAdById(id),
+            api.get(`/reviews/ad/${id}/rating`),
+            api.get(`/reviews/ad/${id}`)
+          ]);
+          setAd(adData);
+          setRating({
+            averageRating: ratingData.data.averageRating || 0,
+            totalReviews: ratingData.data.totalReviews || 0
+          });
+          setReviews(reviewsData.data || []);
+          if (adData.photos && adData.photos.length > 0) {
+            setSelectedImage(adData.photos[0]);
+          }
+        } catch (err) {
+          setError('Impossible de charger les détails de l\'annonce.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAd();
+    }
+  }, [id]);
 
-Véhicule entretenu régulièrement, assurance incluse.
-
-Disponible pour location courte ou longue durée.`,
-    owner: {
-      name: 'Marie Adjovi',
-      rating: 4.8,
-      reviews: 24,
-      joinDate: 'Membre depuis 2022',
-      verified: true
-    },
-    details: {
-      surface: '75 m²',
-      chambres: '2 chambres',
-      salleBain: '1 salle de bain',
-      etage: '2ème étage'
-    },
-    amenities: ['Climatisation', 'GPS', 'Bluetooth', 'Transmission auto', 'Assurance incluse'],
-    rating: 4.8,
-    reviews: 12
+  // Vérifier si l'utilisateur peut ajouter un avis
+  const canAddReview = () => {
+    if (!user || !ad) return false;
+    if (ad.user.id === user.id) return false; // Propriétaire ne peut pas évaluer
+    const userReviewsCount = reviews.filter(review => review.user?.id === user.id).length;
+    return userReviewsCount < 2; // Maximum 2 avis par utilisateur
   };
 
-  const comments = [
-    {
-      id: 1,
-      user: 'Kossi M.',
-      rating: 5,
-      comment: 'Très bel appartement, propriétaire sympathique et reactive.',
-      date: 'Il y a 2 semaines'
-    },
-    {
-      id: 2,
-      user: 'Fatou D.',
-      rating: 4,
-      comment: 'Appartement conforme aux photos, quartier calme et sécurisé.',
-      date: 'Il y a 1 mois'
+  const handleSubmitReview = async () => {
+    if (!newReview.rating || !newReview.comment.trim()) return;
+    
+
+    
+    try {
+      await api.post(`/reviews`, {
+        adId: id,
+        rating: newReview.rating,
+        comment: newReview.comment
+      });
+      
+      // Refresh data
+      const [ratingData, reviewsData] = await Promise.all([
+        api.get(`/reviews/ad/${id}/rating`),
+        api.get(`/reviews/ad/${id}`)
+      ]);
+      
+      setRating({
+        averageRating: ratingData.data.averageRating || 0,
+        totalReviews: ratingData.data.totalReviews || 0
+      });
+      setReviews(reviewsData.data || []);
+      setNewReview({ rating: 0, comment: '' });
+      setShowAddReview(false);
+      showToast('success', 'Avis ajouté avec succès !');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Erreur lors de l\'ajout de l\'avis';
+      showToast('error', errorMessage);
     }
-  ];
+  };
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Chargement...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center mt-10">{error}</div>;
+  }
+
+  if (!ad) {
+    return <div className="text-center mt-10">Annonce non trouvée.</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Media Gallery */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-            <div className="lg:col-span-2 relative group">
-              {annonce.media[currentImage].type === 'image' ? (
+    <div className="bg-white min-h-screen">
+      {/* Image principale avec overlay */}
+      <div className="relative h-96">
+        <img 
+          src={selectedImage || ad.photos?.[0] || 'https://via.placeholder.com/600x400'} 
+          alt={ad.title} 
+          className="w-full h-full object-cover"
+        />
+        
+        {/* Header avec boutons */}
+        <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
+          <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
+            <Heart className="h-5 w-5 text-white" />
+          </button>
+        </div>
+        
+        {/* Miniatures des images */}
+        {ad.photos && ad.photos.length > 1 && (
+          <div className="absolute bottom-4 left-4 right-4">
+            <div className="flex space-x-2 overflow-x-auto">
+              {ad.photos.map((image, index) => (
                 <img
-                  src={annonce.media[currentImage].url}
-                  alt={annonce.title}
-                  className="w-full h-96 lg:h-[500px] object-contain bg-gray-100 cursor-pointer"
-                  onClick={() => setIsMediaViewerOpen(true)}
-                />
-              ) : (
-                <video
-                  src={annonce.media[currentImage].url}
-                  className="w-full h-96 lg:h-[500px] object-contain bg-gray-100"
-                  controls
-                  poster={annonce.media[currentImage].url}
-                />
-              )}
-              
-              {/* Bouton plein écran */}
-              <button
-                onClick={() => setIsMediaViewerOpen(true)}
-                className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all"
-              >
-                <Expand className="h-4 w-4" />
-              </button>
-            </div>
-            
-            <div className="p-4 grid grid-cols-3 lg:grid-cols-1 gap-2 lg:gap-4">
-              {annonce.media.map((media, index) => (
-                <div
                   key={index}
-                  className={`relative w-full h-24 lg:h-32 rounded cursor-pointer transition-all overflow-hidden ${
-                    index === currentImage ? 'ring-2 ring-blue-600' : 'opacity-70 hover:opacity-100'
+                  src={image}
+                  alt={`Miniature ${index + 1}`}
+                  className={`w-16 h-12 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 ${
+                    selectedImage === image ? 'border-white' : 'border-white/30'
                   }`}
-                  onClick={() => setCurrentImage(index)}
-                >
-                  {media.type === 'image' ? (
-                    <img
-                      src={media.url}
-                      alt={`Vue ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                        <div className="w-0 h-0 border-l-[6px] border-l-white border-y-[4px] border-y-transparent ml-0.5"></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  onClick={() => setSelectedImage(image)}
+                />
               ))}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Contenu principal */}
+      <div className="bg-white rounded-t-3xl -mt-6 relative z-10 px-6 pt-6 pb-24">
+        {/* Titre et rating */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{ad.title}</h1>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star 
+                  key={star} 
+                  className={`h-4 w-4 ${
+                    star <= Math.round(rating.averageRating) 
+                      ? 'fill-orange-400 text-orange-400' 
+                      : 'text-gray-300'
+                  }`} 
+                />
+              ))}
+            </div>
+            <span className="text-sm font-medium text-gray-700">
+              {rating.averageRating > 0 ? rating.averageRating.toFixed(1) : '0.0'}
+            </span>
+            <span className="text-sm text-gray-500">({rating.totalReviews})</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Title and Info */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <Badge className="mb-2 flex items-center gap-1">
-                      {getCategoryIcon(annonce.category, 16)}
-                      {annonce.category}
-                    </Badge>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                      {annonce.title}
-                    </h1>
-                    <div className="flex items-center text-gray-600 mb-4">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {annonce.location}
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="icon">
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <ShareButton
-                      adId={id || ''}
-                      title={annonce.title}
-                      description={annonce.description}
-                      imageUrl={annonce.media[0]?.url}
-                    />
-                  </div>
-                </div>
+        {/* Caractéristiques */}
+        <div className="flex items-center gap-6 mb-6">
+          {ad.bedrooms && ad.bedrooms > 0 && (
+            <div className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-gray-600" />
+              <span className="text-sm text-gray-600">{ad.bedrooms} Bed</span>
+            </div>
+          )}
+          {ad.bathrooms && (
+            <div className="flex items-center gap-2">
+              <Bath className="h-5 w-5 text-gray-600" />
+              <span className="text-sm text-gray-600">{ad.bathrooms} Bathroom</span>
+            </div>
+          )}
+          {ad.area && (
+            <div className="flex items-center gap-2">
+              <Square className="h-5 w-5 text-gray-600" />
+              <span className="text-sm text-gray-600">{ad.area} Sqft</span>
+            </div>
+          )}
+        </div>
 
-                {annonce.category === 'Immobilier' && (
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Surface</p>
-                      <p className="font-semibold">{annonce.details.surface}</p>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600 flex items-center justify-center gap-1">
-                        {getPropertyIcon('bedrooms', 1)}
-                        Chambres
-                      </p>
-                      <p className="font-semibold">{annonce.details.chambres}</p>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600 flex items-center justify-center gap-1">
-                        {getPropertyIcon('bathrooms', 1)}
-                        Salle de bain
-                      </p>
-                      <p className="font-semibold">{annonce.details.salleBain}</p>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Étage</p>
-                      <p className="font-semibold">{annonce.details.etage}</p>
-                    </div>
-                  </div>
-                )}
+        {/* Section Details */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Details</h3>
+          <p className="text-gray-600 leading-relaxed">
+            {ad.description || "The prestige of one of Polo Alto's most sought-after neighborhoods takes center stage in this magnificent home that..."}
+            <span className="text-blue-600 font-medium cursor-pointer"> Read more</span>
+          </p>
+        </div>
 
-                <div className="mb-6">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-3">
-                    {annonce.category === 'Immobilier' ? 'Équipements inclus' : 'Options incluses'}
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {annonce.amenities.map((amenity) => (
-                      <Badge key={amenity} variant="outline">
-                        {amenity}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+        {/* Localisation */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="h-5 w-5 text-red-500" />
+            <span className="text-gray-900 font-medium">{ad.location}</span>
+          </div>
+        </div>
 
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900 mb-3">Description</h3>
-                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {annonce.description}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Propriétaire */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold">{ad.user?.firstName?.[0] || 'U'}</span>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-900">{ad.user?.firstName || 'Utilisateur'} {ad.user?.lastName || ''}</p>
+            <p className="text-sm text-gray-500">Propriétaire</p>
+          </div>
+          <button className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+            <MessageCircle className="h-5 w-5 text-white" />
+          </button>
+        </div>
 
-            {/* Reviews */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                  Avis ({comments.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="border-b border-gray-200 last:border-0 pb-6 last:pb-0">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="font-semibold text-blue-600">{comment.user.charAt(0)}</span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{comment.user}</p>
-                            <div className="flex items-center">
-                              {[...Array(comment.rating)].map((_, i) => (
-                                <Star key={i} className="h-3 w-3 text-yellow-400 fill-current" />
-                              ))}
-                              <span className="text-xs text-gray-500 ml-2">{comment.date}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-gray-700">{comment.comment}</p>
-                    </div>
+        {/* Section Avis */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Avis ({rating.totalReviews})</h3>
+            {canAddReview() ? (
+              <button 
+                onClick={() => setShowAddReview(!showAddReview)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                <Plus className="h-4 w-4" />
+                Ajouter un avis
+              </button>
+            ) : (
+              <div className="text-sm text-gray-500">
+                {!user ? 'Connectez-vous pour laisser un avis' : 
+                 ad?.user.id === user.id ? 'Vous ne pouvez pas évaluer votre propre annonce' :
+                 'Vous avez atteint la limite de 2 avis par annonce'}
+              </div>
+            )}
+          </div>
+
+          {/* Formulaire d'ajout d'avis */}
+          {showAddReview && (
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Note</label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setNewReview(prev => ({ ...prev, rating: star }))}
+                      className="p-1"
+                    >
+                      <Star 
+                        className={`h-6 w-6 ${
+                          star <= newReview.rating 
+                            ? 'fill-orange-400 text-orange-400' 
+                            : 'text-gray-300'
+                        }`} 
+                      />
+                    </button>
                   ))}
                 </div>
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Commentaire</label>
+                <textarea
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
+                  placeholder="Partagez votre expérience..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none h-20 text-sm"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={!newReview.rating || !newReview.comment.trim()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:bg-gray-300"
+                >
+                  Publier
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddReview(false);
+                    setNewReview({ rating: 0, comment: '' });
+                  }}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
 
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-3">Laisser un commentaire</h4>
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Votre commentaire..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                    <Button>Publier</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Price and Contact */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <p className="text-3xl font-bold text-blue-600 mb-2">
-                    {annonce.price}
-                  </p>
-                  <p className="text-gray-500">Prix de location</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Button className="w-full" size="lg">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Contacter le propriétaire
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Appeler
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Owner Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Propriétaire</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                    <User className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 flex items-center">
-                      {annonce.owner.name}
-                      {annonce.owner.verified && (
-                        <Badge variant="success" className="ml-2 text-xs">Vérifié</Badge>
-                      )}
-                    </p>
-                    <div className="flex items-center">
-                      <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
-                      <span className="text-sm text-gray-600">
-                        {annonce.owner.rating} ({annonce.owner.reviews} avis)
+          {/* Liste des avis */}
+          <div className="space-y-4">
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div key={review.id} className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-bold">
+                        {review.user?.firstName?.[0] || 'U'}
                       </span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          {review.user ? (
+                            <Link 
+                              to={`/user/${review.user.id}`}
+                              className="font-semibold text-gray-900 text-sm hover:text-blue-600 transition-colors cursor-pointer"
+                            >
+                              {review.user.firstName && review.user.lastName 
+                                ? `${review.user.firstName} ${review.user.lastName}` 
+                                : review.user.firstName || 'Utilisateur anonyme'
+                              }
+                            </Link>
+                          ) : (
+                            <p className="font-semibold text-gray-900 text-sm">
+                              Utilisateur anonyme
+                            </p>
+                          )}
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star 
+                                key={star} 
+                                className={`h-3 w-3 ${
+                                  star <= review.rating 
+                                    ? 'fill-orange-400 text-orange-400' 
+                                    : 'text-gray-300'
+                                }`} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 text-sm leading-relaxed">{review.comment}</p>
                     </div>
                   </div>
                 </div>
-                
-                <p className="text-sm text-gray-500 mb-4">{annonce.owner.joinDate}</p>
-                
-                <Button variant="outline" className="w-full">
-                  Voir le profil
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Safety Tips */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Conseils de sécurité</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <ul className="text-xs text-gray-600 space-y-2">
-                  <li>• Rencontrez le propriétaire en personne</li>
-                  <li>• Vérifiez l'identité avant tout paiement</li>
-                  <li>• Visitez le bien avant de signer</li>
-                  <li>• Utilisez notre messagerie sécurisée</li>
-                </ul>
-              </CardContent>
-            </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">Aucun avis pour le moment</p>
+                <p className="text-xs mt-1">Soyez le premier à laisser un avis !</p>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Recommendations */}
-        <div className="mt-12">
-          <RecommendationsSection />
+      {/* Footer fixe avec prix et bouton */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-gray-900">
+              {parseInt(ad.price).toLocaleString()} FCFA
+            </p>
+            <p className="text-sm text-gray-500">Par mois</p>
+          </div>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors">
+            Réserver
+          </button>
         </div>
       </div>
-      
-      {/* Media Viewer */}
-      <MediaViewer
-        isOpen={isMediaViewerOpen}
-        onClose={() => setIsMediaViewerOpen(false)}
-        media={annonce.media}
-        initialIndex={currentImage}
-      />
     </div>
   );
 };
+
+export default AnnonceDetailPage;

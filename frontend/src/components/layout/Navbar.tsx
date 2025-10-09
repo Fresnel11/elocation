@@ -270,8 +270,8 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-gray-200 shadow-lg">
-          <div className="px-4 py-4 space-y-3">
+        <div className="lg:hidden fixed top-20 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl z-40">
+          <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-5rem)] overflow-y-auto">
             <Link 
               to="/ads" 
               onClick={() => setIsMenuOpen(false)}
