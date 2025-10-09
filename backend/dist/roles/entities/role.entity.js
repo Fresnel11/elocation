@@ -23,8 +23,8 @@ __decorate([
 ], Role.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: 'enum',
-        enum: user_role_enum_1.UserRole,
+        type: 'varchar',
+        length: 50,
         unique: true,
     }),
     __metadata("design:type", String)

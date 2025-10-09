@@ -56,6 +56,7 @@ import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { HelpButton } from './components/ui/HelpButton';
+import { CookieConsent } from './components/ui/CookieConsent';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { ReferralPage } from './pages/ReferralPage';
 
@@ -132,6 +133,7 @@ function AppContent() {
       {!hideFooter && <Footer />}
       <HelpButton />
       <OfflineIndicator />
+      <CookieConsent />
     </div>
   );
 }

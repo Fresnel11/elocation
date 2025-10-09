@@ -28,7 +28,6 @@ __decorate([
 ], User.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 255, unique: true, nullable: true }),
-    (0, typeorm_1.Index)({ unique: true }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
@@ -41,7 +40,6 @@ __decorate([
 ], User.prototype, "lastName", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 20, unique: true, nullable: true }),
-    (0, typeorm_1.Index)({ unique: true }),
     __metadata("design:type", String)
 ], User.prototype, "phone", void 0);
 __decorate([
@@ -55,7 +53,6 @@ __decorate([
 ], User.prototype, "password", void 0);
 __decorate([
     (0, typeorm_1.Column)('varchar', { length: 255, nullable: true, unique: true }),
-    (0, typeorm_1.Index)({ unique: true }),
     __metadata("design:type", String)
 ], User.prototype, "googleId", void 0);
 __decorate([
@@ -92,7 +89,6 @@ __decorate([
 ], User.prototype, "resetPasswordOtpExpiresAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 10, nullable: true, unique: true }),
-    (0, typeorm_1.Index)({ unique: true }),
     __metadata("design:type", String)
 ], User.prototype, "referralCode", void 0);
 __decorate([

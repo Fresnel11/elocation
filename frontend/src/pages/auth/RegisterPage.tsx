@@ -7,7 +7,7 @@ import { Select } from '../../components/ui/Select';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import logoImage from '../../assets/elocation-512.png';
+import logoImage from '../../assets/e_location.png';
 
 export const RegisterPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(() => {
@@ -123,7 +123,7 @@ export const RegisterPage: React.FC = () => {
     if (!validateStep(3) || !acceptedTerms) return;
     
     try {
-      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined, formData.referralCode || undefined, acceptedTerms);
+      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined, formData.referralCode || undefined, acceptedTerms, formData.birthDate, formData.gender as 'masculin' | 'féminin');
       // Nettoyer le sessionStorage après inscription réussie
       sessionStorage.removeItem('registerFormData');
       sessionStorage.removeItem('registerStep');

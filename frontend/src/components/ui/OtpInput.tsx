@@ -77,7 +77,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-center space-x-2">
+      <div className="flex justify-center space-x-1 sm:space-x-2">
         {otp.map((digit, index) => (
           <input
             key={index}
@@ -91,7 +91,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
             onPaste={handlePaste}
             disabled={disabled}
             className={`
-              w-12 h-12 text-center text-xl font-semibold border-2 rounded-lg
+              w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-xl font-semibold border-2 rounded-lg
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
               transition-colors duration-200
               ${error 

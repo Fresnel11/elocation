@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Search, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import logoImage from '../../assets/elocation-512.png';
+import logoImage from '../../assets/e_location.png';
 
 const slides = [
   {

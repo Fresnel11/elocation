@@ -1,4 +1,5 @@
 import { api } from './api';
+import { cookieUtils } from '../utils/cookies';
 
 export interface RegisterData {
   firstName: string;
@@ -7,6 +8,9 @@ export interface RegisterData {
   email?: string;
   password: string;
   referralCode?: string;
+  birthDate: string;
+  gender: 'masculin' | 'féminin';
+  acceptedTerms: boolean;
 }
 
 export interface LoginData {
@@ -84,15 +88,19 @@ export const authService = {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    cookieUtils.remove('token');
+    cookieUtils.remove('user');
   },
 
   getStoredUser(): User | null {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem('user') || sessionStorage.getItem('user') || cookieUtils.get('user');
     return user ? JSON.parse(user) : null;
   },
 
   getStoredToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem('token') || sessionStorage.getItem('token') || cookieUtils.get('token');
   },
 
   isAuthenticated(): boolean {

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar, Heart, Download, BarChart3, Info, Phone, HelpCircle, LogIn, UserPlus } from 'lucide-react';
+import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
@@ -58,18 +59,10 @@ export const Navbar: React.FC = () => {
           <div className="flex justify-between items-center h-20">
           {/* Brand */}
           <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-2xl shadow-lg">
-                <MapPin className="h-7 w-7 text-white" />
-              </div>
-            </div>
-            <div className="ml-4">
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                eLocation
-              </span>
-              <div className="text-sm text-gray-500 font-medium -mt-1">Bénin</div>
-            </div>
+            <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
+            <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
+              eLocation
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -82,7 +75,6 @@ export const Navbar: React.FC = () => {
                   : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
               }`}
             >
-              <Home className="h-5 w-5" />
               Annonces
             </Link>
 

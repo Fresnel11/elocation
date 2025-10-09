@@ -63,10 +63,10 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ adId, className 
     <button
       onClick={toggleFavorite}
       disabled={loading}
-      className={`p-2 rounded-full transition-colors ${
+      className={`p-2 rounded-full transition-colors flex items-center justify-center ${
         isFavorite 
           ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          : 'bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white shadow-sm'
       } ${loading ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
     >
       <Heart 
