@@ -95,6 +95,28 @@ export class UsersController {
     return this.usersService.findAll(paginationDto);
   }
 
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
+  @ApiBody({ type: UpdateProfileDto })
+  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    console.log('Received profile update data:', updateProfileDto);
+    return this.usersService.updateProfile(req.user.id, updateProfileDto);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Obtenir le profil utilisateur' })
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findOne(req.user.id);
+    return {
+      ...user.profile,
+      phone: user.phone // Inclure le téléphone de l'utilisateur
+    };
+  }
+
   @Get(':id/profile')
   @ApiOperation({ 
     summary: 'Récupérer le profil public d\'un utilisateur',
@@ -211,22 +233,6 @@ export class UsersController {
   })
   toggleStatus(@Param('id') id: string) {
     return this.usersService.toggleUserStatus(id);
-  }
-
-  @Patch('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
-  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.usersService.updateProfile(req.user.id, updateProfileDto);
-  }
-
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Obtenir le profil utilisateur' })
-  async getProfile(@Request() req) {
-    return this.usersService.getProfile(req.user.id);
   }
 
   @Post('avatar')

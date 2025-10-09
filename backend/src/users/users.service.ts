@@ -241,12 +241,19 @@ export class UsersService {
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<UserProfile> {
     const user = await this.findOne(userId);
     
+    // Si le téléphone est fourni, mettre à jour l'utilisateur principal
+    if (updateProfileDto.phone) {
+      await this.userRepository.update(userId, { phone: updateProfileDto.phone });
+    }
+    
     let profile = user.profile;
     if (!profile) {
       profile = this.profileRepository.create({ userId });
     }
     
-    Object.assign(profile, updateProfileDto);
+    // Exclure le téléphone du profil car il est géré dans l'entité User
+    const { phone, ...profileData } = updateProfileDto;
+    Object.assign(profile, profileData);
     return this.profileRepository.save(profile);
   }
 

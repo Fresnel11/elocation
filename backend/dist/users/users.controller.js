@@ -36,6 +36,14 @@ let UsersController = class UsersController {
     findAll(paginationDto) {
         return this.usersService.findAll(paginationDto);
     }
+    async updateProfile(req, updateProfileDto) {
+        console.log('Received profile update data:', updateProfileDto);
+        return this.usersService.updateProfile(req.user.id, updateProfileDto);
+    }
+    async getProfile(req) {
+        const user = await this.usersService.findOne(req.user.id);
+        return Object.assign(Object.assign({}, user.profile), { phone: user.phone });
+    }
     getPublicProfile(id) {
         return this.usersService.getPublicProfile(id);
     }
@@ -50,12 +58,6 @@ let UsersController = class UsersController {
     }
     toggleStatus(id) {
         return this.usersService.toggleUserStatus(id);
-    }
-    async updateProfile(req, updateProfileDto) {
-        return this.usersService.updateProfile(req.user.id, updateProfileDto);
-    }
-    async getProfile(req) {
-        return this.usersService.getProfile(req.user.id);
     }
     async uploadAvatar(req, avatarUrl) {
         return this.usersService.uploadAvatar(req.user.id, avatarUrl);
@@ -154,6 +156,28 @@ __decorate([
     __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Patch)('profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Mettre à jour le profil utilisateur' }),
+    (0, swagger_1.ApiBody)({ type: update_profile_dto_1.UpdateProfileDto }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_profile_dto_1.UpdateProfileDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Get)('profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obtenir le profil utilisateur' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Get)(':id/profile'),
     (0, swagger_1.ApiOperation)({
@@ -284,27 +308,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "toggleStatus", null);
-__decorate([
-    (0, common_1.Patch)('profile'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Mettre à jour le profil utilisateur' }),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, update_profile_dto_1.UpdateProfileDto]),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "updateProfile", null);
-__decorate([
-    (0, common_1.Get)('profile'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtenir le profil utilisateur' }),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Post)('avatar'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

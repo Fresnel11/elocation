@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import * as fs from 'fs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
   // Create uploads directory if it doesn't exist
@@ -11,7 +13,12 @@ async function bootstrap() {
     fs.mkdirSync('./uploads');
   }
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
   const configService = app.get(ConfigService);
 
   app.useGlobalPipes(

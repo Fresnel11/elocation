@@ -80,4 +80,9 @@ export class UploadService {
 
     return { photos, video };
   }
+
+  async uploadSingleFile(file: any): Promise<{ url: string }> {
+    const url = await this.uploadFile(file, 'photo');
+    return { url };
+  }
 }

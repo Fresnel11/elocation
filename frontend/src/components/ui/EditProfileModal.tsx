@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Camera, Upload } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -32,6 +32,19 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     address: profile.address || '',
     avatar: profile.avatar || ''
   });
+
+  // Mettre à jour formData quand le modal s'ouvre ou que les props changent
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Modal opened with profile:', profile);
+      setFormData({
+        bio: profile.bio || '',
+        phone: profile.phone || '',
+        address: profile.address || '',
+        avatar: profile.avatar || ''
+      });
+    }
+  }, [isOpen, profile]);
 
   if (!isOpen) return null;
 

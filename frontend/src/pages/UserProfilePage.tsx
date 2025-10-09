@@ -22,6 +22,13 @@ interface User {
   phone?: string;
   whatsappNumber?: string;
   createdAt: string;
+  profile?: {
+    avatar?: string;
+    bio?: string;
+    address?: string;
+    averageRating?: number;
+    totalBookings?: number;
+  };
   _count?: {
     ads: number;
   };
@@ -98,6 +105,18 @@ export const UserProfilePage: React.FC = () => {
 
   const handleProfileUpdated = () => {
     fetchUserProfile();
+  };
+
+  const getProfileForEdit = () => {
+    const profileData = {
+      avatar: user?.profile?.avatar,
+      bio: user?.profile?.bio,
+      address: user?.profile?.address,
+      phone: user?.phone // Récupérer le téléphone depuis l'utilisateur principal
+    };
+    console.log('Profile data for edit:', profileData);
+    console.log('Full user data:', user);
+    return profileData;
   };
 
   const fetchUserAds = async () => {
@@ -212,10 +231,32 @@ export const UserProfilePage: React.FC = () => {
         <div className="bg-white rounded-t-3xl -mt-6 relative z-10 px-6 pt-6">
           {/* Profile Info */}
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 -mt-10 border-4 border-white shadow-lg">
-              <span className="text-white text-2xl font-bold">
-                {getInitials(user.firstName, user.lastName)}
-              </span>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0 -mt-10 border-4 border-white shadow-lg overflow-hidden">
+              {user.profile?.avatar || user.profilePicture ? (
+                <img 
+                  src={user.profile?.avatar?.startsWith('http') 
+                    ? user.profile.avatar 
+                    : user.profile?.avatar 
+                      ? `http://localhost:3000${user.profile.avatar}` 
+                      : user.profilePicture?.startsWith('http')
+                        ? user.profilePicture
+                        : `http://localhost:3000${user.profilePicture}`
+                  } 
+                  alt={`${user.firstName} ${user.lastName}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.log('Image failed to load:', e.currentTarget.src);
+                    console.log('User profile avatar:', user.profile?.avatar);
+                    console.log('User profilePicture:', user.profilePicture);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                  <span className="text-white text-2xl font-bold">
+                    {getInitials(user.firstName, user.lastName)}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex-1 pt-2">
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
@@ -228,13 +269,22 @@ export const UserProfilePage: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 text-orange-400 fill-orange-400" />
-                  <span className="text-sm font-medium">4.8</span>
-                  <span className="text-xs text-gray-500">(24 avis)</span>
+                  <span className="text-sm font-medium">{user.profile?.averageRating ? Number(user.profile.averageRating).toFixed(1) : '0.0'}</span>
+                  <span className="text-xs text-gray-500">({user.profile?.totalBookings || 0} avis)</span>
                 </div>
                 <div className="text-sm text-gray-600">
                   {user._count?.ads || 0} annonce{(user._count?.ads || 0) > 1 ? 's' : ''}
                 </div>
               </div>
+              {user.profile?.bio && (
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{user.profile.bio}</p>
+              )}
+              {user.profile?.address && (
+                <div className="flex items-center gap-1 text-gray-600 mt-1">
+                  <MapPin className="h-3 w-3" />
+                  <span className="text-xs">{user.profile.address}</span>
+                </div>
+              )}
             </div>
             {isOwner && (
               <button
@@ -275,11 +325,11 @@ export const UserProfilePage: React.FC = () => {
               <div className="text-sm text-gray-600">Annonces</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">4.8</div>
+              <div className="text-2xl font-bold text-gray-900">{user.profile?.averageRating ? Number(user.profile.averageRating).toFixed(1) : '0.0'}</div>
               <div className="text-sm text-gray-600">Note</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">24</div>
+              <div className="text-2xl font-bold text-gray-900">{user.profile?.totalBookings || 0}</div>
               <div className="text-sm text-gray-600">Avis</div>
             </div>
           </div>
@@ -431,7 +481,7 @@ export const UserProfilePage: React.FC = () => {
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        profile={user.profile || {}}
+        profile={getProfileForEdit()}
         onProfileUpdated={handleProfileUpdated}
       />
       

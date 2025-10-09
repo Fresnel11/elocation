@@ -18,6 +18,23 @@ export declare class UsersController {
             pages: number;
         };
     }>;
+    updateProfile(req: any, updateProfileDto: UpdateProfileDto): Promise<import("./entities/user-profile.entity").UserProfile>;
+    getProfile(req: any): Promise<{
+        phone: string;
+        id: string;
+        userId: string;
+        user: import("./entities/user.entity").User;
+        avatar: string;
+        bio: string;
+        address: string;
+        identityDocument: string;
+        verificationStatus: import("./entities/user-profile.entity").VerificationStatus;
+        badges: string[];
+        totalBookings: number;
+        averageRating: number;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     getPublicProfile(id: string): Promise<{
         id: string;
         firstName: string;
@@ -34,8 +51,6 @@ export declare class UsersController {
     update(id: string, updateUserDto: UpdateUserDto, req: any): Promise<import("./entities/user.entity").User>;
     remove(id: string): Promise<void>;
     toggleStatus(id: string): Promise<import("./entities/user.entity").User>;
-    updateProfile(req: any, updateProfileDto: UpdateProfileDto): Promise<import("./entities/user-profile.entity").UserProfile>;
-    getProfile(req: any): Promise<import("./entities/user-profile.entity").UserProfile>;
     uploadAvatar(req: any, avatarUrl: string): Promise<import("./entities/user-profile.entity").UserProfile>;
     getUserReputation(id: string): Promise<{
         averageRating: number;
