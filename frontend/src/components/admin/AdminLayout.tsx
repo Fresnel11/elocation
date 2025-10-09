@@ -56,6 +56,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     ...(user?.role?.name === 'super_admin' ? [{ path: '/admin/permissions', icon: Shield, label: 'Permissions' }] : []),
     { path: '/admin/categories', icon: Folder, label: 'Catégories' },
     { path: '/admin/reviews', icon: MessageSquare, label: 'Modération Avis' },
+    { path: '/admin/contact-messages', icon: Mail, label: 'Messages Contact' },
     { path: '/admin/reports', icon: Flag, label: 'Signalements' },
     { path: '/admin/emails', icon: Mail, label: 'Templates Emails' },
     { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },

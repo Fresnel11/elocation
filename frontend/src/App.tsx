@@ -10,7 +10,7 @@ import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordOtpPage } from './pages/auth/ResetPasswordOtpPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { AnnoncesPage } from './pages/AnnoncesPage';
+
 import { AdsPage } from './pages/AdsPage';
 import { AnnonceDetailPage } from './pages/AnnonceDetailPage';
 import { CreateAdPage } from './pages/CreateAdPage';
@@ -32,6 +32,7 @@ import { RolePermissionsManagement } from './pages/admin/RolePermissionsManageme
 import { Analytics } from './pages/admin/Analytics';
 import { CategoriesManagement } from './pages/admin/CategoriesManagement';
 import { ReviewsModeration } from './pages/admin/ReviewsModeration';
+import { ContactMessages } from './pages/admin/ContactMessages';
 import { ReportsManagement } from './pages/admin/ReportsManagement';
 import { EmailTemplates } from './pages/admin/EmailTemplates';
 import { Maintenance } from './pages/admin/Maintenance';
@@ -56,8 +57,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { HelpButton } from './components/ui/HelpButton';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { ReferralPage } from './pages/ReferralPage';
-import { SupportPage } from './pages/SupportPage';
-import { SupportTicketsPage } from './pages/SupportTicketsPage';
+
 import OfflineIndicator from './components/OfflineIndicator';
 import OfflineAdsPage from './pages/OfflineAdsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -93,8 +93,7 @@ function AppContent() {
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/notification-settings" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
           <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/support/tickets" element={<ProtectedRoute><SupportTicketsPage /></ProtectedRoute>} />
+
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><UsersManagement /></AdminRoute>} />
           <Route path="/admin/ads" element={<AdminRoute><AdsManagement /></AdminRoute>} />
@@ -104,6 +103,7 @@ function AppContent() {
           <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><CategoriesManagement /></AdminRoute>} />
           <Route path="/admin/reviews" element={<AdminRoute><ReviewsModeration /></AdminRoute>} />
+          <Route path="/admin/contact-messages" element={<AdminRoute><ContactMessages /></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><ReportsManagement /></AdminRoute>} />
           <Route path="/admin/emails" element={<AdminRoute><EmailTemplates /></AdminRoute>} />
           <Route path="/admin/maintenance" element={<AdminRoute><Maintenance /></AdminRoute>} />
@@ -120,7 +120,7 @@ function AppContent() {
           <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
           <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
           <Route path="/user/:userId" element={<UserProfilePage />} />
-          <Route path="/annonces" element={<AnnoncesPage />} />
+
           <Route path="/annonce/:id" element={<AnnonceDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />

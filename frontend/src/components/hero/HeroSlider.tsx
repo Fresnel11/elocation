@@ -37,26 +37,61 @@ const slides = [
 
 export const HeroSlider: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean[]>(new Array(slides.length).fill(false));
+  const [allImagesLoaded, setAllImagesLoaded] = useState(false);
 
   useEffect(() => {
+    // Précharger les images
+    slides.forEach((slide, index) => {
+      const img = new Image();
+      img.onload = () => {
+        setImagesLoaded(prev => {
+          const newState = [...prev];
+          newState[index] = true;
+          return newState;
+        });
+      };
+      img.src = slide.image;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (imagesLoaded.every(loaded => loaded)) {
+      setAllImagesLoaded(true);
+    }
+  }, [imagesLoaded]);
+
+  useEffect(() => {
+    if (!allImagesLoaded) return;
+    
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [allImagesLoaded]);
 
   const currentSlideData = slides[currentSlide];
 
   return (
     <div className="relative h-screen overflow-hidden">
+      {/* Loader */}
+      {!allImagesLoaded && (
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-20">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-lg">Chargement...</p>
+          </div>
+        </div>
+      )}
+
       {/* Background Images */}
       <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
             className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
+              index === currentSlide && allImagesLoaded ? 'opacity-100' : 'opacity-0'
             }`}
           >
             <img
@@ -70,7 +105,9 @@ export const HeroSlider: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-full flex items-center justify-center">
+      <div className={`relative z-10 h-full flex items-center justify-center transition-opacity duration-500 ${
+        allImagesLoaded ? 'opacity-100' : 'opacity-0'
+      }`}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <div className="space-y-6">
             <div className="inline-block">
@@ -93,14 +130,14 @@ export const HeroSlider: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3" asChild>
-                <Link to="/annonces" className="flex items-center justify-center">
+                <Link to="/login" className="flex items-center justify-center">
                   <Search className="h-5 w-5 mr-2" />
                   Chercher une annonce
                 </Link>
               </Button>
               
               <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3" asChild>
-                <Link to="/register" className="flex items-center justify-center">
+                <Link to="/login" className="flex items-center justify-center">
                   <PlusCircle className="h-5 w-5 mr-2" />
                   Publier une annonce
                 </Link>
@@ -111,7 +148,9 @@ export const HeroSlider: React.FC = () => {
       </div>
 
       {/* Slide indicators */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
+      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 transition-opacity duration-500 ${
+        allImagesLoaded ? 'opacity-100' : 'opacity-0'
+      }`}>
         {slides.map((_, index) => (
           <button
             key={index}

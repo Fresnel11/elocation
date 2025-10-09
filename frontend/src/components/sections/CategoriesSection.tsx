@@ -12,7 +12,8 @@ const categories = [
     count: '1,250+',
     image: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
     overlay: 'bg-blue-600/70',
-    iconColor: 'text-white'
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-600'
   },
   {
     id: 'vehicules',
@@ -22,7 +23,8 @@ const categories = [
     count: '850+',
     image: 'https://images.pexels.com/photos/120049/pexels-photo-120049.jpeg?auto=compress&cs=tinysrgb&w=800',
     overlay: 'bg-green-600/70',
-    iconColor: 'text-white'
+    iconBg: 'bg-green-100',
+    iconColor: 'text-green-600'
   },
   {
     id: 'electromenager',
@@ -32,7 +34,8 @@ const categories = [
     count: '620+',
     image: 'https://images.pexels.com/photos/2724748/pexels-photo-2724748.jpeg?auto=compress&cs=tinysrgb&w=800',
     overlay: 'bg-orange-600/70',
-    iconColor: 'text-white'
+    iconBg: 'bg-orange-100',
+    iconColor: 'text-orange-600'
   },
   {
     id: 'evenementiel',
@@ -42,7 +45,8 @@ const categories = [
     count: '340+',
     image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
     overlay: 'bg-purple-600/70',
-    iconColor: 'text-white'
+    iconBg: 'bg-purple-100',
+    iconColor: 'text-purple-600'
   },
   {
     id: 'professionnel',
@@ -52,7 +56,8 @@ const categories = [
     count: '280+',
     image: 'https://images.pexels.com/photos/416405/pexels-photo-416405.jpeg?auto=compress&cs=tinysrgb&w=800',
     overlay: 'bg-indigo-600/70',
-    iconColor: 'text-white'
+    iconBg: 'bg-indigo-100',
+    iconColor: 'text-indigo-600'
   },
   {
     id: 'loisirs',
@@ -62,7 +67,8 @@ const categories = [
     count: '195+',
     image: 'https://images.pexels.com/photos/274422/pexels-photo-274422.jpeg?auto=compress&cs=tinysrgb&w=800',
     overlay: 'bg-pink-600/70',
-    iconColor: 'text-white'
+    iconBg: 'bg-pink-100',
+    iconColor: 'text-pink-600'
   }
 ];
 
@@ -90,7 +96,7 @@ export const CategoriesSection: React.FC = () => {
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (
-              <Link key={category.id} to={`/annonces?category=${category.id}`} className="group">
+              <Link key={category.id} to={`/ads?category=${category.id}`} className="group">
                 <Card className="h-full hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer border-0 shadow-lg overflow-hidden">
                   <CardContent className="p-0">
                     {/* Icon Section */}
@@ -106,8 +112,8 @@ export const CategoriesSection: React.FC = () => {
                       <div className="absolute inset-0 bg-white/10 transform rotate-12 scale-150 translate-x-1/2 -translate-y-1/2 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500"></div>
                       
                       <div className="relative z-10">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300">
-                          <IconComponent className={`h-8 w-8 ${category.iconColor.replace('text-white', 'text-gray-700')}`} />
+                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${category.iconBg} shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                          <IconComponent className={`h-8 w-8 ${category.iconColor}`} />
                         </div>
                         <div className="text-right">
                           <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-gray-700">
@@ -139,7 +145,7 @@ export const CategoriesSection: React.FC = () => {
         {/* CTA */}
         <div className="text-center mt-16">
           <Link 
-            to="/annonces" 
+            to="/login" 
             className="inline-flex items-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           >
             Voir toutes les annonces
