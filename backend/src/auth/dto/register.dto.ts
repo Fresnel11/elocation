@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsOptional, MinLength, Matches } from 'class-validator';
+import { IsString, IsEmail, IsOptional, MinLength, Matches, IsBoolean, IsDateString, IsEnum } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -64,4 +64,26 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   referralCode?: string;
+
+  @ApiProperty({
+    description: 'Date de naissance (YYYY-MM-DD)',
+    example: '1990-01-01'
+  })
+  @IsDateString()
+  birthDate: string;
+
+  @ApiProperty({
+    description: 'Sexe de l\'utilisateur',
+    example: 'masculin',
+    enum: ['masculin', 'féminin']
+  })
+  @IsEnum(['masculin', 'féminin'])
+  gender: 'masculin' | 'féminin';
+
+  @ApiProperty({
+    description: 'Acceptation des conditions d\'utilisation',
+    example: true
+  })
+  @IsBoolean()
+  acceptedTerms: boolean;
 }

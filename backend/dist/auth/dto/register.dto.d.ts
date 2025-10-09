@@ -5,4 +5,7 @@ export declare class RegisterDto {
     email?: string;
     password: string;
     referralCode?: string;
+    birthDate: string;
+    gender: 'masculin' | 'féminin';
+    acceptedTerms: boolean;
 }

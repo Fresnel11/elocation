@@ -44,6 +44,7 @@ export declare class AdminController {
         googleId: string | null;
         profilePicture: string | null;
         birthDate: Date | null;
+        gender: "masculin" | "f\u00E9minin" | null;
         lastLogin: Date | null;
         otpCode: string | null;
         otpExpiresAt: Date | null;
@@ -60,6 +61,8 @@ export declare class AdminController {
         favorites: import("../favorites/entities/favorite.entity").Favorite[];
         profile: import("../users/entities/user-profile.entity").UserProfile;
         loyaltyPoints: number;
+        acceptedTerms: boolean;
+        termsAcceptedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

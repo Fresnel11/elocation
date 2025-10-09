@@ -84,4 +84,29 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "referralCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Date de naissance (YYYY-MM-DD)',
+        example: '1990-01-01'
+    }),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "birthDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Sexe de l\'utilisateur',
+        example: 'masculin',
+        enum: ['masculin', 'féminin']
+    }),
+    (0, class_validator_1.IsEnum)(['masculin', 'féminin']),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "gender", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Acceptation des conditions d\'utilisation',
+        example: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], RegisterDto.prototype, "acceptedTerms", void 0);
 //# sourceMappingURL=register.dto.js.map

@@ -10,15 +10,27 @@ import { useToast } from '../../context/ToastContext';
 import logoImage from '../../assets/elocation-512.png';
 
 export const RegisterPage: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    referralCode: ''
+  const [currentStep, setCurrentStep] = useState(() => {
+    const saved = sessionStorage.getItem('registerStep');
+    return saved ? parseInt(saved) : 1;
+  });
+  const [formData, setFormData] = useState(() => {
+    const saved = sessionStorage.getItem('registerFormData');
+    return saved ? JSON.parse(saved) : {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      referralCode: '',
+      birthDate: '',
+      gender: ''
+    };
+  });
+  const [acceptedTerms, setAcceptedTerms] = useState(() => {
+    const saved = sessionStorage.getItem('registerAcceptedTerms');
+    return saved ? JSON.parse(saved) : false;
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,7 +48,9 @@ export const RegisterPage: React.FC = () => {
 
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    sessionStorage.setItem('registerFormData', JSON.stringify(newFormData));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -48,6 +62,21 @@ export const RegisterPage: React.FC = () => {
     if (step === 1) {
       if (!formData.firstName.trim()) newErrors.firstName = 'Le prénom est requis';
       if (!formData.lastName.trim()) newErrors.lastName = 'Le nom de famille est requis';
+      if (!formData.birthDate) {
+        newErrors.birthDate = 'La date de naissance est requise';
+      } else {
+        const birthDate = new Date(formData.birthDate);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        if (age < 18) {
+          newErrors.birthDate = 'Vous devez avoir au moins 18 ans';
+        }
+      }
+      if (!formData.gender) newErrors.gender = 'Le sexe est requis';
     }
     
     if (step === 2) {
@@ -78,19 +107,28 @@ export const RegisterPage: React.FC = () => {
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 3));
+      const newStep = Math.min(currentStep + 1, 3);
+      setCurrentStep(newStep);
+      sessionStorage.setItem('registerStep', newStep.toString());
     }
   };
 
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    const newStep = Math.max(currentStep - 1, 1);
+    setCurrentStep(newStep);
+    sessionStorage.setItem('registerStep', newStep.toString());
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) return;
+    if (!validateStep(3) || !acceptedTerms) return;
     
     try {
-      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined, formData.referralCode || undefined);
+      const result = await register(formData.firstName, formData.lastName, formData.phone, formData.password, formData.email || undefined, formData.referralCode || undefined, acceptedTerms);
+      // Nettoyer le sessionStorage après inscription réussie
+      sessionStorage.removeItem('registerFormData');
+      sessionStorage.removeItem('registerStep');
+      sessionStorage.removeItem('registerAcceptedTerms');
+      
       success(
         'Inscription réussie !', 
         'Votre compte a été créé avec succès. Vérifiez votre téléphone pour activer votre compte.'
@@ -140,6 +178,35 @@ export const RegisterPage: React.FC = () => {
               required
               placeholder="Dupont"
             />
+            <Input
+              label="Date de naissance"
+              type="date"
+              value={formData.birthDate}
+              onChange={(e) => handleChange('birthDate', e.target.value)}
+              error={errors.birthDate}
+              required
+              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Sexe <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.gender}
+                onChange={(e) => handleChange('gender', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.gender ? 'border-red-500' : 'border-gray-300'
+                }`}
+                required
+              >
+                <option value="">Sélectionnez votre sexe</option>
+                <option value="masculin">Masculin</option>
+                <option value="féminin">Féminin</option>
+              </select>
+              {errors.gender && (
+                <p className="text-sm text-red-600">{errors.gender}</p>
+              )}
+            </div>
           </div>
         );
       
@@ -255,19 +322,26 @@ export const RegisterPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center">
+            <div className="flex items-start">
               <input
                 id="terms"
                 name="terms"
                 type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setAcceptedTerms(checked);
+                  sessionStorage.setItem('registerAcceptedTerms', JSON.stringify(checked));
+                }}
                 required
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                 J'accepte les{' '}
-                <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                <Link to="/terms" className="text-blue-600 hover:text-blue-500 underline">
                   conditions d'utilisation
                 </Link>
+                {' '}d'eLocation Bénin
               </label>
             </div>
           </div>
@@ -379,8 +453,8 @@ export const RegisterPage: React.FC = () => {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={loading}
-                  className="flex items-center justify-center bg-green-600 hover:bg-green-700 order-1 sm:order-2"
+                  disabled={loading || !acceptedTerms}
+                  className="flex items-center justify-center bg-green-600 hover:bg-green-700 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Inscription...' : 'Créer mon compte'}
                   <CheckCircle className="h-4 w-4 ml-2" />

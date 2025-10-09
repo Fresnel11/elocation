@@ -16,6 +16,7 @@ export declare class User {
     googleId: string | null;
     profilePicture: string | null;
     birthDate: Date | null;
+    gender: 'masculin' | 'féminin' | null;
     lastLogin: Date | null;
     otpCode: string | null;
     otpExpiresAt: Date | null;
@@ -32,6 +33,8 @@ export declare class User {
     favorites: Favorite[];
     profile: UserProfile;
     loyaltyPoints: number;
+    acceptedTerms: boolean;
+    termsAcceptedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }

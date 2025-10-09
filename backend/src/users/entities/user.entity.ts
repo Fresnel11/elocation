@@ -45,6 +45,9 @@ export class User {
   @Column({ type: 'date', nullable: true })
   birthDate: Date | null;
 
+  @Column({ type: 'enum', enum: ['masculin', 'féminin'], nullable: true })
+  gender: 'masculin' | 'féminin' | null;
+
   @Column({ type: 'timestamp', nullable: true })
   lastLogin: Date | null;
 
@@ -94,6 +97,12 @@ export class User {
 
   @Column({ name: 'loyalty_points', default: 0 })
   loyaltyPoints: number;
+
+  @Column({ name: 'accepted_terms', default: false })
+  acceptedTerms: boolean;
+
+  @Column({ name: 'terms_accepted_at', type: 'timestamp', nullable: true })
+  termsAcceptedAt: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;

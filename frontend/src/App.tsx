@@ -17,6 +17,7 @@ import { CreateAdPage } from './pages/CreateAdPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { RequestsPage } from './pages/RequestsPage';
 import { RequestDetailPage } from './pages/RequestDetailPage';
@@ -125,6 +126,7 @@ function AppContent() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/terms" element={<TermsOfServicePage />} />
         </Routes>
       </main>
       {!hideFooter && <Footer />}
