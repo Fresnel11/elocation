@@ -1,18 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin } from 'lucide-react';
-import logoImage from '../../assets/elocation-512.png';
 
 export const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Logo et description */}
+          {/* Description */}
           <div className="col-span-1 lg:col-span-2">
-            <div className="mb-4">
-              <img src={logoImage} alt="eLocation Bénin" className="h-12 w-auto" />
-            </div>
+            <h3 className="font-semibold text-lg mb-4">eLocation Bénin</h3>
             <p className="text-gray-300 mb-6 leading-relaxed">
               La plateforme de confiance pour vos locations au Bénin. 
               Connectez propriétaires et locataires en toute sécurité.
@@ -35,7 +32,7 @@ export const Footer: React.FC = () => {
             <h3 className="font-semibold text-lg mb-4">Liens rapides</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/annonces" className="text-gray-300 hover:text-white transition-colors">
+                <Link to="/ads" className="text-gray-300 hover:text-white transition-colors">
                   Toutes les annonces
                 </Link>
               </li>
@@ -63,11 +60,11 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">+229 XX XX XX XX</span>
+                <span className="text-gray-300">+229 0199154678</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">contact@elocation-benin.com</span>
+                <span className="text-gray-300">elocationcontact@gmail.com</span>
               </li>
               <li className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-blue-400 mt-0.5" />

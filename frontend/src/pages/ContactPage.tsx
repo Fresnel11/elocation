@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { useToast } from '../context/ToastContext';
+import api from '../services/api';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -12,29 +15,38 @@ export const ContactPage: React.FC = () => {
     message: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulation d'envoi
-    setTimeout(() => {
+    setIsLoading(true);
+    
+    try {
+      await api.post('/contact', formData);
       setIsSubmitted(true);
-    }, 1000);
+      success('Message envoyé', 'Votre message a été envoyé avec succès.');
+    } catch (err) {
+      error('Erreur', 'Une erreur est survenue lors de l\'envoi de votre message.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-6 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Send className="h-8 w-8 text-green-600" />
+      <div className="min-h-screen bg-gray-50 pt-6 px-4 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-auto">
+          <CardContent className="p-6 sm:p-8 text-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Send className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Message envoyé !</h2>
-            <p className="text-gray-600">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Message envoyé !</h2>
+            <p className="text-sm sm:text-base text-gray-600">
               Nous avons bien reçu votre message et vous répondrons dans les plus brefs délais.
             </p>
           </CardContent>
@@ -104,9 +116,9 @@ export const ContactPage: React.FC = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   <Send className="h-4 w-4 mr-2" />
-                  Envoyer le message
+                  {isLoading ? 'Envoi en cours...' : 'Envoyer le message'}
                 </Button>
               </form>
             </CardContent>
@@ -127,7 +139,7 @@ export const ContactPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">Téléphone</p>
-                      <p className="text-gray-600">+229 XX XX XX XX</p>
+                      <p className="text-gray-600">+229 0199154678</p>
                     </div>
                   </div>
 
@@ -137,7 +149,7 @@ export const ContactPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">Email</p>
-                      <p className="text-gray-600">contact@elocation-benin.com</p>
+                      <p className="text-gray-600">elocationcontact@gmail.com</p>
                     </div>
                   </div>
 
@@ -177,8 +189,8 @@ export const ContactPage: React.FC = () => {
                   Besoin d'aide avec l'utilisation de la plateforme ? 
                   Notre équipe technique est disponible pour vous assister.
                 </p>
-                <Button variant="outline" className="w-full">
-                  Centre d'aide
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/faq">Centre d'aide</Link>
                 </Button>
               </CardContent>
             </Card>

@@ -84,14 +84,14 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-md">
         <div className="flex justify-center">
           <Link to="/">
-            <img src={logoImage} alt="eLocation Bénin" className="h-16 w-auto" />
+            <img src={logoImage} alt="eLocation Bénin" className="h-12 sm:h-16 w-auto" />
           </Link>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+        <h2 className="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-bold text-gray-900">
           Connectez-vous à votre compte
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
@@ -102,18 +102,18 @@ export const LoginPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <Card>
+      <div className="mt-6 sm:mt-8 mx-auto w-full max-w-md">
+        <Card className="mx-4 sm:mx-0">
           <CardHeader>
             <CardTitle className="text-center">Connexion</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             {successMessage && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
                 <p className="text-sm text-green-800">{successMessage}</p>
               </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <Input
                 label="Email"
                 type="email"
@@ -143,7 +143,7 @@ export const LoginPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                 <div className="flex items-center">
                   <input
                     id="remember-me"

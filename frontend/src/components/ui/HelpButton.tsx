@@ -12,7 +12,7 @@ export const HelpButton: React.FC = () => {
       title: 'Centre d\'aide',
       description: 'FAQ et guides',
       icon: HelpCircle,
-      link: '/support'
+      link: '/faq'
     },
     {
       title: 'Chat support',
@@ -23,12 +23,7 @@ export const HelpButton: React.FC = () => {
         setIsOpen(false);
       }
     },
-    {
-      title: 'Créer un ticket',
-      description: 'Signaler un problème',
-      icon: FileText,
-      link: '/support/tickets'
-    }
+
   ];
 
   return (

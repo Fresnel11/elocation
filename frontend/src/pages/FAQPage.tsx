@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown, Search } from 'lucide-react';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 
 const faqs = [
   {
@@ -171,7 +173,9 @@ export const FAQPage: React.FC = () => {
                 Notre équipe support est disponible pour vous aider personnellement
               </p>
               <Button asChild>
-                <a href="/contact">Nous contacter</a>
+                <Link to="/contact">
+                  Nous contacter
+                </Link>
               </Button>
             </CardContent>
           </Card>

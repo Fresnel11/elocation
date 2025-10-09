@@ -39,6 +39,7 @@ const referrals_module_1 = require("./referrals/referrals.module");
 const social_module_1 = require("./social/social.module");
 const support_module_1 = require("./support/support.module");
 const analytics_module_1 = require("./analytics/analytics.module");
+const contact_module_1 = require("./contact/contact.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -62,6 +63,10 @@ exports.AppModule = AppModule = __decorate([
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(__dirname, '..', 'uploads'),
                 serveRoot: '/uploads',
+                serveStaticOptions: {
+                    index: false,
+                    fallthrough: true,
+                },
             }),
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
@@ -88,6 +93,7 @@ exports.AppModule = AppModule = __decorate([
             social_module_1.SocialModule,
             support_module_1.SupportModule,
             analytics_module_1.AnalyticsModule,
+            contact_module_1.ContactModule,
         ],
     })
 ], AppModule);

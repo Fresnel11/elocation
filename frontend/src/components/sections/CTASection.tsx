@@ -37,7 +37,7 @@ export const CTASection: React.FC = () => {
               className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 font-semibold"
               asChild
             >
-              <Link to="/annonces" className="flex items-center justify-center">
+              <Link to="/login" className="flex items-center justify-center">
                 Voir toutes les annonces
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Link>

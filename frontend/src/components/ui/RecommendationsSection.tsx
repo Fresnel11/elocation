@@ -78,7 +78,7 @@ export const RecommendationsSection: React.FC = () => {
             <div className="aspect-video bg-gray-200 relative">
               {ad.photos?.[0] ? (
                 <img
-                  src={`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/uploads/${ad.photos[0]}`}
+                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/uploads/${ad.photos[0]}`}
                   alt={ad.title}
                   className="w-full h-full object-cover"
                 />

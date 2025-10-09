@@ -29,6 +29,7 @@ import { ReferralsModule } from './referrals/referrals.module';
 import { SocialModule } from './social/social.module';
 import { SupportModule } from './support/support.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -49,6 +50,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
+      serveStaticOptions: {
+        index: false,
+        fallthrough: true,
+      },
     }),
     AuthModule,
     UsersModule,
@@ -75,6 +80,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     SocialModule,
     SupportModule,
     AnalyticsModule,
+    ContactModule,
   ],
 })
 export class AppModule {}
