@@ -5,6 +5,7 @@ import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
+import { WebSocketTest } from '../WebSocketTest';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -189,7 +190,8 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+          <div className="lg:hidden flex items-center space-x-3">
+            {user && <NotificationBell />}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -206,6 +208,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center space-x-6">
             {user ? (
               <div className="flex items-center space-x-6">
+                <WebSocketTest />
                 <NotificationBell />
                 <div className="relative" ref={userMenuRef}>
                   <button

@@ -12,6 +12,8 @@ async function bootstrap() {
         fs.mkdirSync('./uploads');
     }
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.use(require('express').json({ limit: '50mb' }));
+    app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'uploads'), {
         prefix: '/uploads/',
     });

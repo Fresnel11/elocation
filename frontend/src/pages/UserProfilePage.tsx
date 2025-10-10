@@ -11,6 +11,9 @@ import { EditProfileModal } from '../components/ui/EditProfileModal';
 import { BookingHistory } from '../components/ui/BookingHistory';
 import { UserReputation } from '../components/ui/UserReputation';
 import { ReportModal } from '../components/ui/ReportModal';
+import { ClickableAvatar } from '../components/ui/ClickableAvatar';
+import { ShareProfileModal } from '../components/ui/ShareProfileModal';
+import { ProfileDropdownMenu } from '../components/ui/ProfileDropdownMenu';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -82,6 +85,8 @@ export const UserProfilePage: React.FC = () => {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ads' | 'bookings'>('ads');
   const { user: currentUser } = useAuth();
 
@@ -217,12 +222,27 @@ export const UserProfilePage: React.FC = () => {
             <ArrowLeft className="h-5 w-5 text-white" />
           </button>
           <div className="flex gap-2">
-            <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
+            <button 
+              onClick={() => setIsShareModalOpen(true)}
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
+            >
               <Share2 className="h-5 w-5 text-white" />
             </button>
-            <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
-              <MoreVertical className="h-5 w-5 text-white" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
+              >
+                <MoreVertical className="h-5 w-5 text-white" />
+              </button>
+              <ProfileDropdownMenu
+                isOpen={isDropdownOpen}
+                onClose={() => setIsDropdownOpen(false)}
+                isOwner={isOwner}
+                userName={`${user.firstName} ${user.lastName}`}
+                profileUrl={`${window.location.origin}/user/${user.id}`}
+              />
+            </div>
           </div>
         </div>
 
@@ -231,32 +251,13 @@ export const UserProfilePage: React.FC = () => {
         <div className="bg-white rounded-t-3xl -mt-6 relative z-10 px-6 pt-6">
           {/* Profile Info */}
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0 -mt-10 border-4 border-white shadow-lg overflow-hidden">
-              {user.profile?.avatar || user.profilePicture ? (
-                <img 
-                  src={user.profile?.avatar?.startsWith('http') 
-                    ? user.profile.avatar 
-                    : user.profile?.avatar 
-                      ? `http://localhost:3000${user.profile.avatar}` 
-                      : user.profilePicture?.startsWith('http')
-                        ? user.profilePicture
-                        : `http://localhost:3000${user.profilePicture}`
-                  } 
-                  alt={`${user.firstName} ${user.lastName}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.log('Image failed to load:', e.currentTarget.src);
-                    console.log('User profile avatar:', user.profile?.avatar);
-                    console.log('User profilePicture:', user.profilePicture);
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
-                  <span className="text-white text-2xl font-bold">
-                    {getInitials(user.firstName, user.lastName)}
-                  </span>
-                </div>
-              )}
+            <div className="-mt-10 border-4 border-white shadow-lg rounded-full">
+              <ClickableAvatar
+                avatarUrl={user.profile?.avatar || user.profilePicture}
+                userName={`${user.firstName} ${user.lastName}`}
+                size="lg"
+                className="w-20 h-20"
+              />
             </div>
             <div className="flex-1 pt-2">
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
@@ -494,6 +495,13 @@ export const UserProfilePage: React.FC = () => {
           targetTitle={`${user.firstName} ${user.lastName}`}
         />
       )}
+      
+      <ShareProfileModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        profileUrl={`${window.location.origin}/user/${user.id}`}
+        userName={`${user.firstName} ${user.lastName}`}
+      />
     </div>
   );
 };

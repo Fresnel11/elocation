@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, User, MessageCircle, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { ClickableAvatar } from '../components/ui/ClickableAvatar';
 
 interface Review {
   id: string;
@@ -16,6 +17,7 @@ interface Review {
     id: string;
     firstName: string;
     lastName: string;
+    profilePicture?: string;
   } | null;
 }
 
@@ -224,9 +226,11 @@ const AnnonceDetailPage: React.FC = () => {
 
         {/* Propriétaire */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold">{ad.user?.firstName?.[0] || 'U'}</span>
-          </div>
+          <ClickableAvatar
+            avatarUrl={ad.user?.profilePicture}
+            userName={`${ad.user?.firstName || 'Utilisateur'} ${ad.user?.lastName || ''}`}
+            size="lg"
+          />
           <div className="flex-1">
             <p className="font-semibold text-gray-900">{ad.user?.firstName || 'Utilisateur'} {ad.user?.lastName || ''}</p>
             <p className="text-sm text-gray-500">Propriétaire</p>
@@ -316,11 +320,11 @@ const AnnonceDetailPage: React.FC = () => {
               reviews.map((review) => (
                 <div key={review.id} className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm font-bold">
-                        {review.user?.firstName?.[0] || 'U'}
-                      </span>
-                    </div>
+                    <ClickableAvatar
+                      avatarUrl={review.user?.profilePicture}
+                      userName={review.user ? `${review.user.firstName} ${review.user.lastName}` : 'Utilisateur anonyme'}
+                      size="md"
+                    />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
@@ -376,7 +380,7 @@ const AnnonceDetailPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900">
-              {parseInt(ad.price).toLocaleString()} FCFA
+              {parseInt(ad.price.toString()).toLocaleString()} FCFA
             </p>
             <p className="text-sm text-gray-500">Par mois</p>
           </div>

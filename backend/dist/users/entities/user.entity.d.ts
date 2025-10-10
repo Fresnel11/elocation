@@ -5,6 +5,7 @@ import { Request } from '../../requests/entities/request.entity';
 import { Response } from '../../responses/entities/response.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 import { UserProfile } from './user-profile.entity';
+import { UserVerification } from './user-verification.entity';
 export declare class User {
     id: string;
     email: string | null;
@@ -32,6 +33,8 @@ export declare class User {
     responses: Response[];
     favorites: Favorite[];
     profile: UserProfile;
+    verification: UserVerification;
+    isVerified: boolean;
     loyaltyPoints: number;
     acceptedTerms: boolean;
     termsAcceptedAt: Date | null;

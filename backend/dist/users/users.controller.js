@@ -23,6 +23,8 @@ const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
 const update_profile_dto_1 = require("./dto/update-profile.dto");
+const submit_verification_dto_1 = require("./dto/submit-verification.dto");
+const review_verification_dto_1 = require("./dto/review-verification.dto");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
 const reviews_service_1 = require("../reviews/reviews.service");
 let UsersController = class UsersController {
@@ -97,6 +99,23 @@ let UsersController = class UsersController {
             totalReviews,
             reputationLevel,
             reputationScore: Math.min(100, Math.round(reputationScore))
+        };
+    }
+    async submitVerification(req, submitVerificationDto) {
+        return this.usersService.submitVerification(req.user.id, submitVerificationDto);
+    }
+    async getPendingVerifications() {
+        return this.usersService.getPendingVerifications();
+    }
+    async reviewVerification(id, reviewDto, req) {
+        return this.usersService.reviewVerification(id, reviewDto, req.user.id);
+    }
+    async getVerificationStatus(req) {
+        const verification = await this.usersService.getUserVerification(req.user.id);
+        const user = await this.usersService.findOne(req.user.id);
+        return {
+            isVerified: user.isVerified,
+            verification
         };
     }
 };
@@ -337,6 +356,53 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getUserReputation", null);
+__decorate([
+    (0, common_1.Post)('verification'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Soumettre une demande de vérification d\'identité' }),
+    (0, swagger_1.ApiBody)({ type: submit_verification_dto_1.SubmitVerificationDto }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, submit_verification_dto_1.SubmitVerificationDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "submitVerification", null);
+__decorate([
+    (0, common_1.Get)('verification/pending'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_role_enum_1.UserRole.ADMIN, user_role_enum_1.UserRole.SUPER_ADMIN),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Récupérer les demandes de vérification en attente' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getPendingVerifications", null);
+__decorate([
+    (0, common_1.Patch)('verification/:id/review'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_role_enum_1.UserRole.ADMIN, user_role_enum_1.UserRole.SUPER_ADMIN),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Approuver ou rejeter une demande de vérification' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID de la demande de vérification' }),
+    (0, swagger_1.ApiBody)({ type: review_verification_dto_1.ReviewVerificationDto }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, review_verification_dto_1.ReviewVerificationDto, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "reviewVerification", null);
+__decorate([
+    (0, common_1.Get)('verification/status'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Vérifier le statut de vérification de l\'utilisateur' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getVerificationStatus", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('Utilisateurs'),
     (0, common_1.Controller)('users'),

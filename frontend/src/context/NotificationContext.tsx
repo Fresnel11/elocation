@@ -49,8 +49,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       auth: { token },
       transports: ['websocket', 'polling'],
       timeout: 20000,
-      forceNew: true
+      forceNew: true,
+      autoConnect: true
     });
+
+    // Exposer le socket globalement pour les autres composants
+    (window as any).socket = newSocket;
 
     newSocket.on('connect', () => {
       console.log('Connected to notifications server');
@@ -79,6 +83,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           icon: '/favicon.ico'
         });
       }
+    });
+
+    // Écouter les nouvelles vérifications
+    newSocket.on('new_verification', (verification) => {
+      console.log('Nouvelle vérification reçue:', verification);
+      // Ajouter à window pour que AdminVerificationPage puisse l'écouter
+      window.dispatchEvent(new CustomEvent('new_verification', { detail: verification }));
     });
 
     newSocket.on('disconnect', () => {

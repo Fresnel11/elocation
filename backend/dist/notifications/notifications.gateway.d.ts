@@ -14,4 +14,7 @@ export declare class NotificationsGateway implements OnGatewayConnection, OnGate
     }, client: Socket): void;
     sendNotificationToUser(userId: string, notification: any): void;
     sendBroadcastNotification(notification: any): void;
+    notifyAdminsNewVerification(verification: any): void;
+    notifyVerificationStatus(userId: string, status: string, reason?: string): void;
+    handleTestNotification(data: any, client: Socket): void;
 }

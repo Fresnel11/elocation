@@ -11,9 +11,17 @@ export class CategorySeeder {
   ) {}
 
   async seed() {
-    // Supprimer d'abord toutes les annonces pour éviter les contraintes FK
-    await this.categoryRepository.query('DELETE FROM ads');
-    console.log('Annonces supprimées');
+    try {
+      // Supprimer d'abord les reviews pour éviter les contraintes FK
+      await this.categoryRepository.query('DELETE FROM reviews');
+      console.log('Reviews supprimées');
+      
+      // Supprimer les annonces
+      await this.categoryRepository.query('DELETE FROM ads');
+      console.log('Annonces supprimées');
+    } catch (error) {
+      console.log('Erreur lors de la suppression, continuons...');
+    }
     
     // Supprimer les sous-catégories avant les catégories
     await this.categoryRepository.query('DELETE FROM subcategories');

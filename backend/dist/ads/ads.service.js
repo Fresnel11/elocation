@@ -27,6 +27,9 @@ let AdsService = class AdsService {
         this.notificationsService = notificationsService;
     }
     async create(createAdDto, user) {
+        if (!user.isVerified) {
+            throw new common_1.ForbiddenException('Vous devez vérifier votre identité pour publier une annonce');
+        }
         const whatsappLink = createAdDto.whatsappNumber
             ? `https://wa.me/${createAdDto.whatsappNumber.replace(/\D/g, '')}`
             : undefined;

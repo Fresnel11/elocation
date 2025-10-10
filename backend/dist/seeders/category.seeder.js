@@ -22,8 +22,15 @@ let CategorySeeder = class CategorySeeder {
         this.categoryRepository = categoryRepository;
     }
     async seed() {
-        await this.categoryRepository.query('DELETE FROM ads');
-        console.log('Annonces supprimées');
+        try {
+            await this.categoryRepository.query('DELETE FROM reviews');
+            console.log('Reviews supprimées');
+            await this.categoryRepository.query('DELETE FROM ads');
+            console.log('Annonces supprimées');
+        }
+        catch (error) {
+            console.log('Erreur lors de la suppression, continuons...');
+        }
         await this.categoryRepository.query('DELETE FROM subcategories');
         console.log('Sous-catégories supprimées');
         await this.categoryRepository.query('DELETE FROM categories');

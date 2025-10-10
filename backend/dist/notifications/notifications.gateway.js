@@ -76,6 +76,33 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
     sendBroadcastNotification(notification) {
         this.server.emit('broadcast_notification', notification);
     }
+    notifyAdminsNewVerification(verification) {
+        this.server.emit('new_verification', verification);
+    }
+    notifyVerificationStatus(userId, status, reason) {
+        this.sendNotificationToUser(userId, {
+            type: 'verification_status',
+            status,
+            reason,
+            timestamp: new Date()
+        });
+    }
+    handleTestNotification(data, client) {
+        var _a;
+        const userId = (_a = client.data) === null || _a === void 0 ? void 0 : _a.userId;
+        if (userId) {
+            this.sendNotificationToUser(userId, {
+                type: 'test',
+                title: 'Test WebSocket',
+                message: 'WebSocket fonctionne correctement !',
+                timestamp: new Date()
+            });
+            client.emit('test_response', { success: true, message: 'Notification envoyée' });
+        }
+        else {
+            client.emit('test_response', { success: false, message: 'Utilisateur non authentifié' });
+        }
+    }
 };
 exports.NotificationsGateway = NotificationsGateway;
 __decorate([
@@ -90,6 +117,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, socket_io_1.Socket]),
     __metadata("design:returntype", void 0)
 ], NotificationsGateway.prototype, "handleJoinRoom", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('test_notification'),
+    __param(0, (0, websockets_1.MessageBody)()),
+    __param(1, (0, websockets_1.ConnectedSocket)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, socket_io_1.Socket]),
+    __metadata("design:returntype", void 0)
+], NotificationsGateway.prototype, "handleTestNotification", null);
 exports.NotificationsGateway = NotificationsGateway = NotificationsGateway_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, websockets_1.WebSocketGateway)({

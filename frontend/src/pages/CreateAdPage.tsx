@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Minus, Upload, Image, Video, Trash2, Camera } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, Upload, Image, Video, Trash2, Camera, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { verificationService } from '../services/verificationService';
 
 interface Category {
   id: string;
@@ -20,6 +22,7 @@ interface SubCategory {
 
 export const CreateAdPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,6 +45,7 @@ export const CreateAdPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { success, error } = useToast();
 
@@ -134,7 +138,22 @@ Description améliorée (max 100 mots):`;
 
   useEffect(() => {
     fetchCategories();
+    checkVerificationStatus();
   }, []);
+
+  const checkVerificationStatus = async () => {
+    try {
+      const status = await verificationService.getVerificationStatus();
+      setVerificationStatus(status);
+      
+      if (!status.isVerified) {
+        error('Vérification requise', 'Vous devez vérifier votre identité pour publier une annonce.');
+        navigate('/verification');
+      }
+    } catch (err) {
+      console.error('Erreur vérification:', err);
+    }
+  };
 
   // Charger les sous-catégories si une catégorie est déjà sélectionnée
   useEffect(() => {
@@ -291,6 +310,24 @@ Description améliorée (max 100 mots):`;
       setLoading(false);
     }
   };
+
+  if (verificationStatus && !verificationStatus.isVerified) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Vérification requise</h2>
+          <p className="text-gray-600 mb-6">Vous devez vérifier votre identité pour publier des annonces.</p>
+          <button 
+            onClick={() => navigate('/verification')}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            Vérifier mon identité
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

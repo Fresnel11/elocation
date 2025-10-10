@@ -4,13 +4,21 @@ import { UserProfile } from './entities/user-profile.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { SubmitVerificationDto } from './dto/submit-verification.dto';
+import { ReviewVerificationDto } from './dto/review-verification.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Role } from '../roles/entities/role.entity';
+import { UserVerification } from './entities/user-verification.entity';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class UsersService {
     private readonly userRepository;
     private readonly profileRepository;
     private readonly roleRepository;
-    constructor(userRepository: Repository<User>, profileRepository: Repository<UserProfile>, roleRepository: Repository<Role>);
+    private readonly verificationRepository;
+    private readonly notificationsGateway;
+    private readonly notificationsService;
+    constructor(userRepository: Repository<User>, profileRepository: Repository<UserProfile>, roleRepository: Repository<Role>, verificationRepository: Repository<UserVerification>, notificationsGateway: NotificationsGateway, notificationsService: NotificationsService);
     create(createUserDto: CreateUserDto): Promise<User>;
     findAll(paginationDto: PaginationDto): Promise<{
         users: User[];
@@ -52,4 +60,8 @@ export declare class UsersService {
             ads: number;
         };
     }>;
+    submitVerification(userId: string, submitVerificationDto: SubmitVerificationDto): Promise<UserVerification>;
+    reviewVerification(verificationId: string, reviewDto: ReviewVerificationDto, adminId: string): Promise<UserVerification>;
+    getPendingVerifications(): Promise<UserVerification[]>;
+    getUserVerification(userId: string): Promise<UserVerification | null>;
 }

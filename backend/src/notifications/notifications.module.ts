@@ -25,6 +25,6 @@ import { Booking } from '../bookings/entities/booking.entity';
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService, NotificationsGateway, EmailService, PushNotificationService, NotificationSchedulerService, NotificationCronService],
-  exports: [NotificationsService, PushNotificationService],
+  exports: [NotificationsService, NotificationsGateway, PushNotificationService],
 })
 export class NotificationsModule {}

@@ -32,11 +32,18 @@ const user_entity_1 = require("./entities/user.entity");
 const user_profile_entity_1 = require("./entities/user-profile.entity");
 const role_entity_1 = require("../roles/entities/role.entity");
 const user_role_enum_1 = require("../common/enums/user-role.enum");
+const user_verification_entity_1 = require("./entities/user-verification.entity");
+const notifications_gateway_1 = require("../notifications/notifications.gateway");
+const notifications_service_1 = require("../notifications/notifications.service");
+const notification_entity_1 = require("../notifications/entities/notification.entity");
 let UsersService = class UsersService {
-    constructor(userRepository, profileRepository, roleRepository) {
+    constructor(userRepository, profileRepository, roleRepository, verificationRepository, notificationsGateway, notificationsService) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.roleRepository = roleRepository;
+        this.verificationRepository = verificationRepository;
+        this.notificationsGateway = notificationsGateway;
+        this.notificationsService = notificationsService;
     }
     async create(createUserDto) {
         var _a;
@@ -290,6 +297,69 @@ let UsersService = class UsersService {
             }
         };
     }
+    async submitVerification(userId, submitVerificationDto) {
+        const user = await this.findOne(userId);
+        const existingVerification = await this.verificationRepository.findOne({
+            where: { userId }
+        });
+        if (existingVerification && existingVerification.status === user_verification_entity_1.VerificationStatus.PENDING) {
+            throw new common_1.ConflictException('Verification request already pending');
+        }
+        if (existingVerification && existingVerification.status === user_verification_entity_1.VerificationStatus.APPROVED) {
+            throw new common_1.ConflictException('User already verified');
+        }
+        const verification = this.verificationRepository.create(Object.assign(Object.assign({ userId }, submitVerificationDto), { status: user_verification_entity_1.VerificationStatus.PENDING }));
+        const savedVerification = await this.verificationRepository.save(verification);
+        const verificationData = {
+            id: savedVerification.id,
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email
+            },
+            documentType: savedVerification.documentType,
+            createdAt: savedVerification.createdAt
+        };
+        console.log('Envoi notification WebSocket:', verificationData);
+        this.notificationsGateway.notifyAdminsNewVerification(verificationData);
+        return savedVerification;
+    }
+    async reviewVerification(verificationId, reviewDto, adminId) {
+        const verification = await this.verificationRepository.findOne({
+            where: { id: verificationId },
+            relations: ['user']
+        });
+        if (!verification) {
+            throw new common_1.NotFoundException('Verification request not found');
+        }
+        verification.status = reviewDto.status;
+        verification.rejectionReason = reviewDto.rejectionReason;
+        verification.reviewedBy = adminId;
+        verification.reviewedAt = new Date();
+        if (reviewDto.status === user_verification_entity_1.VerificationStatus.APPROVED) {
+            await this.userRepository.update(verification.userId, { isVerified: true });
+        }
+        const updatedVerification = await this.verificationRepository.save(verification);
+        this.notificationsGateway.notifyVerificationStatus(verification.userId, reviewDto.status, reviewDto.rejectionReason);
+        const statusMessage = reviewDto.status === user_verification_entity_1.VerificationStatus.APPROVED
+            ? 'Votre identité a été vérifiée avec succès !'
+            : `Votre demande de vérification a été rejetée : ${reviewDto.rejectionReason}`;
+        await this.notificationsService.createNotification(verification.userId, reviewDto.status === user_verification_entity_1.VerificationStatus.APPROVED ? notification_entity_1.NotificationType.VERIFICATION_APPROVED : notification_entity_1.NotificationType.VERIFICATION_REJECTED, reviewDto.status === user_verification_entity_1.VerificationStatus.APPROVED ? 'Vérification approuvée' : 'Vérification rejetée', statusMessage);
+        return updatedVerification;
+    }
+    async getPendingVerifications() {
+        return this.verificationRepository.find({
+            where: { status: user_verification_entity_1.VerificationStatus.PENDING },
+            relations: ['user'],
+            order: { createdAt: 'ASC' }
+        });
+    }
+    async getUserVerification(userId) {
+        return this.verificationRepository.findOne({
+            where: { userId }
+        });
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
@@ -297,8 +367,12 @@ exports.UsersService = UsersService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(user_profile_entity_1.UserProfile)),
     __param(2, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
+    __param(3, (0, typeorm_1.InjectRepository)(user_verification_entity_1.UserVerification)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        notifications_gateway_1.NotificationsGateway,
+        notifications_service_1.NotificationsService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

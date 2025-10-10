@@ -38,6 +38,7 @@ let UserSeeder = class UserSeeder {
                     password: await bcrypt.hash('superadmin2003', 10),
                     role: superAdminRole,
                     isActive: true,
+                    isVerified: true,
                 };
                 const superAdmin = this.userRepository.create(superAdminData);
                 await this.userRepository.save(superAdmin);

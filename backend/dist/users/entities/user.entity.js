@@ -19,6 +19,7 @@ const request_entity_1 = require("../../requests/entities/request.entity");
 const response_entity_1 = require("../../responses/entities/response.entity");
 const favorite_entity_1 = require("../../favorites/entities/favorite.entity");
 const user_profile_entity_1 = require("./user-profile.entity");
+const user_verification_entity_1 = require("./user-verification.entity");
 let User = class User {
 };
 exports.User = User;
@@ -128,6 +129,14 @@ __decorate([
     (0, typeorm_1.OneToOne)(() => user_profile_entity_1.UserProfile, profile => profile.user, { cascade: true }),
     __metadata("design:type", user_profile_entity_1.UserProfile)
 ], User.prototype, "profile", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => user_verification_entity_1.UserVerification, verification => verification.user, { cascade: true }),
+    __metadata("design:type", user_verification_entity_1.UserVerification)
+], User.prototype, "verification", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "isVerified", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'loyalty_points', default: 0 }),
     __metadata("design:type", Number)

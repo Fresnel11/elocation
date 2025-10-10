@@ -8,6 +8,7 @@ import { Response } from '../../responses/entities/response.entity';
 import { Permission } from '../../permissions/entities/permission.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 import { UserProfile } from './user-profile.entity';
+import { UserVerification } from './user-verification.entity';
 
 @Entity('users')
 export class User {
@@ -90,6 +91,12 @@ export class User {
 
   @OneToOne(() => UserProfile, profile => profile.user, { cascade: true })
   profile: UserProfile;
+
+  @OneToOne(() => UserVerification, verification => verification.user, { cascade: true })
+  verification: UserVerification;
+
+  @Column({ default: false })
+  isVerified: boolean;
 
   @Column({ name: 'loyalty_points', default: 0 })
   loyaltyPoints: number;

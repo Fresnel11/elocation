@@ -2,6 +2,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { SubmitVerificationDto } from './dto/submit-verification.dto';
+import { ReviewVerificationDto } from './dto/review-verification.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { ReviewsService } from '../reviews/reviews.service';
 export declare class UsersController {
@@ -57,5 +59,12 @@ export declare class UsersController {
         totalReviews: number;
         reputationLevel: string;
         reputationScore: number;
+    }>;
+    submitVerification(req: any, submitVerificationDto: SubmitVerificationDto): Promise<import("./entities/user-verification.entity").UserVerification>;
+    getPendingVerifications(): Promise<import("./entities/user-verification.entity").UserVerification[]>;
+    reviewVerification(id: string, reviewDto: ReviewVerificationDto, req: any): Promise<import("./entities/user-verification.entity").UserVerification>;
+    getVerificationStatus(req: any): Promise<{
+        isVerified: boolean;
+        verification: import("./entities/user-verification.entity").UserVerification;
     }>;
 }
