@@ -6,4 +6,7 @@ export declare class UploadService {
         photos: string[];
         video?: string;
     }>;
+    uploadSingleFile(file: any): Promise<{
+        url: string;
+    }>;
 }

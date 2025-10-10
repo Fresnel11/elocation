@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin } from 'lucide-react';
+import logoImage from '../../assets/e_location.png';
 
 export const Footer: React.FC = () => {
   return (
@@ -9,7 +10,10 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Description */}
           <div className="col-span-1 lg:col-span-2">
-            <h3 className="font-semibold text-lg mb-4">eLocation Bénin</h3>
+            <div className="flex items-center mb-4">
+              <img src={logoImage} alt="eLocation Bénin" className="h-8 w-8 object-contain mr-3" />
+              <h3 className="font-semibold text-lg">eLocation Bénin</h3>
+            </div>
             <p className="text-gray-300 mb-6 leading-relaxed">
               La plateforme de confiance pour vos locations au Bénin. 
               Connectez propriétaires et locataires en toute sécurité.

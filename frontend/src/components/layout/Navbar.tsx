@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar, Heart, Download, BarChart3, Info, Phone, HelpCircle, LogIn, UserPlus } from 'lucide-react';
+import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
+import { WebSocketTest } from '../WebSocketTest';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -58,18 +60,10 @@ export const Navbar: React.FC = () => {
           <div className="flex justify-between items-center h-20">
           {/* Brand */}
           <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-2xl shadow-lg">
-                <MapPin className="h-7 w-7 text-white" />
-              </div>
-            </div>
-            <div className="ml-4">
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                eLocation
-              </span>
-              <div className="text-sm text-gray-500 font-medium -mt-1">Bénin</div>
-            </div>
+            <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
+            <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
+              eLocation
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -82,7 +76,6 @@ export const Navbar: React.FC = () => {
                   : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
               }`}
             >
-              <Home className="h-5 w-5" />
               Annonces
             </Link>
 
@@ -197,7 +190,8 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+          <div className="lg:hidden flex items-center space-x-3">
+            {user && <NotificationBell />}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -214,6 +208,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center space-x-6">
             {user ? (
               <div className="flex items-center space-x-6">
+                <WebSocketTest />
                 <NotificationBell />
                 <div className="relative" ref={userMenuRef}>
                   <button
@@ -278,8 +273,8 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-gray-200 shadow-lg">
-          <div className="px-4 py-4 space-y-3">
+        <div className="lg:hidden fixed top-20 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl z-40">
+          <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-5rem)] overflow-y-auto">
             <Link 
               to="/ads" 
               onClick={() => setIsMenuOpen(false)}

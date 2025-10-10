@@ -12,7 +12,7 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 
 import { AdsPage } from './pages/AdsPage';
-import { AnnonceDetailPage } from './pages/AnnonceDetailPage';
+import AnnonceDetailPage from './pages/AnnonceDetailPage';
 import { CreateAdPage } from './pages/CreateAdPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
@@ -56,8 +56,11 @@ import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { HelpButton } from './components/ui/HelpButton';
+import { CookieConsent } from './components/ui/CookieConsent';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { ReferralPage } from './pages/ReferralPage';
+import VerificationPage from './pages/VerificationPage';
+import AdminVerificationPage from './pages/AdminVerificationPage';
 
 import OfflineIndicator from './components/OfflineIndicator';
 import OfflineAdsPage from './pages/OfflineAdsPage';
@@ -94,6 +97,7 @@ function AppContent() {
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/notification-settings" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
           <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
+          <Route path="/verification" element={<ProtectedRoute><VerificationPage /></ProtectedRoute>} />
 
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><UsersManagement /></AdminRoute>} />
@@ -118,6 +122,7 @@ function AppContent() {
           <Route path="/admin/data-import-export" element={<AdminRoute><DataImportExport /></AdminRoute>} />
           <Route path="/admin/data-cleanup" element={<AdminRoute><DataCleanup /></AdminRoute>} />
           <Route path="/admin/system-tests" element={<AdminRoute><SystemTests /></AdminRoute>} />
+          <Route path="/admin/verifications" element={<AdminRoute><AdminVerificationPage /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
           <Route path="/create-ad" element={<ProtectedRoute><CreateAdPage /></ProtectedRoute>} />
           <Route path="/user/:userId" element={<UserProfilePage />} />
@@ -132,6 +137,7 @@ function AppContent() {
       {!hideFooter && <Footer />}
       <HelpButton />
       <OfflineIndicator />
+      <CookieConsent />
     </div>
   );
 }

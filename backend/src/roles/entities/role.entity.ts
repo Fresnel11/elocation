@@ -9,8 +9,8 @@ export class Role {
   id: string;
 
   @Column({
-    type: 'enum',
-    enum: UserRole,
+    type: 'varchar',
+    length: 50,
     unique: true,
   })
   name: UserRole;

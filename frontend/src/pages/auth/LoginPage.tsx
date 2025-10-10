@@ -6,12 +6,13 @@ import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import logoImage from '../../assets/elocation-512.png';
+import logoImage from '../../assets/e_location.png';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{email?: string; password?: string}>({});
   const { login, loading, user } = useAuth();
   const { success, error } = useToast();
@@ -73,7 +74,7 @@ export const LoginPage: React.FC = () => {
     setErrors({});
     
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
       setLoginSuccess(true);
     } catch (err: any) {
       error(
@@ -149,6 +150,8 @@ export const LoginPage: React.FC = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">

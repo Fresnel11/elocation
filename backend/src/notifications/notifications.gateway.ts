@@ -91,4 +91,35 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   sendBroadcastNotification(notification: any) {
     this.server.emit('broadcast_notification', notification);
   }
+
+  // Méthode pour notifier les admins d'une nouvelle vérification
+  notifyAdminsNewVerification(verification: any) {
+    this.server.emit('new_verification', verification);
+  }
+
+  // Méthode pour notifier un utilisateur du statut de sa vérification
+  notifyVerificationStatus(userId: string, status: string, reason?: string) {
+    this.sendNotificationToUser(userId, {
+      type: 'verification_status',
+      status,
+      reason,
+      timestamp: new Date()
+    });
+  }
+
+  @SubscribeMessage('test_notification')
+  handleTestNotification(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
+    const userId = client.data?.userId;
+    if (userId) {
+      this.sendNotificationToUser(userId, {
+        type: 'test',
+        title: 'Test WebSocket',
+        message: 'WebSocket fonctionne correctement !',
+        timestamp: new Date()
+      });
+      client.emit('test_response', { success: true, message: 'Notification envoyée' });
+    } else {
+      client.emit('test_response', { success: false, message: 'Utilisateur non authentifié' });
+    }
+  }
 }

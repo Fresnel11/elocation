@@ -24,6 +24,8 @@ var NotificationType;
     NotificationType["AD_APPROVED"] = "ad_approved";
     NotificationType["AD_REJECTED"] = "ad_rejected";
     NotificationType["PRICE_CHANGE"] = "price_change";
+    NotificationType["VERIFICATION_APPROVED"] = "verification_approved";
+    NotificationType["VERIFICATION_REJECTED"] = "verification_rejected";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
 let Notification = class Notification {
 };

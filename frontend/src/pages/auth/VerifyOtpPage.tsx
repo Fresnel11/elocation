@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { OtpInput } from '../../components/ui/OtpInput';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import logoImage from '../../assets/elocation-512.png';
+import logoImage from '../../assets/e_location.png';
 
 export const VerifyOtpPage: React.FC = () => {
   const [otpCode, setOtpCode] = useState('');
@@ -77,34 +77,37 @@ export const VerifyOtpPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-md">
         <div className="flex justify-center">
           <Link to="/">
-            <img src={logoImage} alt="eLocation Bénin" className="h-16 w-auto" />
+            <img src={logoImage} alt="eLocation Bénin" className="h-12 sm:h-16 w-auto" />
           </Link>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+        <h2 className="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-bold text-gray-900">
           Vérification du compte
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-gray-600 px-2">
           Un code de vérification a été envoyé à votre {email ? 'email' : 'téléphone'}
         </p>
-        {phone && (
-          <p className="mt-1 text-center text-sm text-blue-600 font-medium">
+        {email ? (
+          <p className="mt-1 text-center text-sm text-blue-600 font-medium break-all px-2">
+            {email}
+          </p>
+        ) : phone && (
+          <p className="mt-1 text-center text-sm text-blue-600 font-medium break-all px-2">
             {phone}
           </p>
         )}
-
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <Card>
+      <div className="mt-6 sm:mt-8 mx-auto w-full max-w-md">
+        <Card className="mx-4 sm:mx-0">
           <CardHeader>
-            <CardTitle className="text-center">Code de vérification</CardTitle>
+            <CardTitle className="text-center text-lg sm:text-xl">Code de vérification</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="px-4 sm:px-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
                   Saisissez le code OTP (6 chiffres)

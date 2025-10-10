@@ -69,6 +69,10 @@ let UploadService = class UploadService {
         }
         return { photos, video };
     }
+    async uploadSingleFile(file) {
+        const url = await this.uploadFile(file, 'photo');
+        return { url };
+    }
 };
 exports.UploadService = UploadService;
 exports.UploadService = UploadService = __decorate([

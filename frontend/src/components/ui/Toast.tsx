@@ -98,8 +98,8 @@ export const Toast: React.FC<ToastProps> = ({
   return (
     <div
       className={`
-        fixed top-4 left-1/2 transform -translate-x-1/2 z-50
-        max-w-md w-full mx-4 sm:mx-0
+        fixed top-4 left-4 right-4 sm:top-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-50
+        max-w-md w-auto sm:w-full sm:mx-0
         ${config.bgColor} ${config.borderColor}
         border rounded-lg shadow-lg backdrop-blur-sm
         transition-all duration-300 ease-in-out
@@ -117,31 +117,31 @@ export const Toast: React.FC<ToastProps> = ({
         />
       </div>
 
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <div className="flex items-start">
           {/* Icône */}
           <div className="flex-shrink-0">
-            <IconComponent className={`h-6 w-6 ${config.iconColor}`} />
+            <IconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${config.iconColor}`} />
           </div>
 
           {/* Contenu */}
-          <div className="ml-3 flex-1">
-            <h3 className={`text-sm font-semibold ${config.titleColor}`}>
+          <div className="ml-2 sm:ml-3 flex-1 min-w-0">
+            <h3 className={`text-sm font-semibold ${config.titleColor} leading-tight`}>
               {title}
             </h3>
             {message && (
-              <p className={`mt-1 text-sm ${config.messageColor}`}>
+              <p className={`mt-1 text-xs sm:text-sm ${config.messageColor} leading-tight break-words`}>
                 {message}
               </p>
             )}
           </div>
 
           {/* Bouton fermer */}
-          <div className="ml-4 flex-shrink-0">
+          <div className="ml-2 sm:ml-4 flex-shrink-0">
             <button
               onClick={handleClose}
               className={`
-                inline-flex rounded-md p-1.5 
+                inline-flex rounded-md p-1 sm:p-1.5 
                 ${config.iconColor} hover:bg-white/50
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent
                 transition-colors duration-200

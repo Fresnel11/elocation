@@ -3,8 +3,8 @@ self.addEventListener('push', function(event) {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || '/assets/elocation-512.png',
-      badge: data.badge || '/assets/elocation-512.png',
+      icon: data.icon || '/assets/e_location.png',
+      badge: data.badge || '/assets/e_location.png',
       data: data.data || {},
       actions: data.actions || [
         {

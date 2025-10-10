@@ -33,6 +33,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { SubmitVerificationDto } from './dto/submit-verification.dto';
+import { ReviewVerificationDto } from './dto/review-verification.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { ReviewsService } from '../reviews/reviews.service';
 
@@ -93,6 +95,28 @@ export class UsersController {
   })
   findAll(@Query() paginationDto: PaginationDto) {
     return this.usersService.findAll(paginationDto);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
+  @ApiBody({ type: UpdateProfileDto })
+  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    console.log('Received profile update data:', updateProfileDto);
+    return this.usersService.updateProfile(req.user.id, updateProfileDto);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Obtenir le profil utilisateur' })
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findOne(req.user.id);
+    return {
+      ...user.profile,
+      phone: user.phone // Inclure le téléphone de l'utilisateur
+    };
   }
 
   @Get(':id/profile')
@@ -213,22 +237,6 @@ export class UsersController {
     return this.usersService.toggleUserStatus(id);
   }
 
-  @Patch('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
-  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.usersService.updateProfile(req.user.id, updateProfileDto);
-  }
-
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Obtenir le profil utilisateur' })
-  async getProfile(@Request() req) {
-    return this.usersService.getProfile(req.user.id);
-  }
-
   @Post('avatar')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
@@ -286,6 +294,52 @@ export class UsersController {
       totalReviews,
       reputationLevel,
       reputationScore: Math.min(100, Math.round(reputationScore))
+    };
+  }
+
+  @Post('verification')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Soumettre une demande de vérification d\'identité' })
+  @ApiBody({ type: SubmitVerificationDto })
+  async submitVerification(@Request() req, @Body() submitVerificationDto: SubmitVerificationDto) {
+    return this.usersService.submitVerification(req.user.id, submitVerificationDto);
+  }
+
+  @Get('verification/pending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Récupérer les demandes de vérification en attente' })
+  async getPendingVerifications() {
+    return this.usersService.getPendingVerifications();
+  }
+
+  @Patch('verification/:id/review')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Approuver ou rejeter une demande de vérification' })
+  @ApiParam({ name: 'id', description: 'ID de la demande de vérification' })
+  @ApiBody({ type: ReviewVerificationDto })
+  async reviewVerification(
+    @Param('id') id: string,
+    @Body() reviewDto: ReviewVerificationDto,
+    @Request() req
+  ) {
+    return this.usersService.reviewVerification(id, reviewDto, req.user.id);
+  }
+
+  @Get('verification/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Vérifier le statut de vérification de l\'utilisateur' })
+  async getVerificationStatus(@Request() req) {
+    const verification = await this.usersService.getUserVerification(req.user.id);
+    const user = await this.usersService.findOne(req.user.id);
+    return {
+      isVerified: user.isVerified,
+      verification
     };
   }
 }

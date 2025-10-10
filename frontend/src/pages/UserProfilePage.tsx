@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Phone, Mail, Star, Grid, List, MessageCircle, Settings } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Phone, Mail, Star, Grid, List, MessageCircle, Settings, Edit, Share2, MoreVertical, Heart, Eye } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
@@ -11,6 +11,9 @@ import { EditProfileModal } from '../components/ui/EditProfileModal';
 import { BookingHistory } from '../components/ui/BookingHistory';
 import { UserReputation } from '../components/ui/UserReputation';
 import { ReportModal } from '../components/ui/ReportModal';
+import { ClickableAvatar } from '../components/ui/ClickableAvatar';
+import { ShareProfileModal } from '../components/ui/ShareProfileModal';
+import { ProfileDropdownMenu } from '../components/ui/ProfileDropdownMenu';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,6 +25,13 @@ interface User {
   phone?: string;
   whatsappNumber?: string;
   createdAt: string;
+  profile?: {
+    avatar?: string;
+    bio?: string;
+    address?: string;
+    averageRating?: number;
+    totalBookings?: number;
+  };
   _count?: {
     ads: number;
   };
@@ -75,6 +85,8 @@ export const UserProfilePage: React.FC = () => {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ads' | 'bookings'>('ads');
   const { user: currentUser } = useAuth();
 
@@ -98,6 +110,18 @@ export const UserProfilePage: React.FC = () => {
 
   const handleProfileUpdated = () => {
     fetchUserProfile();
+  };
+
+  const getProfileForEdit = () => {
+    const profileData = {
+      avatar: user?.profile?.avatar,
+      bio: user?.profile?.bio,
+      address: user?.profile?.address,
+      phone: user?.phone // Récupérer le téléphone depuis l'utilisateur principal
+    };
+    console.log('Profile data for edit:', profileData);
+    console.log('Full user data:', user);
+    return profileData;
   };
 
   const fetchUserAds = async () => {
@@ -183,233 +207,257 @@ export const UserProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+    <div className="min-h-screen bg-white">
+      {/* Mobile Header */}
+      <div className="relative">
+        {/* Background gradient */}
+        <div className="h-48 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700"></div>
+        
+        {/* Header controls */}
+        <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 pt-12">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setIsShareModalOpen(true)}
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
             >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="font-medium">Retour</span>
+              <Share2 className="h-5 w-5 text-white" />
             </button>
-            {isOwner && (
-              <Button
-                variant="outline"
-                onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-2"
+            <div className="relative">
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
               >
-                <Settings className="h-4 w-4" />
-                Modifier le profil
-              </Button>
-            )}
+                <MoreVertical className="h-5 w-5 text-white" />
+              </button>
+              <ProfileDropdownMenu
+                isOpen={isDropdownOpen}
+                onClose={() => setIsDropdownOpen(false)}
+                isOwner={isOwner}
+                userName={`${user.firstName} ${user.lastName}`}
+                profileUrl={`${window.location.origin}/user/${user.id}`}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profil utilisateur */}
-          <div className="lg:col-span-1 space-y-6">
-            <ProfileCard
-              user={user}
-              isOwner={isOwner}
-              onEditProfile={() => setIsEditModalOpen(true)}
-            />
-            
-            {!isOwner && (
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <Button 
-                    onClick={handleContactUser}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Contacter
-                  </Button>
-                  {user.whatsappNumber && (
-                    <Button 
-                      onClick={handleWhatsAppContact}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      WhatsApp
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={() => setIsReportModalOpen(true)}
-                  >
-                    Signaler le profil
-                  </Button>
-                </CardContent>
-              </Card>
+        
+        {/* Profile Section */}
+        <div className="bg-white rounded-t-3xl -mt-6 relative z-10 px-6 pt-6">
+          {/* Profile Info */}
+          <div className="flex items-start gap-4 mb-6">
+            <div className="-mt-10 border-4 border-white shadow-lg rounded-full">
+              <ClickableAvatar
+                avatarUrl={user.profile?.avatar || user.profilePicture}
+                userName={`${user.firstName} ${user.lastName}`}
+                size="lg"
+                className="w-20 h-20"
+              />
+            </div>
+            <div className="flex-1 pt-2">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                {user.firstName} {user.lastName}
+              </h1>
+              <div className="flex items-center gap-2 text-gray-600 mb-2">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm">Membre depuis {formatDate(user.createdAt)}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 text-orange-400 fill-orange-400" />
+                  <span className="text-sm font-medium">{user.profile?.averageRating ? Number(user.profile.averageRating).toFixed(1) : '0.0'}</span>
+                  <span className="text-xs text-gray-500">({user.profile?.totalBookings || 0} avis)</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {user._count?.ads || 0} annonce{(user._count?.ads || 0) > 1 ? 's' : ''}
+                </div>
+              </div>
+              {user.profile?.bio && (
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{user.profile.bio}</p>
+              )}
+              {user.profile?.address && (
+                <div className="flex items-center gap-1 text-gray-600 mt-1">
+                  <MapPin className="h-3 w-3" />
+                  <span className="text-xs">{user.profile.address}</span>
+                </div>
+              )}
+            </div>
+            {isOwner && (
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mt-2"
+              >
+                <Edit className="h-4 w-4 text-gray-600" />
+              </button>
             )}
           </div>
+          
+          {/* Action Buttons */}
+          {!isOwner && (
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={handleContactUser}
+                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="h-5 w-5" />
+                Message
+              </button>
+              {user.whatsappNumber && (
+                <button
+                  onClick={handleWhatsAppContact}
+                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2"
+                >
+                  <Phone className="h-5 w-5" />
+                  WhatsApp
+                </button>
+              )}
+            </div>
+          )}
+          
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">{user._count?.ads || 0}</div>
+              <div className="text-sm text-gray-600">Annonces</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">{user.profile?.averageRating ? Number(user.profile.averageRating).toFixed(1) : '0.0'}</div>
+              <div className="text-sm text-gray-600">Note</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-bold text-gray-900">{user.profile?.totalBookings || 0}</div>
+              <div className="text-sm text-gray-600">Avis</div>
+            </div>
+          </div>
 
-          {/* Contenu principal */}
-          <div className="lg:col-span-2">
-            {/* Onglets */}
-            <Card className="mb-6">
-              <div className="border-b">
-                <nav className="flex">
-                  <button
-                    onClick={() => setActiveTab('ads')}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'ads'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Annonces ({userAds.length})
-                  </button>
-                  {isOwner && (
-                    <button
-                      onClick={() => setActiveTab('bookings')}
-                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === 'bookings'
-                          ? 'border-blue-600 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      Mes réservations
-                    </button>
-                  )}
-                </nav>
-              </div>
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab('ads')}
+              className={`flex-1 py-3 text-center font-medium border-b-2 transition-colors ${
+                activeTab === 'ads'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              Annonces ({userAds.length})
+            </button>
+            {isOwner && (
+              <button
+                onClick={() => setActiveTab('bookings')}
+                className={`flex-1 py-3 text-center font-medium border-b-2 transition-colors ${
+                  activeTab === 'bookings'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500'
+                }`}
+              >
+                Réservations
+              </button>
+            )}
+          </div>
               
-              <CardContent className="p-6">
-                {activeTab === 'ads' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                          {isOwner ? 'Mes annonces' : `Annonces de ${user.firstName}`}
-                        </h2>
-                      </div>
-                      
-                      <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => setViewMode('grid')}
-                          className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                        >
-                          <Grid className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setViewMode('list')}
-                          className={`p-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                        >
-                          <List className="h-4 w-4" />
-                        </button>
+          {/* Content */}
+          {activeTab === 'ads' && (
+            <div>
+
+              {adsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 rounded-xl h-32 animate-pulse"></div>
+                  ))}
+                </div>
+              ) : userAds.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Grid className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Aucune annonce
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {isOwner ? 'Vous n\'avez pas encore publié d\'annonce.' : `${user.firstName} n'a pas encore publié d'annonces.`}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {userAds.map((ad) => (
+                    <div 
+                      key={ad.id}
+                      className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
+                      onClick={() => openModal(ad)}
+                    >
+                      <div className="flex">
+                        <div className="w-24 h-24 flex-shrink-0">
+                          <img
+                            src={ad.photos[0] 
+                              ? (ad.photos[0].startsWith('http') 
+                                  ? ad.photos[0] 
+                                  : `http://localhost:3000${ad.photos[0]}`
+                                )
+                              : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+                            }
+                            alt={ad.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-semibold text-gray-900 text-sm line-clamp-1 flex-1">
+                              {ad.title}
+                            </h3>
+                            <button className="ml-2 p-1">
+                              <Heart className="h-4 w-4 text-gray-400" />
+                            </button>
+                          </div>
+                          <div className="flex items-center text-gray-500 mb-2">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span className="text-xs truncate">{ad.location}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="text-blue-600 font-bold text-sm">
+                              {parseInt(ad.price.toString()).toLocaleString()} FCFA
+                              <span className="text-xs text-gray-500 font-normal">/mois</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                <span>24</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                                <span>4.8</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {adsLoading ? (
-                      <AdCardSkeletonGrid count={6} />
-                    ) : userAds.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="text-gray-400 mb-4">
-                          <Grid className="h-12 w-12 mx-auto" />
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Aucune annonce
-                        </h3>
-                        <p className="text-gray-600">
-                          {isOwner ? 'Vous n\'avez pas encore publié d\'annonce.' : `${user.firstName} n'a pas encore publié d'annonces.`}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className={viewMode === 'grid' 
-                        ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' 
-                        : 'space-y-6'
-                      }>
-                        {userAds.map((ad) => (
-                          <Card 
-                            key={ad.id}
-                            className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group border border-gray-100 overflow-hidden"
-                          >
-                            <div className="relative h-48 overflow-hidden">
-                              <img
-                                src={ad.photos[0] 
-                                  ? (ad.photos[0].startsWith('http') 
-                                      ? ad.photos[0] 
-                                      : `http://localhost:3000${ad.photos[0]}`
-                                    )
-                                  : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
-                                }
-                                alt={ad.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                              
-                              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md">
-                                <span className="text-xs font-medium text-gray-700">{ad.category.name}</span>
-                              </div>
-                              
-                              <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
-                                <span className="text-sm font-semibold">{parseInt(ad.price.toString()).toLocaleString()} FCFA</span>
-                                <span className="text-xs opacity-90">/mois</span>
-                              </div>
-                            </div>
-                            
-                            <div className="p-4">
-                              <h3 className="font-semibold text-gray-900 text-base mb-2 line-clamp-1">
-                                {ad.title}
-                              </h3>
-                              
-                              <div className="flex items-center text-gray-500 mb-3">
-                                <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                                <span className="text-sm truncate">{ad.location}</span>
-                              </div>
-                              
-                              {(ad.bedrooms || ad.bathrooms || ad.area) && (
-                                <div className="flex items-center gap-4 text-gray-600 text-sm mb-4">
-                                  {ad.bedrooms && <span>{ad.bedrooms} ch.</span>}
-                                  {ad.bathrooms && <span>{ad.bathrooms} sdb.</span>}
-                                  {ad.area && <span>{ad.area}m²</span>}
-                                </div>
-                              )}
-                              
-                              <div className="pt-3 border-t border-gray-100">
-                                <div className="flex gap-2">
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => openModal(ad)}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium rounded-lg transition-colors duration-200"
-                                  >
-                                    Voir détails
-                                  </Button>
-                                  {!isOwner && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsReportModalOpen(true);
-                                      }}
-                                      className="px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200 text-red-600 border-red-200 hover:bg-red-50"
-                                    >
-                                      Signaler
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {activeTab === 'bookings' && isOwner && (
-                  <BookingHistory userId={userId!} />
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {activeTab === 'bookings' && isOwner && (
+            <div className="space-y-4">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Aucune réservation
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Vos réservations apparaîtront ici.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -434,7 +482,7 @@ export const UserProfilePage: React.FC = () => {
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        profile={user.profile || {}}
+        profile={getProfileForEdit()}
         onProfileUpdated={handleProfileUpdated}
       />
       
@@ -447,6 +495,13 @@ export const UserProfilePage: React.FC = () => {
           targetTitle={`${user.firstName} ${user.lastName}`}
         />
       )}
+      
+      <ShareProfileModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        profileUrl={`${window.location.origin}/user/${user.id}`}
+        userName={`${user.firstName} ${user.lastName}`}
+      />
     </div>
   );
 };

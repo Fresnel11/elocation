@@ -78,6 +78,8 @@ export declare class AdminService {
         responses: import("../responses/entities/response.entity").Response[];
         favorites: import("../favorites/entities/favorite.entity").Favorite[];
         profile: import("../users/entities/user-profile.entity").UserProfile;
+        verification: import("../users/entities/user-verification.entity").UserVerification;
+        isVerified: boolean;
         loyaltyPoints: number;
         acceptedTerms: boolean;
         termsAcceptedAt: Date | null;

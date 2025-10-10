@@ -6,11 +6,17 @@ const config_1 = require("@nestjs/config");
 const app_module_1 = require("./app.module");
 const fs = require("fs");
 const swagger_1 = require("@nestjs/swagger");
+const path_1 = require("path");
 async function bootstrap() {
     if (!fs.existsSync('./uploads')) {
         fs.mkdirSync('./uploads');
     }
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.use(require('express').json({ limit: '50mb' }));
+    app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
+    app.useStaticAssets((0, path_1.join)(__dirname, '..', 'uploads'), {
+        prefix: '/uploads/',
+    });
     const configService = app.get(config_1.ConfigService);
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,

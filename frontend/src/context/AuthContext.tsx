@@ -4,8 +4,8 @@ import { User } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (firstName: string, lastName: string, phone: string, password: string, email?: string, referralCode?: string, acceptedTerms?: boolean) => Promise<{ phone: string; otpPreview: string }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  register: (firstName: string, lastName: string, phone: string, password: string, email?: string, referralCode?: string, acceptedTerms?: boolean, birthDate?: string, gender?: 'masculin' | 'féminin') => Promise<{ phone: string; otpPreview: string }>;
   requestOtp: (email: string) => Promise<void>;
   verifyOtp: (email: string, code: string) => Promise<void>;
   logout: () => void;
@@ -49,12 +49,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, [initializeAuth]);
 
-  const login = async (email: string, password: string) => {
-    await storeLogin({ email, password });
+  const login = async (email: string, password: string, rememberMe?: boolean) => {
+    await storeLogin({ email, password, rememberMe });
   };
 
-  const register = async (firstName: string, lastName: string, phone: string, password: string, email?: string, referralCode?: string, acceptedTerms?: boolean) => {
-    return await storeRegister({ firstName, lastName, phone, password, email, referralCode, acceptedTerms });
+  const register = async (firstName: string, lastName: string, phone: string, password: string, email?: string, referralCode?: string, acceptedTerms?: boolean, birthDate?: string, gender?: 'masculin' | 'féminin') => {
+    return await storeRegister({ firstName, lastName, phone, password, email, referralCode, acceptedTerms: acceptedTerms || false, birthDate: birthDate || '', gender: gender || 'masculin' });
   };
 
   const requestOtp = async (email: string) => {

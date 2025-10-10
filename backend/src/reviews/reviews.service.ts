@@ -31,19 +31,32 @@ export class ReviewsService {
       throw new ForbiddenException('Vous ne pouvez pas évaluer votre propre annonce');
     }
 
+    // Vérifier le nombre d'avis existants de cet utilisateur pour cette annonce
+    const existingReviewsCount = await this.reviewRepository.count({
+      where: {
+        ad: { id: createReviewDto.adId },
+        user: { id: userId }
+      }
+    });
+
+    if (existingReviewsCount >= 2) {
+      throw new ForbiddenException('Vous ne pouvez pas ajouter plus de 2 avis par annonce');
+    }
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    
     const review = this.reviewRepository.create({
       rating: createReviewDto.rating,
       comment: createReviewDto.comment,
-      user: { id: userId } as User,
+      user: user,
       ad: { id: createReviewDto.adId } as Ad
     });
 
-    return this.reviewRepository.save(review);
-  }
-
-  async findByAd(adId: string): Promise<Review[]> {
-    return this.reviewRepository.find({
-      where: { ad: { id: adId }, status: ReviewStatus.APPROVED },
+    const savedReview = await this.reviewRepository.save(review);
+    
+    // Return with user relation loaded
+    return this.reviewRepository.findOne({
+      where: { id: savedReview.id },
       relations: ['user'],
       select: {
         id: true,
@@ -56,9 +69,27 @@ export class ReviewsService {
           firstName: true,
           lastName: true
         }
-      },
-      order: { createdAt: 'DESC' }
+      }
     });
+  }
+
+  async findByAd(adId: string): Promise<Review[]> {
+    return this.reviewRepository
+      .createQueryBuilder('review')
+      .leftJoinAndSelect('review.user', 'user')
+      .where('review.adId = :adId', { adId })
+      .select([
+        'review.id',
+        'review.rating', 
+        'review.comment',
+        'review.createdAt',
+        'review.updatedAt',
+        'user.id',
+        'user.firstName',
+        'user.lastName'
+      ])
+      .orderBy('review.createdAt', 'DESC')
+      .getMany();
   }
 
   async getAdRating(adId: string): Promise<{ averageRating: number; totalReviews: number }> {
@@ -66,7 +97,7 @@ export class ReviewsService {
       .createQueryBuilder('review')
       .select('AVG(review.rating)', 'averageRating')
       .addSelect('COUNT(review.id)', 'totalReviews')
-      .where('review.adId = :adId AND review.status = :status', { adId, status: ReviewStatus.APPROVED })
+      .where('review.adId = :adId', { adId })
       .getRawOne();
 
     return {

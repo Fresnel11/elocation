@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authService, User, LoginData, RegisterData } from '../services/authService';
+import { cookieUtils } from '../utils/cookies';
 
 interface AuthState {
   user: User | null;
@@ -25,12 +26,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   error: null,
 
-  login: async (data: LoginData) => {
+  login: async (data: LoginData & { rememberMe?: boolean }) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authService.login(data);
-      localStorage.setItem('token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      const { rememberMe, ...loginData } = data;
+      const response = await authService.login(loginData);
+      if (rememberMe) {
+        // Stocker dans localStorage ET cookies (30 jours)
+        localStorage.setItem('token', response.access_token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('rememberMe', 'true');
+        cookieUtils.set('token', response.access_token, 30);
+        cookieUtils.set('user', JSON.stringify(response.user), 30);
+      } else {
+        // Stocker seulement dans sessionStorage
+        sessionStorage.setItem('token', response.access_token);
+        sessionStorage.setItem('user', JSON.stringify(response.user));
+      }
       set({ 
         user: response.user, 
         token: response.access_token, 
@@ -90,6 +102,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     authService.logout();
+    localStorage.removeItem('rememberMe');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    cookieUtils.remove('token');
+    cookieUtils.remove('user');
     set({ user: null, token: null, error: null });
   },
 

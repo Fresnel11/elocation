@@ -8,6 +8,7 @@ import { Response } from '../../responses/entities/response.entity';
 import { Permission } from '../../permissions/entities/permission.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 import { UserProfile } from './user-profile.entity';
+import { UserVerification } from './user-verification.entity';
 
 @Entity('users')
 export class User {
@@ -15,7 +16,6 @@ export class User {
   id: string;
 
   @Column('varchar', { length: 255, unique: true, nullable: true })
-  @Index({ unique: true })
   email: string | null;
 
   @Column('varchar', { length: 100 })
@@ -25,7 +25,6 @@ export class User {
   lastName: string;
 
   @Column('varchar', { length: 20, unique: true, nullable: true })
-  @Index({ unique: true })
   phone: string | null;
 
   @Column('varchar', { length: 20, nullable: true })
@@ -36,7 +35,6 @@ export class User {
   password: string | null;
 
   @Column('varchar', { length: 255, nullable: true, unique: true })
-  @Index({ unique: true })
   googleId: string | null;
 
   @Column('varchar', { length: 512, nullable: true })
@@ -64,7 +62,6 @@ export class User {
   resetPasswordOtpExpiresAt: Date | null;
 
   @Column({ type: 'varchar', length: 10, nullable: true, unique: true })
-  @Index({ unique: true })
   referralCode: string | null;
 
   @ManyToOne(() => Role, (role) => role.users)
@@ -94,6 +91,12 @@ export class User {
 
   @OneToOne(() => UserProfile, profile => profile.user, { cascade: true })
   profile: UserProfile;
+
+  @OneToOne(() => UserVerification, verification => verification.user, { cascade: true })
+  verification: UserVerification;
+
+  @Column({ default: false })
+  isVerified: boolean;
 
   @Column({ name: 'loyalty_points', default: 0 })
   loyaltyPoints: number;

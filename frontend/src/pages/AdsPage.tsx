@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Search, Filter, MapPin, Calendar, Users, Bed, Bath, Car, Wifi, Tv, AirVent, Utensils, ChevronDown, Grid, List, Heart, Star, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -460,152 +460,254 @@ export const AdsPage: React.FC = () => {
                   : 'space-y-4 sm:space-y-6'
                 }>
                   {filteredAds.map((ad, index) => (
-                <Card 
+                <div 
                   key={ad.id} 
-                  className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
+                  className="group cursor-pointer"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  {/* Image Section */}
-                  <div className="relative h-48 overflow-hidden">
-                    {imageLoadingStates[ad.id] && (
-                      <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-                        <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                    <img
-                      src={ad.photos[0] 
-                        ? (ad.photos[0].startsWith('http') 
-                            ? ad.photos[0] 
-                            : `http://localhost:3000${ad.photos[0]}`
-                          )
-                        : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
-                      }
-                      alt={ad.title}
-                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-                        imageLoadingStates[ad.id] ? 'opacity-0' : 'opacity-100'
-                      }`}
-                      onLoad={() => handleImageLoad(ad.id)}
-                      onError={() => handleImageError(ad.id)}
-                    />
-                    
-                    {/* Heart Button */}
-                    <div className="absolute top-3 right-3">
-                      <FavoriteButton 
-                        adId={ad.id} 
-                        className="w-8 h-8 bg-white/90 backdrop-blur-sm hover:bg-white shadow-sm" 
+                  {/* Mobile Design */}
+                  <div 
+                    className="sm:hidden relative bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl p-4 shadow-lg hover:shadow-xl transition-all duration-300"
+                    onClick={() => navigate(`/annonce/${ad.id}`)}
+                  >
+                    {/* Image Section */}
+                    <div className="relative h-56 mb-4 rounded-2xl overflow-hidden">
+                      {imageLoadingStates[ad.id] && (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center rounded-2xl">
+                          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      <img
+                        src={ad.photos[0] 
+                          ? (ad.photos[0].startsWith('http') 
+                              ? ad.photos[0] 
+                              : `http://localhost:3000${ad.photos[0]}`
+                            )
+                          : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+                        }
+                        alt={ad.title}
+                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-2xl ${
+                          imageLoadingStates[ad.id] ? 'opacity-0' : 'opacity-100'
+                        }`}
+                        onLoad={() => handleImageLoad(ad.id)}
+                        onError={() => handleImageError(ad.id)}
                       />
-                    </div>
-                    
-                    {/* Category Badge */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md">
-                      <span className="text-xs font-medium text-gray-700">{ad.category.name}</span>
-                    </div>
-                    
-                    {/* Price Badge */}
-                    <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
-                      <span className="text-sm font-semibold">{parseInt(ad.price).toLocaleString()} FCFA</span>
-                      <span className="text-xs opacity-90">/mois</span>
-                    </div>
-                  </div>
-                  
-                  {/* Content Section */}
-                  <div className="p-4">
-                    {/* Title */}
-                    <h3 className="font-semibold text-gray-900 text-base mb-2 line-clamp-1">
-                      {ad.title}
-                    </h3>
-                    
-                    {/* Location */}
-                    <div className="flex items-center text-gray-500 mb-3">
-                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="text-sm truncate">{ad.location}</span>
-                    </div>
-                    
-                    {/* Property Details */}
-                    <div className="flex items-center gap-4 mb-3">
-                      {ad.bedrooms > 0 && (
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <Bed className="h-4 w-4" />
-                          <span className="text-sm">{ad.bedrooms}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <Bath className="h-4 w-4" />
-                        <span className="text-sm">{ad.bathrooms}</span>
+                      
+                      {/* Heart Button */}
+                      <div className="absolute top-3 right-3">
+                        <FavoriteButton 
+                          adId={ad.id} 
+                          className="w-10 h-10 bg-white/20 backdrop-blur-md hover:bg-white/30 shadow-lg border border-white/20" 
+                        />
                       </div>
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <span className="text-sm">{ad.area}m²</span>
+                      
+                      {/* Price Badge */}
+                      <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
+                        <span className="text-lg font-bold text-white">{parseInt(ad.price).toLocaleString()}</span>
+                        <span className="text-sm text-white/80 ml-1">FCFA/mois</span>
                       </div>
-                      {ad.averageRating && ad.averageRating > 0 && (
-                        <div className="flex items-center gap-1 text-gray-600 ml-auto">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{ad.averageRating.toFixed(1)}</span>
-                        </div>
-                      )}
                     </div>
                     
-                    {/* Amenities */}
-                    <div className="flex items-center gap-1 mb-4">
-                      {ad.amenities.slice(0, 3).map(amenity => {
-                        const Icon = amenityIcons[amenity as keyof typeof amenityIcons];
-                        return Icon ? (
-                          <div key={amenity} className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center">
-                            <Icon className="h-3.5 w-3.5 text-gray-600" />
+                    {/* Content Section with Glassmorphism */}
+                    <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                      {/* Title */}
+                      <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1">
+                        {ad.title}
+                      </h3>
+                      
+                      {/* Location */}
+                      <div className="flex items-center text-gray-700 mb-3">
+                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">{ad.location}</span>
+                      </div>
+                      
+                      {/* Property Details */}
+                      <div className="flex items-center gap-2 mb-4 flex-wrap">
+                        {ad.bedrooms > 0 && (
+                          <div className="flex items-center gap-1 bg-white/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+                            <Bed className="h-4 w-4 text-gray-700" />
+                            <span className="text-sm font-medium text-gray-700">{ad.bedrooms}</span>
                           </div>
-                        ) : null;
-                      })}
-                      {ad.amenities.length > 3 && (
-                        <div className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center">
-                          <span className="text-xs font-medium text-gray-600">+{ad.amenities.length - 3}</span>
+                        )}
+                        <div className="flex items-center gap-1 bg-white/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+                          <Bath className="h-4 w-4 text-gray-700" />
+                          <span className="text-sm font-medium text-gray-700">{ad.bathrooms}</span>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <div 
-                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors duration-200"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/user/${ad.user.id}`);
-                        }}
-                      >
-                        <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-semibold">{ad.user.firstName[0]}</span>
+                        <div className="flex items-center gap-1 bg-white/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+                          <span className="text-sm font-medium text-gray-700">{ad.area}m²</span>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900 truncate max-w-[100px] hover:text-blue-600 transition-colors">
-                            {ad.user.firstName}
+                        <div className="flex items-center gap-1 bg-white/30 backdrop-blur-sm px-2 py-1 rounded-lg">
+                          <Star className="h-4 w-4 text-gray-700" />
+                          <span className="text-sm font-medium text-gray-700">
+                            {ad.averageRating && ad.averageRating > 0 ? ad.averageRating.toFixed(1) : '0.0'}
                           </span>
-                          <span className="text-xs text-gray-500">Propriétaire</span>
+                          <span className="text-xs text-gray-600">({ad.reviewsCount || 0})</span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal(ad);
-                          }}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
-                        >
-                          Voir détails
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openReviewModal(ad);
-                          }}
-                          className="px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
-                        >
-                          <Star className="h-3 w-3" />
-                        </Button>
+                      
+                      {/* Footer */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{ad.user.firstName[0]}</span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-800">{ad.user.firstName}</span>
+                        </div>
+                        <div className="bg-blue-600 text-white px-4 py-2 rounded-full">
+                          <span className="text-sm font-semibold">Voir</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </Card>
+
+                  {/* Desktop Design (unchanged) */}
+                  <Card 
+                    className="hidden sm:block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
+                    onClick={() => openModal(ad)}
+                  >
+                    {/* Image Section */}
+                    <div className="relative h-48 overflow-hidden">
+                      {imageLoadingStates[ad.id] && (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      <img
+                        src={ad.photos[0] 
+                          ? (ad.photos[0].startsWith('http') 
+                              ? ad.photos[0] 
+                              : `http://localhost:3000${ad.photos[0]}`
+                            )
+                          : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+                        }
+                        alt={ad.title}
+                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                          imageLoadingStates[ad.id] ? 'opacity-0' : 'opacity-100'
+                        }`}
+                        onLoad={() => handleImageLoad(ad.id)}
+                        onError={() => handleImageError(ad.id)}
+                      />
+                      
+                      {/* Heart Button */}
+                      <div className="absolute top-3 right-3">
+                        <FavoriteButton 
+                          adId={ad.id} 
+                          className="w-8 h-8 bg-white/90 backdrop-blur-sm hover:bg-white shadow-sm" 
+                        />
+                      </div>
+                      
+                      {/* Category Badge */}
+                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md">
+                        <span className="text-xs font-medium text-gray-700">{ad.category.name}</span>
+                      </div>
+                      
+                      {/* Price Badge */}
+                      <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
+                        <span className="text-sm font-semibold">{parseInt(ad.price).toLocaleString()} FCFA</span>
+                        <span className="text-xs opacity-90">/mois</span>
+                      </div>
+                    </div>
+                    
+                    {/* Content Section */}
+                    <div className="p-4">
+                      {/* Title */}
+                      <h3 className="font-semibold text-gray-900 text-base mb-2 line-clamp-1">
+                        {ad.title}
+                      </h3>
+                      
+                      {/* Location */}
+                      <div className="flex items-center text-gray-500 mb-3">
+                        <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span className="text-sm truncate">{ad.location}</span>
+                      </div>
+                      
+                      {/* Property Details */}
+                      <div className="flex items-center gap-4 mb-3">
+                        {ad.bedrooms > 0 && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Bed className="h-4 w-4" />
+                            <span className="text-sm">{ad.bedrooms}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Bath className="h-4 w-4" />
+                          <span className="text-sm">{ad.bathrooms}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <span className="text-sm">{ad.area}m²</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600 ml-auto">
+                          <Star className="h-4 w-4 text-gray-600" />
+                          <span className="text-sm font-medium">
+                            {ad.averageRating && ad.averageRating > 0 ? ad.averageRating.toFixed(1) : '0.0'}
+                          </span>
+                          <span className="text-xs text-gray-500">({ad.reviewsCount || 0})</span>
+                        </div>
+                      </div>
+                      
+                      {/* Amenities */}
+                      <div className="flex items-center gap-1 mb-4">
+                        {ad.amenities.slice(0, 3).map(amenity => {
+                          const Icon = amenityIcons[amenity as keyof typeof amenityIcons];
+                          return Icon ? (
+                            <div key={amenity} className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center">
+                              <Icon className="h-3.5 w-3.5 text-gray-600" />
+                            </div>
+                          ) : null;
+                        })}
+                        {ad.amenities.length > 3 && (
+                          <div className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center">
+                            <span className="text-xs font-medium text-gray-600">+{ad.amenities.length - 3}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <div 
+                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/user/${ad.user.id}`);
+                          }}
+                        >
+                          <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-semibold">{ad.user.firstName[0]}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900 truncate max-w-[100px] hover:text-blue-600 transition-colors">
+                              {ad.user.firstName}
+                            </span>
+                            <span className="text-xs text-gray-500">Propriétaire</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal(ad);
+                            }}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
+                          >
+                            Voir détails
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReviewModal(ad);
+                            }}
+                            className="px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
+                          >
+                            <Star className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
                   ))}
                 </div>
                 

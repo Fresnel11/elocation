@@ -9,7 +9,9 @@ export declare enum NotificationType {
     NEW_AD_MATCH = "new_ad_match",
     AD_APPROVED = "ad_approved",
     AD_REJECTED = "ad_rejected",
-    PRICE_CHANGE = "price_change"
+    PRICE_CHANGE = "price_change",
+    VERIFICATION_APPROVED = "verification_approved",
+    VERIFICATION_REJECTED = "verification_rejected"
 }
 export declare class Notification {
     id: string;

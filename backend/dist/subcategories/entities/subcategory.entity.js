@@ -21,7 +21,7 @@ __decorate([
     __metadata("design:type", String)
 ], SubCategory.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ length: 100 }),
     __metadata("design:type", String)
 ], SubCategory.prototype, "name", void 0);
 __decorate([

@@ -21,6 +21,10 @@ export class AdsService {
   ) {}
 
   async create(createAdDto: CreateAdDto, user: User): Promise<Ad> {
+    if (!user.isVerified) {
+      throw new ForbiddenException('Vous devez vérifier votre identité pour publier une annonce');
+    }
+
     const whatsappLink = createAdDto.whatsappNumber
       ? `https://wa.me/${createAdDto.whatsappNumber.replace(/\D/g, '')}`
       : undefined;

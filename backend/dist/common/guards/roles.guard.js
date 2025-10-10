@@ -26,7 +26,7 @@ let RolesGuard = class RolesGuard {
             return true;
         }
         const { user } = context.switchToHttp().getRequest();
-        return requiredRoles.some((role) => { var _a; return (_a = user.role) === null || _a === void 0 ? void 0 : _a.includes(role); });
+        return requiredRoles.some((role) => { var _a; return ((_a = user.role) === null || _a === void 0 ? void 0 : _a.name) === role; });
     }
 };
 exports.RolesGuard = RolesGuard;
