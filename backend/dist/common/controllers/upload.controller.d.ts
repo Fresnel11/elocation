@@ -9,7 +9,7 @@ export declare class UploadController {
         video?: string;
         message: string;
     }>;
-    uploadAvatar(file: Express.Multer.File, req: any): Promise<{
+    uploadAvatar(file: any, req: any): Promise<{
         message: string;
         url: string;
     }>;

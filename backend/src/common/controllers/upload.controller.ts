@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { UploadService } from '../services/upload.service';
 import { UsersService } from '../../users/users.service';
-import { Express } from 'express';
+
 
 @ApiTags('Upload')
 @Controller('upload')
@@ -72,7 +72,7 @@ export class UploadController {
       },
     })
   )
-  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Request() req) {
+  async uploadAvatar(@UploadedFile() file: any, @Request() req) {
     if (!file) {
       throw new BadRequestException('Aucun fichier fourni');
     }
