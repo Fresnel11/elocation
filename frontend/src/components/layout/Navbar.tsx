@@ -5,7 +5,6 @@ import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
-import { WebSocketTest } from '../WebSocketTest';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,7 +20,6 @@ export const Navbar: React.FC = () => {
     setIsUserMenuOpen(false);
   };
 
-  // Fermer le menu utilisateur quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -33,7 +31,6 @@ export const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Générer une couleur aléatoire basée sur le nom
   const getAvatarColor = (name: string) => {
     const colors = [
       'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500',
@@ -50,21 +47,17 @@ export const Navbar: React.FC = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const isAdsPage = location.pathname === '/ads';
-
   return (
     <>
-      {/* Navbar */}
       <nav className="bg-white/95 backdrop-blur-xl shadow-xl sticky top-0 z-50 border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-          {/* Brand */}
-          <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
-            <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
-            <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
-              eLocation
-            </span>
-          </Link>
+            <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
+              <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
+              <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
+                eLocation
+              </span>
+            </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-3 ml-16">
@@ -163,20 +156,15 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center space-x-3">
-            {user && <NotificationBell />}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+            <div className="lg:hidden flex items-center space-x-3">
+              {user && <NotificationBell />}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-6">
@@ -245,7 +233,6 @@ export const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="lg:hidden fixed top-20 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl z-40">
           <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-5rem)] overflow-y-auto">
@@ -356,7 +343,6 @@ export const Navbar: React.FC = () => {
               </>
             )}
 
-            {/* Actions mobiles */}
             <div className="pt-4 border-t border-gray-200">
               {user ? (
                 <div className="space-y-3">
