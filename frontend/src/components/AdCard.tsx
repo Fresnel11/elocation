@@ -14,7 +14,7 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
       className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
-      <div className="relative">
+      <div className="relative overflow-visible">
         {ad.photos && ad.photos.length > 0 && (
           <img 
             src={ad.photos[0]} 
@@ -22,8 +22,8 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
             className="w-full h-48 object-cover rounded-t-lg"
           />
         )}
-        <div className="absolute top-2 right-2">
-          <SaveForOfflineButton adId={ad.id} />
+        <div className="absolute top-3 right-3 z-10">
+          <SaveForOfflineButton adId={ad.id} compact />
         </div>
       </div>
       

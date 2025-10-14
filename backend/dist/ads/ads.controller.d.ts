@@ -7,15 +7,7 @@ export declare class AdsController {
     private readonly adsService;
     constructor(adsService: AdsService);
     create(createAdDto: CreateAdDto, req: any): Promise<import("./entities/ad.entity").Ad>;
-    findAll(searchAdsDto: SearchAdsDto): Promise<{
-        ads: import("./entities/ad.entity").Ad[];
-        pagination: {
-            page: number;
-            limit: number;
-            total: number;
-            pages: number;
-        };
-    }>;
+    findAll(searchAdsDto: SearchAdsDto, userCity?: string, req?: any): Promise<unknown>;
     findUserAds(userId: string, paginationDto: PaginationDto): Promise<{
         ads: import("./entities/ad.entity").Ad[];
         pagination: {
@@ -34,7 +26,7 @@ export declare class AdsController {
             pages: number;
         };
     }>;
-    findOne(id: string): Promise<import("./entities/ad.entity").Ad>;
+    findOne(id: string, req: any): Promise<import("./entities/ad.entity").Ad>;
     redirectToWhatsapp(id: string): Promise<{
         whatsappLink: string;
     }>;

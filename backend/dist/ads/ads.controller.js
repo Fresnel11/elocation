@@ -32,8 +32,10 @@ let AdsController = class AdsController {
     create(createAdDto, req) {
         return this.adsService.create(createAdDto, req.user);
     }
-    findAll(searchAdsDto) {
-        return this.adsService.findAll(searchAdsDto);
+    findAll(searchAdsDto, userCity, req) {
+        var _a;
+        const userId = (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id;
+        return this.adsService.findAll(searchAdsDto, userCity, userId);
     }
     findUserAds(userId, paginationDto) {
         return this.adsService.findUserAds(userId, paginationDto);
@@ -41,8 +43,10 @@ let AdsController = class AdsController {
     findMyAds(req, paginationDto) {
         return this.adsService.findUserAds(req.user.id, paginationDto);
     }
-    findOne(id) {
-        return this.adsService.findOne(id);
+    findOne(id, req) {
+        var _a;
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        return this.adsService.findOne(id, userId);
     }
     redirectToWhatsapp(id) {
         return this.adsService.redirectToWhatsapp(id);
@@ -118,6 +122,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'maxPrice', required: false, description: 'Prix maximum en FCFA' }),
     (0, swagger_1.ApiQuery)({ name: 'location', required: false, description: 'Localisation' }),
     (0, swagger_1.ApiQuery)({ name: 'isAvailable', required: false, description: 'Disponibilité' }),
+    (0, swagger_1.ApiQuery)({ name: 'userCity', required: false, description: 'Ville de l\'utilisateur pour tri géographique' }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false, description: 'Numéro de page', example: 1 }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Nombre d\'éléments par page', example: 10 }),
     (0, swagger_1.ApiQuery)({ name: 'sortBy', required: false, description: 'Champ de tri', enum: ['createdAt', 'price', 'title', 'location'] }),
@@ -152,8 +157,10 @@ __decorate([
         }
     }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Query)('userCity')),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [search_ads_dto_1.SearchAdsDto]),
+    __metadata("design:paramtypes", [search_ads_dto_1.SearchAdsDto, String, Object]),
     __metadata("design:returntype", void 0)
 ], AdsController.prototype, "findAll", null);
 __decorate([
@@ -213,8 +220,9 @@ __decorate([
         description: 'Annonce non trouvée'
     }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], AdsController.prototype, "findOne", null);
 __decorate([

@@ -30,6 +30,8 @@ import { SocialModule } from './social/social.module';
 import { SupportModule } from './support/support.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ContactModule } from './contact/contact.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
+import { ABTestingModule } from './ab-testing/ab-testing.module';
 
 @Module({
   imports: [
@@ -81,6 +83,8 @@ import { ContactModule } from './contact/contact.module';
     SupportModule,
     AnalyticsModule,
     ContactModule,
+    RecommendationsModule,
+    ABTestingModule,
   ],
 })
 export class AppModule {}
