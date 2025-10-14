@@ -97,6 +97,7 @@ export class AdsController {
   @ApiQuery({ name: 'maxPrice', required: false, description: 'Prix maximum en FCFA' })
   @ApiQuery({ name: 'location', required: false, description: 'Localisation' })
   @ApiQuery({ name: 'isAvailable', required: false, description: 'Disponibilité' })
+  @ApiQuery({ name: 'userCity', required: false, description: 'Ville de l\'utilisateur pour tri géographique' })
   @ApiQuery({ name: 'page', required: false, description: 'Numéro de page', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Nombre d\'éléments par page', example: 10 })
   @ApiQuery({ name: 'sortBy', required: false, description: 'Champ de tri', enum: ['createdAt', 'price', 'title', 'location'] })
@@ -130,8 +131,9 @@ export class AdsController {
       }
     }
   })
-  findAll(@Query() searchAdsDto: SearchAdsDto) {
-    return this.adsService.findAll(searchAdsDto);
+  findAll(@Query() searchAdsDto: SearchAdsDto, @Query('userCity') userCity?: string, @Request() req?) {
+    const userId = req?.user?.id;
+    return this.adsService.findAll(searchAdsDto, userCity, userId);
   }
 
   @Get('user/:userId')
@@ -183,8 +185,9 @@ export class AdsController {
   @ApiNotFoundResponse({ 
     description: 'Annonce non trouvée' 
   })
-  findOne(@Param('id') id: string) {
-    return this.adsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req) {
+    const userId = req.user?.id;
+    return this.adsService.findOne(id, userId);
   }
 
 

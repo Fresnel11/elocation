@@ -40,6 +40,8 @@ const social_module_1 = require("./social/social.module");
 const support_module_1 = require("./support/support.module");
 const analytics_module_1 = require("./analytics/analytics.module");
 const contact_module_1 = require("./contact/contact.module");
+const recommendations_module_1 = require("./recommendations/recommendations.module");
+const ab_testing_module_1 = require("./ab-testing/ab-testing.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -94,6 +96,8 @@ exports.AppModule = AppModule = __decorate([
             support_module_1.SupportModule,
             analytics_module_1.AnalyticsModule,
             contact_module_1.ContactModule,
+            recommendations_module_1.RecommendationsModule,
+            ab_testing_module_1.ABTestingModule,
         ],
     })
 ], AppModule);

@@ -13,6 +13,9 @@ import { MobileSearchFilter } from '../components/ui/MobileSearchFilter';
 import { FavoriteButton } from '../components/ui/FavoriteButton';
 import { AddReviewModal } from '../components/ui/AddReviewModal';
 import { adsService, Ad } from '../services/adsService';
+import { LocationService } from '../services/locationService';
+import { recommendationsService } from '../services/recommendationsService';
+import { RecommendedAds } from '../components/RecommendedAds';
 import { api } from '../services/api';
 
 interface AdWithUI extends Ad {
@@ -49,6 +52,7 @@ export const AdsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number; radius: number; isCity?: boolean} | null>(null);
+  const [userCity, setUserCity] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
   const [priceFilterActive, setPriceFilterActive] = useState(false);
   const [filters, setFilters] = useState({
@@ -72,7 +76,7 @@ export const AdsPage: React.FC = () => {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data.map(cat => ({ value: cat.id, label: cat.name })));
+      setCategories(response.data.map((cat: any) => ({ value: cat.id, label: cat.name })));
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
     }
@@ -82,8 +86,16 @@ export const AdsPage: React.FC = () => {
     try {
       setLoading(true);
       
-      const response = await adsService.getAds(page, 12, userLocation || undefined);
+      const response = await adsService.getAds(page, 12, userLocation || undefined, userCity || undefined);
       const adsArray = response.ads || [];
+      
+      // Précharger la page suivante en arrière-plan
+      if (page === 1 && response.pagination.pages > 1) {
+        setTimeout(() => {
+          adsService.getAds(2, 12, userLocation || undefined, userCity || undefined)
+            .catch(() => {}); // Ignorer les erreurs de préchargement
+        }, 1000);
+      }
       
       // Récupérer les ratings pour chaque annonce
       const adsWithRatings = await Promise.all(
@@ -113,7 +125,7 @@ export const AdsPage: React.FC = () => {
       setCurrentPage(page);
       
       // Initialiser les états de chargement des images
-      const initialLoadingStates = {};
+      const initialLoadingStates: {[key: string]: boolean} = {};
       adsWithRatings.forEach(ad => {
         initialLoadingStates[ad.id] = true;
       });
@@ -123,13 +135,20 @@ export const AdsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [userLocation]);
+  }, [userLocation, userCity]);
 
 
 
   useEffect(() => {
     fetchCategories();
     fetchAds();
+    
+    // Détecter la ville de l'utilisateur au chargement
+    LocationService.detectUserCity().then(city => {
+      if (city) {
+        setUserCity(city);
+      }
+    });
   }, [fetchCategories, fetchAds]);
 
   useEffect(() => {
@@ -146,7 +165,7 @@ export const AdsPage: React.FC = () => {
     // Filtre par prix
     if (priceFilterActive) {
       filtered = filtered.filter(ad => {
-        const price = parseInt(ad.price);
+        const price = parseInt(ad.price.toString());
         return price >= priceRange[0] && price <= priceRange[1];
       });
     }
@@ -211,6 +230,9 @@ export const AdsPage: React.FC = () => {
   const openModal = (ad: AdWithUI) => {
     setSelectedAd(ad);
     setIsModalOpen(true);
+    
+    // Tracker la vue
+    recommendationsService.trackView(ad.id, ad.category.id, ad.location, ad.price);
   };
 
   const closeModal = () => {
@@ -503,7 +525,7 @@ export const AdsPage: React.FC = () => {
                       
                       {/* Price Badge */}
                       <div className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
-                        <span className="text-lg font-bold text-white">{parseInt(ad.price).toLocaleString()}</span>
+                        <span className="text-lg font-bold text-white">{parseInt(ad.price.toString()).toLocaleString()}</span>
                         <span className="text-sm text-white/80 ml-1">FCFA/mois</span>
                       </div>
                     </div>
@@ -603,7 +625,7 @@ export const AdsPage: React.FC = () => {
                       
                       {/* Price Badge */}
                       <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded-lg">
-                        <span className="text-sm font-semibold">{parseInt(ad.price).toLocaleString()} FCFA</span>
+                        <span className="text-sm font-semibold">{parseInt(ad.price.toString()).toLocaleString()} FCFA</span>
                         <span className="text-xs opacity-90">/mois</span>
                       </div>
                     </div>
@@ -663,7 +685,7 @@ export const AdsPage: React.FC = () => {
                       </div>
                       
                       {/* Footer */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between pt-3 -ml-3 border-t border-gray-100">
                         <div 
                           className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors duration-200"
                           onClick={(e) => {
@@ -762,6 +784,18 @@ export const AdsPage: React.FC = () => {
                   )}
                   <Button onClick={clearFilters}>Effacer tous les filtres</Button>
                 </div>
+                
+                {/* Recommandations quand aucune annonce trouvée */}
+                <div className="mt-8">
+                  <RecommendedAds limit={6} />
+                </div>
+              </div>
+            )}
+            
+            {/* Recommandations en bas de page */}
+            {filteredAds.length > 0 && (
+              <div className="mt-12">
+                <RecommendedAds limit={6} />
               </div>
             )}
           </div>

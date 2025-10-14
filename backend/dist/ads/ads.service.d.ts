@@ -6,22 +6,20 @@ import { UpdateAdDto } from './dto/update-ad.dto';
 import { SearchAdsDto } from './dto/search-ads.dto';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CacheService } from '../cache/cache.service';
+import { RecommendationsService } from '../recommendations/recommendations.service';
+import { ABTestingService } from '../ab-testing/ab-testing.service';
 export declare class AdsService {
     private readonly adRepository;
     private readonly priceAlertsService;
     private readonly notificationsService;
-    constructor(adRepository: Repository<Ad>, priceAlertsService: PriceAlertsService, notificationsService: NotificationsService);
+    private readonly cacheService;
+    private readonly recommendationsService;
+    private readonly abTestingService;
+    constructor(adRepository: Repository<Ad>, priceAlertsService: PriceAlertsService, notificationsService: NotificationsService, cacheService: CacheService, recommendationsService: RecommendationsService, abTestingService: ABTestingService);
     create(createAdDto: CreateAdDto, user: User): Promise<Ad>;
-    findAll(searchAdsDto: SearchAdsDto): Promise<{
-        ads: Ad[];
-        pagination: {
-            page: number;
-            limit: number;
-            total: number;
-            pages: number;
-        };
-    }>;
-    findOne(id: string): Promise<Ad>;
+    findAll(searchAdsDto: SearchAdsDto, userCity?: string, userId?: string): Promise<unknown>;
+    findOne(id: string, userId?: string): Promise<Ad>;
     findUserAds(userId: string, searchAdsDto: SearchAdsDto): Promise<{
         ads: Ad[];
         pagination: {
@@ -39,4 +37,5 @@ export declare class AdsService {
     }>;
     uploadPhotos(id: string, photos: string[], user: User): Promise<Ad>;
     private checkSearchAlerts;
+    private invalidateAdsCache;
 }

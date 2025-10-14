@@ -8,7 +8,7 @@ export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 100 })
+  @Column({ unique: true, length: 100, nullable: false })
   name: string;
 
   @Column({ nullable: true })

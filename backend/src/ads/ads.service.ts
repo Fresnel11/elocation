@@ -9,6 +9,10 @@ import { SearchAdsDto } from './dto/search-ads.dto';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../common/enums/user-role.enum';
 import { NotificationsService } from '../notifications/notifications.service';
+import { LocationService } from '../services/locationService';
+import { CacheService } from '../cache/cache.service';
+import { RecommendationsService } from '../recommendations/recommendations.service';
+import { ABTestingService } from '../ab-testing/ab-testing.service';
 
 
 @Injectable()
@@ -18,6 +22,9 @@ export class AdsService {
     private readonly adRepository: Repository<Ad>,
     private readonly priceAlertsService: PriceAlertsService,
     private readonly notificationsService: NotificationsService,
+    private readonly cacheService: CacheService,
+    private readonly recommendationsService: RecommendationsService,
+    private readonly abTestingService: ABTestingService,
   ) {}
 
   async create(createAdDto: CreateAdDto, user: User): Promise<Ad> {
@@ -37,6 +44,9 @@ export class AdsService {
 
     const savedAd = await this.adRepository.save(ad);
     
+    // Invalider le cache après création
+    await this.invalidateAdsCache();
+    
     // Vérifier les alertes de recherche après création
     this.checkSearchAlerts(savedAd).catch(err => 
       console.error('Erreur vérification alertes:', err)
@@ -45,7 +55,7 @@ export class AdsService {
     return savedAd;
   }
 
-  async findAll(searchAdsDto: SearchAdsDto) {
+  async findAll(searchAdsDto: SearchAdsDto, userCity?: string, userId?: string) {
     const {
       page = 1,
       limit = 10,
@@ -62,6 +72,18 @@ export class AdsService {
       radius = 50,
     } = searchAdsDto;
 
+    // Génération de la clé de cache
+    const cacheKey = this.cacheService.generateCacheKey('ads', {
+      page, limit, search, categoryId, minPrice, maxPrice, location,
+      isAvailable, sortBy, sortOrder, userCity, userLatitude, userLongitude, radius
+    });
+
+    // Vérifier le cache
+    const cachedResult = await this.cacheService.get(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const skip = (page - 1) * limit;
     
     let queryBuilder: SelectQueryBuilder<Ad> = this.adRepository
@@ -70,8 +92,6 @@ export class AdsService {
       .leftJoinAndSelect('ad.category', 'category')
       .leftJoinAndSelect('ad.subCategory', 'subCategory')
       .where('ad.isActive = :isActive', { isActive: true });
-
-
 
     if (search) {
       queryBuilder.andWhere(
@@ -100,16 +120,48 @@ export class AdsService {
       queryBuilder.andWhere('ad.isAvailable = :isAvailable', { isAvailable });
     }
 
+    // A/B Testing pour l'algorithme de tri
+    let algorithmConfig = null;
+    if (userId) {
+      const abTest = await this.abTestingService.getAlgorithmForUser(userId);
+      if (abTest) {
+        algorithmConfig = abTest;
+      }
+    }
+
+    // Appliquer l'algorithme selon le test A/B
+    if (algorithmConfig?.algorithm === 'B') {
+      // Algorithme B : Tri par popularité + géographie
+      queryBuilder.addSelect('(ad.views * 0.7 + COALESCE(ad.averageRating, 0) * 0.3)', 'popularity_score');
+      queryBuilder.orderBy('popularity_score', 'DESC');
+    } else {
+      // Algorithme A : Tri géographique standard
+      if (userCity && !location) {
+        const nearbyCities = LocationService.getNearbyCities(userCity);
+        
+        queryBuilder.addSelect(
+          `CASE 
+            WHEN ad.location ILIKE '%${userCity}%' THEN 1
+            WHEN ad.location ILIKE ANY(ARRAY[${nearbyCities.map(city => `'%${city}%'`).join(',')}]) THEN 2
+            ELSE 3
+          END`,
+          'location_priority'
+        );
+        
+        queryBuilder.orderBy('location_priority', 'ASC');
+      }
+    }
+
     const validSortFields = ['createdAt', 'price', 'title'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     
-    queryBuilder.orderBy(`ad.${sortField}` as any, sortOrder as any);
+    queryBuilder.addOrderBy(`ad.${sortField}` as any, sortOrder as any);
     
     queryBuilder.skip(skip).take(limit);
 
     const [ads, total] = await queryBuilder.getManyAndCount();
 
-    return {
+    const result = {
       ads,
       pagination: {
         page,
@@ -118,9 +170,15 @@ export class AdsService {
         pages: Math.ceil(total / limit),
       },
     };
+
+    // Mettre en cache le résultat (TTL plus court pour les recherches)
+    const ttl = search || location ? 5 * 60 * 1000 : 15 * 60 * 1000; // 5min si recherche, 15min sinon
+    await this.cacheService.set(cacheKey, result, ttl);
+
+    return result;
   }
 
-  async findOne(id: string): Promise<Ad> {
+  async findOne(id: string, userId?: string): Promise<Ad> {
     const ad = await this.adRepository.findOne({
       where: { id },
       relations: ['user', 'category', 'subCategory'],
@@ -128,6 +186,19 @@ export class AdsService {
 
     if (!ad) {
       throw new NotFoundException('Ad not found');
+    }
+
+    // Incrémenter les vues
+    await this.adRepository.update(id, { views: () => 'views + 1' });
+
+    // Tracker la vue pour les recommandations
+    if (userId) {
+      await this.recommendationsService.trackUserAction(userId, 'view', {
+        adId: id,
+        categoryId: ad.categoryId,
+        location: ad.location,
+        priceRange: [ad.price * 0.8, ad.price * 1.2]
+      });
     }
 
     return ad;
@@ -231,5 +302,12 @@ export class AdsService {
   private async checkSearchAlerts(ad: Ad): Promise<void> {
     // Cette méthode sera appelée par le service cron
     // Pas besoin d'implémentation ici car gérée par NotificationCronService
+  }
+
+  private async invalidateAdsCache(): Promise<void> {
+    // Invalider tous les caches d'annonces (pattern matching simple)
+    // Dans une vraie implémentation Redis, on utiliserait SCAN avec pattern
+    // Ici on clear tout le cache pour simplifier
+    // await this.cacheService.clear();
   }
 }

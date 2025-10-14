@@ -14,6 +14,9 @@ const ads_controller_1 = require("./ads.controller");
 const ad_entity_1 = require("./entities/ad.entity");
 const price_alerts_module_1 = require("../price-alerts/price-alerts.module");
 const notifications_module_1 = require("../notifications/notifications.module");
+const cache_module_1 = require("../cache/cache.module");
+const recommendations_module_1 = require("../recommendations/recommendations.module");
+const ab_testing_module_1 = require("../ab-testing/ab-testing.module");
 let AdsModule = class AdsModule {
 };
 exports.AdsModule = AdsModule;
@@ -22,7 +25,10 @@ exports.AdsModule = AdsModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([ad_entity_1.Ad]),
             price_alerts_module_1.PriceAlertsModule,
-            (0, common_1.forwardRef)(() => notifications_module_1.NotificationsModule)
+            (0, common_1.forwardRef)(() => notifications_module_1.NotificationsModule),
+            cache_module_1.CacheModule,
+            (0, common_1.forwardRef)(() => recommendations_module_1.RecommendationsModule),
+            (0, common_1.forwardRef)(() => ab_testing_module_1.ABTestingModule)
         ],
         controllers: [ads_controller_1.AdsController],
         providers: [ads_service_1.AdsService],

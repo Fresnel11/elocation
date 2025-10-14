@@ -5,7 +5,6 @@ import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
-import { WebSocketTest } from '../WebSocketTest';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,7 +20,6 @@ export const Navbar: React.FC = () => {
     setIsUserMenuOpen(false);
   };
 
-  // Fermer le menu utilisateur quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -33,7 +31,6 @@ export const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Générer une couleur aléatoire basée sur le nom
   const getAvatarColor = (name: string) => {
     const colors = [
       'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500',
@@ -50,24 +47,20 @@ export const Navbar: React.FC = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const isAdsPage = location.pathname === '/ads';
-
   return (
     <>
-      {/* Navbar */}
       <nav className="bg-white/95 backdrop-blur-xl shadow-xl sticky top-0 z-50 border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-          {/* Brand */}
-          <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
-            <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
-            <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
-              eLocation
-            </span>
-          </Link>
+            <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
+              <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
+              <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
+                eLocation
+              </span>
+            </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-3">
+          <div className="hidden lg:flex items-center space-x-3 ml-16">
             <Link 
               to="/ads" 
               className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
@@ -83,24 +76,22 @@ export const Navbar: React.FC = () => {
               <>
                 <Link 
                   to="/requests" 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
+                  className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/requests' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                   }`}
                 >
-                  <MessageSquare className="h-5 w-5" />
                   Demandes
                 </Link>
                 <Link 
                   to="/messages" 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
+                  className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/messages' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                   }`}
                 >
-                  <Mail className="h-5 w-5" />
                   Messages
                 </Link>
               </>
@@ -109,47 +100,23 @@ export const Navbar: React.FC = () => {
               <>
                 <Link 
                   to="/bookings" 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
+                  className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/bookings' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                   }`}
                 >
-                  <Calendar className="h-5 w-5" />
                   Réservations
                 </Link>
                 <Link 
                   to="/favorites" 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
+                  className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/favorites' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                   }`}
                 >
-                  <Heart className="h-5 w-5" />
                   Favoris
-                </Link>
-                <Link 
-                  to="/offline-ads" 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
-                    location.pathname === '/offline-ads' 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                  }`}
-                >
-                  <Download className="h-5 w-5" />
-                  Hors ligne
-                </Link>
-                <Link 
-                  to="/analytics" 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
-                    location.pathname === '/analytics' 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                  }`}
-                >
-                  <BarChart3 className="h-5 w-5" />
-                  Statistiques
                 </Link>
               </>
             )}
@@ -189,68 +156,63 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center space-x-3">
-            {user && <NotificationBell />}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+            <div className="lg:hidden flex items-center space-x-3">
+              {user && <NotificationBell />}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-6">
             {user ? (
               <div className="flex items-center space-x-6">
-                <WebSocketTest />
                 <NotificationBell />
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-4 p-4 rounded-2xl hover:bg-blue-50 transition-all duration-200 border border-gray-200 shadow-sm"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-base font-bold shadow-lg ${getAvatarColor(user.firstName + user.lastName)}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${getAvatarColor(user.firstName + user.lastName)}`}>
                       {getInitials(user.firstName, user.lastName)}
                     </div>
-                    <div className="flex flex-col items-start">
-                      <span className="text-gray-800 font-semibold text-base">
-                        {user.firstName}
-                      </span>
-                      <span className="text-gray-500 text-sm">
-                        {user.lastName}
-                      </span>
-                    </div>
-                    <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${
+                    <span className="text-gray-900 font-medium text-sm whitespace-nowrap">
+                      {user.firstName} {user.lastName}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${
                       isUserMenuOpen ? 'rotate-180' : ''
                     }`} />
                   </button>
 
                   {/* Menu déroulant */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900 truncate">{user.firstName} {user.lastName}</p>
+                        <p className="text-xs text-gray-500 truncate" title={user.email || user.phone || undefined}>{user.email || user.phone}</p>
+                      </div>
                       <button
                         onClick={() => {
                           navigate('/settings');
                           setIsUserMenuOpen(false);
                         }}
-                        className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-white/60 transition-all duration-200 rounded-xl mx-2"
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        <Settings className="h-4 w-4 mr-3" />
+                        <Settings className="h-4 w-4 mr-3 text-gray-400" />
                         Paramètres
                       </button>
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50/80 transition-all duration-200 rounded-xl mx-2"
-                      >
-                        <LogOut className="h-4 w-4 mr-3" />
-                        Déconnexion
-                      </button>
+                      <div className="border-t border-gray-100 mt-1 pt-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4 mr-3" />
+                          Déconnexion
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -271,7 +233,6 @@ export const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="lg:hidden fixed top-20 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl z-40">
           <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-5rem)] overflow-y-auto">
@@ -338,30 +299,6 @@ export const Navbar: React.FC = () => {
                   <Heart className="h-5 w-5" />
                   Favoris
                 </Link>
-                <Link 
-                  to="/offline-ads" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all duration-200 ${
-                    location.pathname === '/offline-ads' 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                  }`}
-                >
-                  <Download className="h-5 w-5" />
-                  Hors ligne
-                </Link>
-                <Link 
-                  to="/analytics" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all duration-200 ${
-                    location.pathname === '/analytics' 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                  }`}
-                >
-                  <BarChart3 className="h-5 w-5" />
-                  Statistiques
-                </Link>
               </>
             )}
 
@@ -406,7 +343,6 @@ export const Navbar: React.FC = () => {
               </>
             )}
 
-            {/* Actions mobiles */}
             <div className="pt-4 border-t border-gray-200">
               {user ? (
                 <div className="space-y-3">
