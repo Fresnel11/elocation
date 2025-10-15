@@ -251,9 +251,16 @@ export class UsersService {
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<UserProfile> {
     const user = await this.findOne(userId);
     
-    // Si le téléphone est fourni, mettre à jour l'utilisateur principal
-    if (updateProfileDto.phone) {
-      await this.userRepository.update(userId, { phone: updateProfileDto.phone });
+    // Mettre à jour les champs de l'utilisateur principal
+    const userUpdateData: any = {};
+    if (updateProfileDto.firstName) userUpdateData.firstName = updateProfileDto.firstName;
+    if (updateProfileDto.lastName) userUpdateData.lastName = updateProfileDto.lastName;
+    if (updateProfileDto.email) userUpdateData.email = updateProfileDto.email.toLowerCase();
+    if (updateProfileDto.phone) userUpdateData.phone = updateProfileDto.phone;
+    if (updateProfileDto.whatsappNumber) userUpdateData.whatsappNumber = updateProfileDto.whatsappNumber;
+    
+    if (Object.keys(userUpdateData).length > 0) {
+      await this.userRepository.update(userId, userUpdateData);
     }
     
     let profile = user.profile;
@@ -261,8 +268,8 @@ export class UsersService {
       profile = this.profileRepository.create({ userId });
     }
     
-    // Exclure le téléphone du profil car il est géré dans l'entité User
-    const { phone, ...profileData } = updateProfileDto;
+    // Mettre à jour les champs du profil
+    const { firstName, lastName, email, phone, whatsappNumber, ...profileData } = updateProfileDto;
     Object.assign(profile, profileData);
     return this.profileRepository.save(profile);
   }

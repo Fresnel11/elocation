@@ -196,6 +196,16 @@ export const Navbar: React.FC = () => {
                       </div>
                       <button
                         onClick={() => {
+                          navigate(`/user/${user.id}`);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <User className="h-4 w-4 mr-3 text-gray-400" />
+                        Profil
+                      </button>
+                      <button
+                        onClick={() => {
                           navigate('/settings');
                           setIsUserMenuOpen(false);
                         }}
