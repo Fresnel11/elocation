@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Settings, Shield, BarChart3, Download, LogOut, UserX, Flag, Copy, Star, EyeOff, QrCode, UserPlus } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface ProfileDropdownMenuProps {
   isOpen: boolean;
@@ -7,6 +9,7 @@ interface ProfileDropdownMenuProps {
   isOwner: boolean;
   userName: string;
   profileUrl: string;
+  userId?: string;
 }
 
 export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
@@ -14,53 +17,40 @@ export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
   onClose,
   isOwner,
   userName,
-  profileUrl
+  profileUrl,
+  userId
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
+  // useEffect supprimé pour éviter la fermeture automatique du menu
 
   if (!isOpen) return null;
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(profileUrl);
-      onClose();
-    } catch (err) {
-      console.error('Erreur lors de la copie:', err);
-    }
-  };
-
   const ownerMenuItems = [
-    { icon: Settings, label: 'Paramètres du compte', action: () => console.log('Paramètres') },
-    { icon: Shield, label: 'Confidentialité', action: () => console.log('Confidentialité') },
-    { icon: BarChart3, label: 'Statistiques du profil', action: () => console.log('Statistiques') },
-    { icon: Download, label: 'Exporter les données', action: () => console.log('Exporter') },
-    { icon: LogOut, label: 'Se déconnecter', action: () => console.log('Déconnexion'), danger: true }
+    { icon: Settings, label: 'Paramètres du compte', onClick: () => navigate('/settings') },
+    { icon: Shield, label: 'Confidentialité', onClick: () => navigate('/settings') },
+    { icon: BarChart3, label: 'Statistiques du profil', onClick: () => navigate('/analytics') },
+    { icon: Download, label: 'Exporter les données', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: LogOut, label: 'Se déconnecter', onClick: () => { logout(); navigate('/'); }, danger: true }
   ];
 
   const visitorMenuItems = [
-    { icon: Copy, label: 'Copier le lien du profil', action: handleCopyLink },
-    { icon: Star, label: 'Ajouter aux favoris', action: () => console.log('Favoris') },
-    { icon: UserPlus, label: 'Ajouter aux contacts', action: () => console.log('Contacts') },
-    { icon: QrCode, label: 'Partager via QR Code', action: () => console.log('QR Code') },
-    { icon: EyeOff, label: 'Masquer ce profil', action: () => console.log('Masquer') },
-    { icon: UserX, label: 'Bloquer cet utilisateur', action: () => console.log('Bloquer'), danger: true },
-    { icon: Flag, label: 'Signaler le profil', action: () => console.log('Signaler'), danger: true }
+    { icon: Copy, label: 'Copier le lien du profil', onClick: async () => {
+      try {
+        await navigator.clipboard.writeText(profileUrl);
+        alert('Lien copié dans le presse-papiers !');
+      } catch (err) {
+        alert('Erreur lors de la copie du lien');
+      }
+    }},
+    { icon: Star, label: 'Ajouter aux favoris', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: UserPlus, label: 'Ajouter aux contacts', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: QrCode, label: 'Partager via QR Code', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: EyeOff, label: 'Masquer ce profil', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: UserX, label: 'Bloquer cet utilisateur', onClick: () => alert('Fonctionnalité bientôt disponible'), danger: true },
+    { icon: Flag, label: 'Signaler le profil', onClick: () => alert('Fonctionnalité bientôt disponible'), danger: true }
   ];
 
   const menuItems = isOwner ? ownerMenuItems : visitorMenuItems;
@@ -73,10 +63,7 @@ export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
       {menuItems.map((item, index) => (
         <button
           key={index}
-          onClick={() => {
-            item.action();
-            onClose();
-          }}
+          onClick={item.onClick}
           className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-left whitespace-nowrap ${
             item.danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'
           }`}

@@ -19,6 +19,7 @@ import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { UserProfilePage } from './pages/UserProfilePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { RequestsPage } from './pages/RequestsPage';
 import { RequestDetailPage } from './pages/RequestDetailPage';
 import { MessagesPage } from './pages/MessagesPage';
@@ -91,6 +92,7 @@ function AppContent() {
           <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
           <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
           <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/offline-ads" element={<ProtectedRoute><OfflineAdsPage /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
 

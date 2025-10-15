@@ -245,14 +245,25 @@ let UsersService = class UsersService {
     }
     async updateProfile(userId, updateProfileDto) {
         const user = await this.findOne(userId);
-        if (updateProfileDto.phone) {
-            await this.userRepository.update(userId, { phone: updateProfileDto.phone });
+        const userUpdateData = {};
+        if (updateProfileDto.firstName)
+            userUpdateData.firstName = updateProfileDto.firstName;
+        if (updateProfileDto.lastName)
+            userUpdateData.lastName = updateProfileDto.lastName;
+        if (updateProfileDto.email)
+            userUpdateData.email = updateProfileDto.email.toLowerCase();
+        if (updateProfileDto.phone)
+            userUpdateData.phone = updateProfileDto.phone;
+        if (updateProfileDto.whatsappNumber)
+            userUpdateData.whatsappNumber = updateProfileDto.whatsappNumber;
+        if (Object.keys(userUpdateData).length > 0) {
+            await this.userRepository.update(userId, userUpdateData);
         }
         let profile = user.profile;
         if (!profile) {
             profile = this.profileRepository.create({ userId });
         }
-        const { phone } = updateProfileDto, profileData = __rest(updateProfileDto, ["phone"]);
+        const { firstName, lastName, email, phone, whatsappNumber } = updateProfileDto, profileData = __rest(updateProfileDto, ["firstName", "lastName", "email", "phone", "whatsappNumber"]);
         Object.assign(profile, profileData);
         return this.profileRepository.save(profile);
     }
