@@ -32,6 +32,7 @@ export declare class AuthService {
             lastName: string;
             phone: string;
             role: import("../roles/entities/role.entity").Role;
+            profilePicture: string;
         };
     }>;
     validateGoogleUser(googleUser: any): Promise<{
@@ -43,6 +44,7 @@ export declare class AuthService {
             lastName: string;
             phone: string;
             role: import("../roles/entities/role.entity").Role;
+            profilePicture: string;
         };
     }>;
     forgotPassword(email: string): Promise<{
@@ -65,4 +67,5 @@ export declare class AuthService {
     resetPassword(email: string, code: string, newPassword: string): Promise<{
         message: string;
     }>;
+    getUserWithProfile(userId: string): Promise<import("../users/entities/user.entity").User>;
 }

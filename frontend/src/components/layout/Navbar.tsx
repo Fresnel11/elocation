@@ -14,6 +14,10 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  // Console log pour vérifier l'image de profil
+  console.log('🔍 Navbar - User data:', user);
+  console.log('📸 Navbar - Profile picture:', user?.profilePicture);
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -176,9 +180,17 @@ export const Navbar: React.FC = () => {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${getAvatarColor(user.firstName + user.lastName)}`}>
-                      {getInitials(user.firstName, user.lastName)}
-                    </div>
+                    {user.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt={`${user.firstName} ${user.lastName}`}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${getAvatarColor(user.firstName + user.lastName)}`}>
+                        {getInitials(user.firstName, user.lastName)}
+                      </div>
+                    )}
                     <span className="text-gray-900 font-medium text-sm whitespace-nowrap">
                       {user.firstName} {user.lastName}
                     </span>
@@ -357,14 +369,38 @@ export const Navbar: React.FC = () => {
               {user ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 px-4 py-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getAvatarColor(user.firstName + user.lastName)}`}>
-                      {getInitials(user.firstName, user.lastName)}
-                    </div>
+                    {user.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt={`${user.firstName} ${user.lastName}`}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getAvatarColor(user.firstName + user.lastName)}`}>
+                        {getInitials(user.firstName, user.lastName)}
+                      </div>
+                    )}
                     <div>
                       <p className="font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
                       <p className="text-sm text-gray-600">Connecté</p>
                     </div>
                   </div>
+                  <Link
+                    to={`/user/${user.id}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-2xl transition-colors"
+                  >
+                    <User className="h-5 w-5" />
+                    Profil
+                  </Link>
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-2xl transition-colors"
+                  >
+                    <Settings className="h-5 w-5" />
+                    Paramètres
+                  </Link>
                   <button
                     onClick={() => {
                       handleLogout();

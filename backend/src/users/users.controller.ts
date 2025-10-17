@@ -103,7 +103,11 @@ export class UsersController {
   @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
   @ApiBody({ type: UpdateProfileDto })
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    console.log('=== UPDATE PROFILE DEBUG ===');
+    console.log('Headers:', req.headers.authorization);
+    console.log('User from JWT:', req.user);
     console.log('Received profile update data:', updateProfileDto);
+    console.log('============================');
     return this.usersService.updateProfile(req.user.id, updateProfileDto);
   }
 

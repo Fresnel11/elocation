@@ -39,7 +39,11 @@ let UsersController = class UsersController {
         return this.usersService.findAll(paginationDto);
     }
     async updateProfile(req, updateProfileDto) {
+        console.log('=== UPDATE PROFILE DEBUG ===');
+        console.log('Headers:', req.headers.authorization);
+        console.log('User from JWT:', req.user);
         console.log('Received profile update data:', updateProfileDto);
+        console.log('============================');
         return this.usersService.updateProfile(req.user.id, updateProfileDto);
     }
     async getProfile(req) {

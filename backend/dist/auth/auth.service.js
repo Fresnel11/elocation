@@ -74,6 +74,7 @@ let AuthService = class AuthService {
         return { message: 'Email verified. Account activated.' };
     }
     async login(loginDto) {
+        var _a;
         const user = await this.usersService.findByEmail(loginDto.email);
         if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
@@ -96,10 +97,12 @@ let AuthService = class AuthService {
                 lastName: user.lastName,
                 phone: user.phone,
                 role: user.role,
+                profilePicture: ((_a = user.profile) === null || _a === void 0 ? void 0 : _a.avatar) || user.profilePicture,
             },
         };
     }
     async validateGoogleUser(googleUser) {
+        var _a;
         let user = await this.usersService.findByEmail(googleUser.email);
         if (!user) {
             user = await this.usersService.createGoogleUser({
@@ -121,6 +124,7 @@ let AuthService = class AuthService {
                 lastName: user.lastName,
                 phone: user.phone,
                 role: user.role,
+                profilePicture: ((_a = user.profile) === null || _a === void 0 ? void 0 : _a.avatar) || user.profilePicture,
             },
         };
     }
@@ -169,6 +173,9 @@ let AuthService = class AuthService {
         }
         await this.usersService.resetPassword(email, newPassword);
         return { message: 'Password reset successfully' };
+    }
+    async getUserWithProfile(userId) {
+        return this.usersService.findOne(userId);
     }
 };
 exports.AuthService = AuthService;

@@ -17,6 +17,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   initializeAuth: () => void;
+  updateUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -121,6 +122,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ token, user, isInitialized: true });
     } else {
       set({ isInitialized: true });
+    }
+  },
+
+  updateUser: (user: User) => {
+    // Mettre à jour l'utilisateur dans le store
+    set({ user });
+    
+    // Mettre à jour dans le stockage local
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+    if (rememberMe) {
+      localStorage.setItem('user', JSON.stringify(user));
+      cookieUtils.set('user', JSON.stringify(user), 30);
+    } else {
+      sessionStorage.setItem('user', JSON.stringify(user));
     }
   }
 }));

@@ -14,6 +14,7 @@ import {
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
@@ -26,7 +27,10 @@ import { Response } from 'express';
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService
+  ) {}
 
   @Post('register')
   @ApiOperation({ 
@@ -177,6 +181,28 @@ export class AuthController {
   })
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ 
+    summary: 'Récupérer les données complètes de l\'utilisateur',
+    description: 'Récupère toutes les informations de l\'utilisateur connecté avec son profil.'
+  })
+  async getMe(@Request() req) {
+    const user = await this.authService.getUserWithProfile(req.user.sub);
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      role: user.role,
+      profilePicture: user.profile?.avatar || user.profilePicture,
+      isActive: user.isActive,
+      createdAt: user.createdAt
+    };
   }
 
   @Get('google')
