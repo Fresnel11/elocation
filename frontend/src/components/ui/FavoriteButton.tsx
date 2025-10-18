@@ -22,11 +22,14 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ adId, className 
   }, [adId, user]);
 
   const checkFavoriteStatus = async () => {
+    if (!user) return;
+    
     try {
       const response = await api.get(`/favorites/check/${adId}`);
       setIsFavorite(response.data.isFavorite);
     } catch (err) {
       console.error('Erreur lors de la vérification du favori:', err);
+      setIsFavorite(false);
     }
   };
 

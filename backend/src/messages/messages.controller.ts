@@ -64,4 +64,12 @@ export class MessagesController {
   async getUnreadCount(@Request() req) {
     return this.messagesService.getUnreadCount(req.user.id);
   }
+
+  @Post('conversation')
+  async createOrGetConversation(
+    @Request() req,
+    @Body() body: { receiverId: string; adId?: string }
+  ) {
+    return this.messagesService.createOrGetConversation(req.user.id, body.receiverId, body.adId);
+  }
 }

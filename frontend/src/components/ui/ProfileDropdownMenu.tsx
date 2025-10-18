@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Shield, BarChart3, Download, LogOut, UserX, Flag, Copy, Star, EyeOff, QrCode, UserPlus } from 'lucide-react';
+import { Settings, Shield, BarChart3, Download, LogOut, UserX, Flag, Copy, EyeOff, QrCode, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+
 
 interface ProfileDropdownMenuProps {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface ProfileDropdownMenuProps {
   userName: string;
   profileUrl: string;
   userId?: string;
+  onShowQRModal?: () => void;
 }
 
 export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
@@ -18,11 +21,13 @@ export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
   isOwner,
   userName,
   profileUrl,
-  userId
+  userId,
+  onShowQRModal
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { logout } = useAuth();
+
 
   // useEffect supprimé pour éviter la fermeture automatique du menu
 
@@ -36,18 +41,27 @@ export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
     { icon: LogOut, label: 'Se déconnecter', onClick: () => { logout(); navigate('/'); }, danger: true }
   ];
 
+  const { success, error } = useToast();
+
   const visitorMenuItems = [
     { icon: Copy, label: 'Copier le lien du profil', onClick: async () => {
       try {
         await navigator.clipboard.writeText(profileUrl);
-        alert('Lien copié dans le presse-papiers !');
+        success('Lien copié !', 'Le lien du profil a été copié dans le presse-papiers');
+        onClose();
       } catch (err) {
-        alert('Erreur lors de la copie du lien');
+        error('Erreur', 'Impossible de copier le lien');
+        onClose();
       }
     }},
-    { icon: Star, label: 'Ajouter aux favoris', onClick: () => alert('Fonctionnalité bientôt disponible') },
     { icon: UserPlus, label: 'Ajouter aux contacts', onClick: () => alert('Fonctionnalité bientôt disponible') },
-    { icon: QrCode, label: 'Partager via QR Code', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: QrCode, label: 'Partager via QR Code', onClick: () => { 
+      console.log('QR Code clicked, onShowQRModal:', onShowQRModal);
+      onClose(); 
+      if (onShowQRModal) {
+        onShowQRModal();
+      }
+    } },
     { icon: EyeOff, label: 'Masquer ce profil', onClick: () => alert('Fonctionnalité bientôt disponible') },
     { icon: UserX, label: 'Bloquer cet utilisateur', onClick: () => alert('Fonctionnalité bientôt disponible'), danger: true },
     { icon: Flag, label: 'Signaler le profil', onClick: () => alert('Fonctionnalité bientôt disponible'), danger: true }

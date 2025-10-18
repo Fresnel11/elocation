@@ -106,6 +106,7 @@ export class AuthService {
         lastName: user.lastName,
         phone: user.phone,
         role: user.role,
+        profilePicture: user.profile?.avatar || user.profilePicture,
       },
     };
   }
@@ -137,6 +138,7 @@ export class AuthService {
         lastName: user.lastName,
         phone: user.phone,
         role: user.role,
+        profilePicture: user.profile?.avatar || user.profilePicture,
       },
     };
   }
@@ -193,5 +195,9 @@ export class AuthService {
     
     await this.usersService.resetPassword(email, newPassword);
     return { message: 'Password reset successfully' };
+  }
+
+  async getUserWithProfile(userId: string) {
+    return this.usersService.findOne(userId);
   }
 }

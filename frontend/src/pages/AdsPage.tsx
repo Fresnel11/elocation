@@ -585,7 +585,7 @@ export const AdsPage: React.FC = () => {
                   {/* Desktop Design (unchanged) */}
                   <Card 
                     className="hidden sm:block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 overflow-hidden"
-                    onClick={() => openModal(ad)}
+                    onClick={() => navigate(`/annonce/${ad.id}`)}
                   >
                     {/* Image Section */}
                     <div className="relative h-48 overflow-hidden">
@@ -708,7 +708,7 @@ export const AdsPage: React.FC = () => {
                             size="sm" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              openModal(ad);
+                              navigate(`/annonce/${ad.id}`);
                             }}
                             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs font-medium rounded-lg transition-colors duration-200"
                           >

@@ -1,9 +1,13 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { JwtService } from '@nestjs/jwt';
 import { join } from 'path';
+import { WebSocketServerService } from './websocket/websocket.server';
+import { MessagesService } from './messages/messages.service';
+import { NotificationsGateway } from './notifications/notifications.gateway';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AdsModule } from './ads/ads.module';
@@ -86,5 +90,18 @@ import { ABTestingModule } from './ab-testing/ab-testing.module';
     RecommendationsModule,
     ABTestingModule,
   ],
+  providers: [JwtService, WebSocketServerService, NotificationsGateway],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(
+    private jwtService: JwtService,
+    private messagesService: MessagesService,
+    private webSocketServerService: WebSocketServerService,
+    private notificationsGateway: NotificationsGateway,
+  ) {}
+
+  onModuleInit() {
+    this.messagesService.setWebSocketServer(this.webSocketServerService);
+    this.webSocketServerService.setNotificationsGateway(this.notificationsGateway);
+  }
+}

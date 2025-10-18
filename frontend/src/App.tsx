@@ -55,6 +55,7 @@ import { AdminRoute } from './components/admin/AdminRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { MessagesProvider } from './context/MessagesContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { HelpButton } from './components/ui/HelpButton';
 import { CookieConsent } from './components/ui/CookieConsent';
@@ -149,7 +150,9 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         <NotificationProvider>
-          <AppContent />
+          <MessagesProvider>
+            <AppContent />
+          </MessagesProvider>
         </NotificationProvider>
       </AuthProvider>
     </ToastProvider>

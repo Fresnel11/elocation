@@ -19,4 +19,7 @@ export class CreateMessageDto {
   @IsOptional()
   @IsIn(['text', 'image'])
   messageType?: 'text' | 'image';
+
+  @IsOptional()
+  isEncrypted?: boolean;
 }

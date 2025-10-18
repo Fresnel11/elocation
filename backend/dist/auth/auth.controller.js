@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const google_auth_guard_1 = require("./guards/google-auth.guard");
 const auth_service_1 = require("./auth.service");
+const users_service_1 = require("../users/users.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const request_otp_dto_1 = require("./dto/request-otp.dto");
@@ -25,8 +26,9 @@ const verify_otp_dto_1 = require("./dto/verify-otp.dto");
 const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
 let AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, usersService) {
         this.authService = authService;
+        this.usersService = usersService;
     }
     register(registerDto) {
         return this.authService.register(registerDto);
@@ -42,6 +44,21 @@ let AuthController = class AuthController {
     }
     getProfile(req) {
         return req.user;
+    }
+    async getMe(req) {
+        var _a;
+        const user = await this.authService.getUserWithProfile(req.user.sub);
+        return {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+            role: user.role,
+            profilePicture: ((_a = user.profile) === null || _a === void 0 ? void 0 : _a.avatar) || user.profilePicture,
+            isActive: user.isActive,
+            createdAt: user.createdAt
+        };
     }
     async googleAuth(req) {
     }
@@ -222,6 +239,19 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getProfile", null);
 __decorate([
+    (0, common_1.Get)('me'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Récupérer les données complètes de l\'utilisateur',
+        description: 'Récupère toutes les informations de l\'utilisateur connecté avec son profil.'
+    }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getMe", null);
+__decorate([
     (0, common_1.Get)('google'),
     (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
     (0, swagger_1.ApiOperation)({
@@ -341,6 +371,7 @@ exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),
     (0, common_1.UseInterceptors)(common_1.ClassSerializerInterceptor),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        users_service_1.UsersService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

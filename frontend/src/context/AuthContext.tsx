@@ -14,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   error: string | null;
   clearError: () => void;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +43,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     verifyOtp: storeVerifyOtp,
     logout: storeLogout,
     clearError,
-    initializeAuth
+    initializeAuth,
+    updateUser: storeUpdateUser
   } = useAuthStore();
 
   useEffect(() => {
@@ -69,6 +71,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     storeLogout();
   };
 
+  const updateUser = (user: User) => {
+    storeUpdateUser(user);
+  };
+
   const value = {
     user,
     login,
@@ -80,7 +86,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isInitialized,
     isAuthenticated: !!user,
     error,
-    clearError
+    clearError,
+    updateUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Message } from './entities/message.entity';
@@ -8,9 +8,12 @@ import { User } from '../users/entities/user.entity';
 import { Ad } from '../ads/entities/ad.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { WebSocketServerService } from '../websocket/websocket.server';
 
 @Injectable()
 export class MessagesService {
+  private wsServer: WebSocketServerService;
+
   constructor(
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
@@ -23,8 +26,12 @@ export class MessagesService {
     private notificationsService: NotificationsService,
   ) {}
 
+  setWebSocketServer(wsServer: WebSocketServerService) {
+    this.wsServer = wsServer;
+  }
+
   async sendMessage(senderId: string, createMessageDto: CreateMessageDto) {
-    const { content, receiverId, adId, imageUrl, messageType } = createMessageDto;
+    const { content, receiverId, adId, imageUrl, messageType, isEncrypted } = createMessageDto;
 
     // Vérifier que l'annonce existe (si adId est fourni)
     let ad: any = null;
@@ -49,6 +56,7 @@ export class MessagesService {
       adId: adId || null,
       imageUrl: imageUrl || null,
       messageType: messageType || 'text',
+      isEncrypted: isEncrypted || false,
     });
 
     const savedMessage = await this.messageRepository.save(message);
@@ -60,7 +68,12 @@ export class MessagesService {
     });
     
     // Créer ou mettre à jour la conversation
-    await this.updateConversation(senderId, receiverId, adId || null, content);
+    const conversation = await this.updateConversation(senderId, receiverId, adId || null, content);
+
+    // Émettre le message via WebSocket
+    if (this.wsServer) {
+      this.wsServer.emitNewMessage(messageWithRelations || savedMessage);
+    }
 
     // Créer une notification pour le destinataire
     const sender = await this.userRepository.findOne({ where: { id: senderId } });
@@ -176,7 +189,7 @@ export class MessagesService {
     return { unreadCount: totalUnread };
   }
 
-  private async updateConversation(senderId: string, receiverId: string, adId: string | null, content: string) {
+  private async updateConversation(senderId: string, receiverId: string, adId: string | null, content: string): Promise<Conversation> {
     const whereConditions = adId
       ? [
           { user1Id: senderId, user2Id: receiverId, adId },
@@ -211,6 +224,64 @@ export class MessagesService {
       }
     }
 
-    await this.conversationRepository.save(conversation);
+    const savedConversation = await this.conversationRepository.save(conversation);
+    return savedConversation;
+  }
+
+  async createOrGetConversation(senderId: string, receiverId: string, adId?: string) {
+    // Vérifier que le destinataire existe
+    const receiver = await this.userRepository.findOne({ where: { id: receiverId } });
+    if (!receiver) {
+      throw new NotFoundException('Destinataire non trouvé');
+    }
+
+    // Vérifier que l'annonce existe (si adId est fourni)
+    if (adId) {
+      const ad = await this.adRepository.findOne({ where: { id: adId } });
+      if (!ad) {
+        throw new NotFoundException('Annonce non trouvée');
+      }
+    }
+
+    const actualAdId = adId || null;
+    const whereConditions = actualAdId
+      ? [
+          { user1Id: senderId, user2Id: receiverId, adId: actualAdId },
+          { user1Id: receiverId, user2Id: senderId, adId: actualAdId }
+        ]
+      : [
+          { user1Id: senderId, user2Id: receiverId, adId: IsNull() },
+          { user1Id: receiverId, user2Id: senderId, adId: IsNull() }
+        ];
+
+    let conversation = await this.conversationRepository.findOne({
+      where: whereConditions,
+      relations: ['user1', 'user2', 'ad']
+    });
+
+    if (!conversation) {
+      // Créer une nouvelle conversation
+      conversation = this.conversationRepository.create({
+        user1Id: senderId,
+        user2Id: receiverId,
+        adId: actualAdId,
+        lastMessageContent: '',
+        lastMessageAt: new Date(),
+        unreadCountUser1: 0,
+        unreadCountUser2: 0
+      });
+      conversation = await this.conversationRepository.save(conversation);
+      
+      // Recharger avec les relations
+      conversation = await this.conversationRepository.findOne({
+        where: { id: conversation.id },
+        relations: ['user1', 'user2', 'ad']
+      });
+    }
+
+    return {
+      conversationId: conversation.id,
+      conversation
+    };
   }
 }

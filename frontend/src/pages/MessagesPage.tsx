@@ -1,12 +1,61 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MessageCircle, Send, ArrowLeft, Image, X } from 'lucide-react';
-import { messagesService, Conversation, Message } from '../services/messagesService';
+import { messagesService } from '../services/messagesService';
 import { Button } from '../components/ui/Button';
 import { EmojiPicker } from '../components/ui/EmojiPicker';
 import { useAuth } from '../context/AuthContext';
+import { useMessages } from '../context/MessagesContext';
+import { websocketService } from '../services/websocketService';
+
+export interface Conversation {
+  id: string;
+  user1: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  user2: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  ad?: {
+    id: string;
+    title: string;
+  };
+  lastMessageContent: string;
+  lastMessageAt: string;
+  unreadCountUser1: number;
+  unreadCountUser2: number;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  isEncrypted: boolean;
+  senderId: string;
+  receiverId: string;
+  adId?: string;
+  createdAt: string;
+  messageType?: string;
+  imageUrl?: string;
+  sender: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  receiver: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
+  const { refreshUnreadCount } = useMessages();
+  const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -19,9 +68,34 @@ export const MessagesPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+
   useEffect(() => {
     fetchConversations();
   }, []);
+
+  // Gérer l'ouverture automatique d'une conversation via l'URL
+  useEffect(() => {
+    const conversationId = searchParams.get('conversationId');
+    const adId = searchParams.get('adId');
+    const userId = searchParams.get('userId');
+    
+    if (conversationId && conversations.length > 0) {
+      // Trouver la conversation par ID
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        handleSelectConversation(conversation);
+      }
+    } else if (adId && userId && conversations.length > 0) {
+      // Trouver la conversation par adId et userId
+      const conversation = conversations.find(c => {
+        const otherUser = getOtherUser(c);
+        return c.ad?.id === adId && otherUser.id === userId;
+      });
+      if (conversation) {
+        handleSelectConversation(conversation);
+      }
+    }
+  }, [conversations, searchParams]);
 
   const fetchConversations = async () => {
     try {
@@ -85,6 +159,11 @@ export const MessagesPage: React.FC = () => {
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     fetchMessages(conversation);
+    
+    // Actualiser le compteur après avoir marqué les messages comme lus
+    setTimeout(() => {
+      refreshUnreadCount();
+    }, 500);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -110,19 +189,18 @@ export const MessagesPage: React.FC = () => {
         imageUrl = uploadData.filePath;
       }
       
-      await messagesService.sendMessage(
-        otherUser.id,
-        selectedConversation.ad?.id || '',
-        newMessage.trim() || (selectedImage ? 'Image' : ''),
-        imageUrl,
-        selectedImage ? 'image' : 'text'
-      );
+      await messagesService.sendMessage({
+        content: newMessage.trim() || (selectedImage ? 'Image' : ''),
+        receiverId: otherUser.id,
+        adId: selectedConversation.ad?.id
+      });
+      
+      // Le message sera ajouté via WebSocket
       
       setNewMessage('');
       setSelectedImage(null);
       setImagePreview(null);
-      await fetchMessages(selectedConversation);
-      await fetchConversations();
+      refreshUnreadCount();
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
     } finally {
@@ -157,6 +235,38 @@ export const MessagesPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // WebSocket pour les messages en temps réel
+  useEffect(() => {
+    const handleNewMessage = (message: Message) => {
+      // Ajouter le message à la liste si c'est pour la conversation actuelle
+      if (selectedConversation && user) {
+        const otherUser = getOtherUser(selectedConversation);
+        const isForCurrentConversation = 
+          (message.senderId === otherUser.id && message.receiverId === user.id) ||
+          (message.senderId === user.id && message.receiverId === otherUser.id);
+        
+        if (isForCurrentConversation) {
+          setMessages(prev => {
+            // Éviter les doublons
+            const exists = prev.some(m => m.id === message.id);
+            if (!exists) {
+              return [...prev, message];
+            }
+            return prev;
+          });
+        }
+      }
+      // Actualiser la liste des conversations
+      fetchConversations();
+    };
+
+    websocketService.on('new_message', handleNewMessage);
+
+    return () => {
+      websocketService.off('new_message', handleNewMessage);
+    };
+  }, [selectedConversation, user]);
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden fixed inset-0">

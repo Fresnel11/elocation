@@ -13,6 +13,7 @@ import { UserReputation } from '../components/ui/UserReputation';
 import { ReportModal } from '../components/ui/ReportModal';
 import { ClickableAvatar } from '../components/ui/ClickableAvatar';
 import { ShareProfileModal } from '../components/ui/ShareProfileModal';
+import { QRCodeModal } from '../components/ui/QRCodeModal';
 import { ProfileDropdownMenu } from '../components/ui/ProfileDropdownMenu';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -87,8 +88,9 @@ export const UserProfilePage: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ads' | 'bookings'>('ads');
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, updateUser } = useAuth();
 
   useEffect(() => {
     if (userId) {
@@ -108,8 +110,21 @@ export const UserProfilePage: React.FC = () => {
     }
   };
 
-  const handleProfileUpdated = () => {
-    fetchUserProfile();
+  const handleProfileUpdated = async () => {
+    await fetchUserProfile();
+    // Mettre à jour l'utilisateur dans le contexte si c'est le propriétaire
+    if (isOwner && currentUser) {
+      try {
+        const response = await api.get('/auth/me');
+        const updatedUserData = {
+          ...currentUser,
+          profilePicture: response.data.profilePicture
+        };
+        updateUser(updatedUserData);
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du contexte utilisateur:', error);
+      }
+    }
   };
 
   const getProfileForEdit = () => {
@@ -244,6 +259,10 @@ export const UserProfilePage: React.FC = () => {
                   userName={`${user.firstName} ${user.lastName}`}
                   profileUrl={`${window.location.origin}/user/${user.id}`}
                   userId={user.id}
+                  onShowQRModal={() => {
+                    console.log('Opening QR Modal');
+                    setIsQRModalOpen(true);
+                  }}
                 />
               </div>
             </div>
@@ -391,7 +410,7 @@ export const UserProfilePage: React.FC = () => {
                         <div 
                           key={ad.id}
                           className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                          onClick={() => openModal(ad)}
+                          onClick={() => navigate(`/annonce/${ad.id}`)}
                         >
                           <div className="aspect-video relative">
                             <img
@@ -498,6 +517,10 @@ export const UserProfilePage: React.FC = () => {
                   userName={`${user.firstName} ${user.lastName}`}
                   profileUrl={`${window.location.origin}/user/${user.id}`}
                   userId={user.id}
+                  onShowQRModal={() => {
+                    console.log('Opening QR Modal');
+                    setIsQRModalOpen(true);
+                  }}
                 />
               </div>
             </div>
@@ -646,7 +669,7 @@ export const UserProfilePage: React.FC = () => {
                       <div 
                         key={ad.id}
                         className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
-                        onClick={() => openModal(ad)}
+                        onClick={() => navigate(`/annonce/${ad.id}`)}
                       >
                         <div className="flex">
                           <div className="w-24 h-24 flex-shrink-0">
@@ -757,6 +780,13 @@ export const UserProfilePage: React.FC = () => {
       <ShareProfileModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
+        profileUrl={`${window.location.origin}/user/${user.id}`}
+        userName={`${user.firstName} ${user.lastName}`}
+      />
+      
+      <QRCodeModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
         profileUrl={`${window.location.origin}/user/${user.id}`}
         userName={`${user.firstName} ${user.lastName}`}
       />

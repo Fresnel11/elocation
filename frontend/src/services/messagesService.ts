@@ -1,11 +1,14 @@
 import { api } from './api';
+import { encryptionService } from './encryptionService';
 
 export interface Message {
   id: string;
   content: string;
-  isRead: boolean;
-  imageUrl?: string;
-  messageType: 'text' | 'image';
+  isEncrypted: boolean;
+  senderId: string;
+  receiverId: string;
+  adId?: string;
+  createdAt: string;
   sender: {
     id: string;
     firstName: string;
@@ -16,45 +19,62 @@ export interface Message {
     firstName: string;
     lastName: string;
   };
-  ad: {
-    id: string;
-    title: string;
-  };
-  createdAt: string;
-}
-
-export interface Conversation {
-  id: string;
-  user1: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-  user2: {
-    id: string;
-    firstName: string;
-    lastName: string;
-  };
-  ad: {
-    id: string;
-    title: string;
-  };
-  lastMessageContent: string;
-  lastMessageAt: string;
-  unreadCountUser1: number;
-  unreadCountUser2: number;
 }
 
 export const messagesService = {
-  async sendMessage(receiverId: string, adId: string, content: string, imageUrl?: string, messageType?: 'text' | 'image') {
+  async sendMessage(data: {
+    content: string;
+    receiverId: string;
+    adId?: string;
+    encrypt?: boolean;
+  }): Promise<Message> {
+    let messageContent = data.content;
+    let isEncrypted = false;
+
+    if (data.encrypt) {
+      try {
+        // Récupérer la clé publique du destinataire
+        const { data: keyData } = await api.get(`/users/${data.receiverId}/public-key`);
+        if (keyData.publicKey) {
+          messageContent = await encryptionService.encryptMessage(data.content, keyData.publicKey);
+          isEncrypted = true;
+        }
+      } catch (error) {
+        console.warn('Impossible de chiffrer le message, envoi en clair:', error);
+      }
+    }
+
     const response = await api.post('/messages', {
-      receiverId,
-      adId: adId || null,
-      content,
-      imageUrl,
-      messageType: messageType || 'text'
+      content: messageContent,
+      receiverId: data.receiverId,
+      adId: data.adId,
+      isEncrypted
     });
+
     return response.data;
+  },
+
+  async getMessages(adId: string | null, otherUserId: string): Promise<Message[]> {
+    const endpoint = adId 
+      ? `/messages/conversation/${adId}/${otherUserId}`
+      : `/messages/conversation/direct/${otherUserId}`;
+    
+    const response = await api.get(endpoint);
+    const messages = response.data;
+
+    // Déchiffrer les messages chiffrés
+    for (const message of messages) {
+      if (message.isEncrypted) {
+        try {
+          message.content = await encryptionService.decryptMessage(message.content);
+        } catch (error) {
+          console.error('Erreur de déchiffrement:', error);
+          message.content = '[Message chiffré - impossible à déchiffrer]';
+        }
+      }
+    }
+
+    return messages;
   },
 
   async getConversations() {
@@ -62,24 +82,47 @@ export const messagesService = {
     return response.data;
   },
 
-  async getMessages(adId: string, otherUserId: string) {
-    const endpoint = adId && adId !== '' 
-      ? `/messages/conversation/${adId}/${otherUserId}`
-      : `/messages/conversation/direct/${otherUserId}`;
-    const response = await api.get(endpoint);
-    return response.data;
-  },
-
-  async markAsRead(adId: string, otherUserId: string) {
-    const endpoint = adId && adId !== '' 
+  async markAsRead(adId: string | null, otherUserId: string) {
+    const endpoint = adId 
       ? `/messages/mark-read/${adId}/${otherUserId}`
       : `/messages/mark-read/direct/${otherUserId}`;
-    const response = await api.post(endpoint);
-    return response.data;
+    
+    return api.post(endpoint);
   },
 
   async getUnreadCount() {
     const response = await api.get('/messages/unread-count');
+    return response.data;
+  },
+
+  // Initialiser les clés de chiffrement
+  async initializeEncryption() {
+    try {
+      // Essayer de charger les clés existantes
+      const keysLoaded = await encryptionService.loadKeysFromStorage();
+      
+      if (!keysLoaded) {
+        // Générer de nouvelles clés
+        await encryptionService.generateKeyPair();
+        await encryptionService.saveKeysToStorage();
+      }
+
+      // Envoyer la clé publique au serveur
+      const publicKey = await encryptionService.exportPublicKey();
+      await api.patch('/users/public-key', { publicKey });
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation du chiffrement:', error);
+      return false;
+    }
+  },
+
+  async createOrGetConversation(receiverId: string, adId?: string) {
+    const response = await api.post('/messages/conversation', {
+      receiverId,
+      adId
+    });
     return response.data;
   }
 };

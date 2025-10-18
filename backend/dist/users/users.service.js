@@ -112,7 +112,7 @@ let UsersService = class UsersService {
             return null;
         return this.userRepository.findOne({
             where: { email: email.toLowerCase() },
-            relations: ['role'],
+            relations: ['role', 'profile'],
         });
     }
     async findByPhone(phone) {
@@ -244,7 +244,11 @@ let UsersService = class UsersService {
         });
     }
     async updateProfile(userId, updateProfileDto) {
+        console.log('=== SERVICE UPDATE PROFILE ===');
+        console.log('UserId:', userId);
+        console.log('UpdateProfileDto:', updateProfileDto);
         const user = await this.findOne(userId);
+        console.log('User found:', user.id, user.email);
         const userUpdateData = {};
         if (updateProfileDto.firstName)
             userUpdateData.firstName = updateProfileDto.firstName;
@@ -256,16 +260,23 @@ let UsersService = class UsersService {
             userUpdateData.phone = updateProfileDto.phone;
         if (updateProfileDto.whatsappNumber)
             userUpdateData.whatsappNumber = updateProfileDto.whatsappNumber;
+        console.log('User update data:', userUpdateData);
         if (Object.keys(userUpdateData).length > 0) {
             await this.userRepository.update(userId, userUpdateData);
+            console.log('User updated successfully');
         }
         let profile = user.profile;
         if (!profile) {
             profile = this.profileRepository.create({ userId });
+            console.log('Created new profile for user');
         }
         const { firstName, lastName, email, phone, whatsappNumber } = updateProfileDto, profileData = __rest(updateProfileDto, ["firstName", "lastName", "email", "phone", "whatsappNumber"]);
+        console.log('Profile data to update:', profileData);
         Object.assign(profile, profileData);
-        return this.profileRepository.save(profile);
+        const savedProfile = await this.profileRepository.save(profile);
+        console.log('Profile saved successfully:', savedProfile.id);
+        console.log('===============================');
+        return savedProfile;
     }
     async uploadAvatar(userId, avatarUrl) {
         return this.updateProfile(userId, { avatar: avatarUrl });
@@ -370,6 +381,20 @@ let UsersService = class UsersService {
         return this.verificationRepository.findOne({
             where: { userId }
         });
+    }
+    async updatePublicKey(userId, publicKey) {
+        await this.userRepository.update(userId, { publicKey });
+        return { message: 'Clé publique mise à jour avec succès' };
+    }
+    async getPublicKey(userId) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            select: ['id', 'publicKey']
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Utilisateur non trouvé');
+        }
+        return { publicKey: user.publicKey };
     }
 };
 exports.UsersService = UsersService;

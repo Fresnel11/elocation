@@ -33,6 +33,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePublicKeyDto } from './dto/update-public-key.dto';
 import { SubmitVerificationDto } from './dto/submit-verification.dto';
 import { ReviewVerificationDto } from './dto/review-verification.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -103,7 +104,11 @@ export class UsersController {
   @ApiOperation({ summary: 'Mettre à jour le profil utilisateur' })
   @ApiBody({ type: UpdateProfileDto })
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    console.log('=== UPDATE PROFILE DEBUG ===');
+    console.log('Headers:', req.headers.authorization);
+    console.log('User from JWT:', req.user);
     console.log('Received profile update data:', updateProfileDto);
+    console.log('============================');
     return this.usersService.updateProfile(req.user.id, updateProfileDto);
   }
 
@@ -117,6 +122,22 @@ export class UsersController {
       ...user.profile,
       phone: user.phone // Inclure le téléphone de l'utilisateur
     };
+  }
+
+  @Patch('public-key')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Mettre à jour la clé publique pour le chiffrement E2E' })
+  updatePublicKey(@Request() req, @Body() updatePublicKeyDto: UpdatePublicKeyDto) {
+    return this.usersService.updatePublicKey(req.user.id, updatePublicKeyDto.publicKey);
+  }
+
+  @Get(':id/public-key')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Récupérer la clé publique d\'un utilisateur' })
+  getPublicKey(@Param('id') id: string) {
+    return this.usersService.getPublicKey(id);
   }
 
   @Get(':id/profile')

@@ -4,4 +4,5 @@ export declare class CreateMessageDto {
     adId?: string;
     imageUrl?: string;
     messageType?: 'text' | 'image';
+    isEncrypted?: boolean;
 }

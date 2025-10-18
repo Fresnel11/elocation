@@ -16,6 +16,7 @@ export declare class User {
     password: string | null;
     googleId: string | null;
     profilePicture: string | null;
+    publicKey: string | null;
     birthDate: Date | null;
     gender: 'masculin' | 'féminin' | null;
     lastLogin: Date | null;

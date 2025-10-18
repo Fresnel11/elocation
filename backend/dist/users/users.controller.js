@@ -23,6 +23,7 @@ const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
 const update_profile_dto_1 = require("./dto/update-profile.dto");
+const update_public_key_dto_1 = require("./dto/update-public-key.dto");
 const submit_verification_dto_1 = require("./dto/submit-verification.dto");
 const review_verification_dto_1 = require("./dto/review-verification.dto");
 const pagination_dto_1 = require("../common/dto/pagination.dto");
@@ -39,12 +40,22 @@ let UsersController = class UsersController {
         return this.usersService.findAll(paginationDto);
     }
     async updateProfile(req, updateProfileDto) {
+        console.log('=== UPDATE PROFILE DEBUG ===');
+        console.log('Headers:', req.headers.authorization);
+        console.log('User from JWT:', req.user);
         console.log('Received profile update data:', updateProfileDto);
+        console.log('============================');
         return this.usersService.updateProfile(req.user.id, updateProfileDto);
     }
     async getProfile(req) {
         const user = await this.usersService.findOne(req.user.id);
         return Object.assign(Object.assign({}, user.profile), { phone: user.phone });
+    }
+    updatePublicKey(req, updatePublicKeyDto) {
+        return this.usersService.updatePublicKey(req.user.id, updatePublicKeyDto.publicKey);
+    }
+    getPublicKey(id) {
+        return this.usersService.getPublicKey(id);
     }
     getPublicProfile(id) {
         return this.usersService.getPublicProfile(id);
@@ -197,6 +208,27 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Patch)('public-key'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Mettre à jour la clé publique pour le chiffrement E2E' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_public_key_dto_1.UpdatePublicKeyDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updatePublicKey", null);
+__decorate([
+    (0, common_1.Get)(':id/public-key'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Récupérer la clé publique d\'un utilisateur' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getPublicKey", null);
 __decorate([
     (0, common_1.Get)(':id/profile'),
     (0, swagger_1.ApiOperation)({

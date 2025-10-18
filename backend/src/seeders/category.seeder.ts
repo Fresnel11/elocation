@@ -12,24 +12,32 @@ export class CategorySeeder {
 
   async seed() {
     try {
-      // Supprimer d'abord les reviews pour éviter les contraintes FK
+      // Désactiver les contraintes de clés étrangères temporairement
+      await this.categoryRepository.query('SET FOREIGN_KEY_CHECKS = 0');
+      
+      // Supprimer dans l'ordre pour éviter les contraintes FK
       await this.categoryRepository.query('DELETE FROM reviews');
       console.log('Reviews supprimées');
       
-      // Supprimer les annonces
+      await this.categoryRepository.query('DELETE FROM favorites');
+      console.log('Favoris supprimés');
+      
       await this.categoryRepository.query('DELETE FROM ads');
       console.log('Annonces supprimées');
+      
+      await this.categoryRepository.query('DELETE FROM subcategories');
+      console.log('Sous-catégories supprimées');
+      
+      await this.categoryRepository.query('DELETE FROM categories');
+      console.log('Anciennes catégories supprimées');
+      
+      // Réactiver les contraintes de clés étrangères
+      await this.categoryRepository.query('SET FOREIGN_KEY_CHECKS = 1');
     } catch (error) {
-      console.log('Erreur lors de la suppression, continuons...');
+      console.log('Erreur lors de la suppression:', error.message);
+      // Réactiver les contraintes même en cas d'erreur
+      await this.categoryRepository.query('SET FOREIGN_KEY_CHECKS = 1');
     }
-    
-    // Supprimer les sous-catégories avant les catégories
-    await this.categoryRepository.query('DELETE FROM subcategories');
-    console.log('Sous-catégories supprimées');
-    
-    // Supprimer toutes les anciennes catégories
-    await this.categoryRepository.query('DELETE FROM categories');
-    console.log('Anciennes catégories supprimées');
 
     const categories = [
       {

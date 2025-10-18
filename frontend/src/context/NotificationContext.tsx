@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { websocketService } from '../services/websocketService';
 
 interface Notification {
   id: string;
@@ -14,7 +14,7 @@ interface Notification {
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
-  socket: Socket | null;
+  isConnected: boolean;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (id: string) => void;
@@ -38,41 +38,37 @@ interface NotificationProviderProps {
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Connexion WebSocket
-    const newSocket = io('http://localhost:3000', {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      forceNew: true,
-      autoConnect: true
-    });
+    // Connexion WebSocket seulement si pas déjà connecté
+    if (!websocketService.isConnected) {
+      websocketService.connect();
+    }
 
-    // Exposer le socket globalement pour les autres composants
-    (window as any).socket = newSocket;
+    const handleConnect = () => {
+      console.log('Connected to WebSocket server');
+      setIsConnected(true);
+    };
 
-    newSocket.on('connect', () => {
-      console.log('Connected to notifications server');
-    });
-
-    newSocket.on('connected', (data) => {
+    const handleConnected = (data: any) => {
       console.log('WebSocket authenticated:', data);
-    });
+    };
 
-    newSocket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-    });
+    const handleDisconnect = () => {
+      console.log('Disconnected from WebSocket server');
+      setIsConnected(false);
+    };
 
-    newSocket.on('error', (error) => {
+    const handleError = (error: any) => {
       console.error('WebSocket error:', error);
-    });
+      setIsConnected(false);
+    };
 
-    newSocket.on('notification', (notification: Notification) => {
+    const handleNotification = (notification: Notification) => {
       setNotifications(prev => [notification, ...prev.slice(0, 49)]); // Garder max 50
       setUnreadCount(prev => prev + 1);
       
@@ -83,20 +79,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           icon: '/favicon.ico'
         });
       }
-    });
+    };
 
-    // Écouter les nouvelles vérifications
-    newSocket.on('new_verification', (verification) => {
+    const handleNewVerification = (verification: any) => {
       console.log('Nouvelle vérification reçue:', verification);
       // Ajouter à window pour que AdminVerificationPage puisse l'écouter
       window.dispatchEvent(new CustomEvent('new_verification', { detail: verification }));
-    });
+    };
 
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from notifications server');
-    });
-
-    setSocket(newSocket);
+    // Écouter les événements WebSocket
+    websocketService.on('connect', handleConnect);
+    websocketService.on('connected', handleConnected);
+    websocketService.on('disconnect', handleDisconnect);
+    websocketService.on('error', handleError);
+    websocketService.on('notification', handleNotification);
+    websocketService.on('new_verification', handleNewVerification);
 
     // Demander permission pour notifications browser
     if (Notification.permission === 'default') {
@@ -104,7 +101,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
 
     return () => {
-      newSocket.close();
+      websocketService.off('connect', handleConnect);
+      websocketService.off('connected', handleConnected);
+      websocketService.off('disconnect', handleDisconnect);
+      websocketService.off('error', handleError);
+      websocketService.off('notification', handleNotification);
+      websocketService.off('new_verification', handleNewVerification);
+      websocketService.disconnect();
     };
   }, []);
 
@@ -180,7 +183,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     <NotificationContext.Provider value={{
       notifications,
       unreadCount,
-      socket,
+      isConnected,
       markAsRead,
       markAllAsRead,
       deleteNotification,

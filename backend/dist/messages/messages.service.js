@@ -30,8 +30,11 @@ let MessagesService = class MessagesService {
         this.adRepository = adRepository;
         this.notificationsService = notificationsService;
     }
+    setWebSocketServer(wsServer) {
+        this.wsServer = wsServer;
+    }
     async sendMessage(senderId, createMessageDto) {
-        const { content, receiverId, adId, imageUrl, messageType } = createMessageDto;
+        const { content, receiverId, adId, imageUrl, messageType, isEncrypted } = createMessageDto;
         let ad = null;
         if (adId) {
             ad = await this.adRepository.findOne({ where: { id: adId } });
@@ -50,13 +53,17 @@ let MessagesService = class MessagesService {
             adId: adId || null,
             imageUrl: imageUrl || null,
             messageType: messageType || 'text',
+            isEncrypted: isEncrypted || false,
         });
         const savedMessage = await this.messageRepository.save(message);
         const messageWithRelations = await this.messageRepository.findOne({
             where: { id: savedMessage.id },
             relations: ['sender', 'receiver', 'ad']
         });
-        await this.updateConversation(senderId, receiverId, adId || null, content);
+        const conversation = await this.updateConversation(senderId, receiverId, adId || null, content);
+        if (this.wsServer) {
+            this.wsServer.emitNewMessage(messageWithRelations || savedMessage);
+        }
         const sender = await this.userRepository.findOne({ where: { id: senderId } });
         if (sender) {
             const notificationMessage = ad
@@ -175,7 +182,54 @@ let MessagesService = class MessagesService {
                 conversation.unreadCountUser1++;
             }
         }
-        await this.conversationRepository.save(conversation);
+        const savedConversation = await this.conversationRepository.save(conversation);
+        return savedConversation;
+    }
+    async createOrGetConversation(senderId, receiverId, adId) {
+        const receiver = await this.userRepository.findOne({ where: { id: receiverId } });
+        if (!receiver) {
+            throw new common_1.NotFoundException('Destinataire non trouvé');
+        }
+        if (adId) {
+            const ad = await this.adRepository.findOne({ where: { id: adId } });
+            if (!ad) {
+                throw new common_1.NotFoundException('Annonce non trouvée');
+            }
+        }
+        const actualAdId = adId || null;
+        const whereConditions = actualAdId
+            ? [
+                { user1Id: senderId, user2Id: receiverId, adId: actualAdId },
+                { user1Id: receiverId, user2Id: senderId, adId: actualAdId }
+            ]
+            : [
+                { user1Id: senderId, user2Id: receiverId, adId: (0, typeorm_2.IsNull)() },
+                { user1Id: receiverId, user2Id: senderId, adId: (0, typeorm_2.IsNull)() }
+            ];
+        let conversation = await this.conversationRepository.findOne({
+            where: whereConditions,
+            relations: ['user1', 'user2', 'ad']
+        });
+        if (!conversation) {
+            conversation = this.conversationRepository.create({
+                user1Id: senderId,
+                user2Id: receiverId,
+                adId: actualAdId,
+                lastMessageContent: '',
+                lastMessageAt: new Date(),
+                unreadCountUser1: 0,
+                unreadCountUser2: 0
+            });
+            conversation = await this.conversationRepository.save(conversation);
+            conversation = await this.conversationRepository.findOne({
+                where: { id: conversation.id },
+                relations: ['user1', 'user2', 'ad']
+            });
+        }
+        return {
+            conversationId: conversation.id,
+            conversation
+        };
     }
 };
 exports.MessagesService = MessagesService;
