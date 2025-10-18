@@ -10,6 +10,9 @@ export class Message {
   @Column('text')
   content: string;
 
+  @Column({ default: false })
+  isEncrypted: boolean;
+
   @Column({ type: 'varchar', length: 500, nullable: true })
   imageUrl: string | null;
 

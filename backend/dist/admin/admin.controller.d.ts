@@ -43,6 +43,7 @@ export declare class AdminController {
         password: string | null;
         googleId: string | null;
         profilePicture: string | null;
+        publicKey: string | null;
         birthDate: Date | null;
         gender: "masculin" | "f\u00E9minin" | null;
         lastLogin: Date | null;

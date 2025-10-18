@@ -50,6 +50,9 @@ let MessagesController = class MessagesController {
     async getUnreadCount(req) {
         return this.messagesService.getUnreadCount(req.user.id);
     }
+    async createOrGetConversation(req, body) {
+        return this.messagesService.createOrGetConversation(req.user.id, body.receiverId, body.adId);
+    }
 };
 exports.MessagesController = MessagesController;
 __decorate([
@@ -108,6 +111,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "getUnreadCount", null);
+__decorate([
+    (0, common_1.Post)('conversation'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "createOrGetConversation", null);
 exports.MessagesController = MessagesController = __decorate([
     (0, common_1.Controller)('messages'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

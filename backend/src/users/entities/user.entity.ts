@@ -40,6 +40,9 @@ export class User {
   @Column('varchar', { length: 512, nullable: true })
   profilePicture: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  publicKey: string | null;
+
   @Column({ type: 'date', nullable: true })
   birthDate: Date | null;
 

@@ -3,6 +3,7 @@ import { Ad } from '../../ads/entities/ad.entity';
 export declare class Message {
     id: string;
     content: string;
+    isEncrypted: boolean;
     imageUrl: string | null;
     messageType: 'text' | 'image';
     isRead: boolean;

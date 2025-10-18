@@ -2,6 +2,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePublicKeyDto } from './dto/update-public-key.dto';
 import { SubmitVerificationDto } from './dto/submit-verification.dto';
 import { ReviewVerificationDto } from './dto/review-verification.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -36,6 +37,12 @@ export declare class UsersController {
         averageRating: number;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    updatePublicKey(req: any, updatePublicKeyDto: UpdatePublicKeyDto): Promise<{
+        message: string;
+    }>;
+    getPublicKey(id: string): Promise<{
+        publicKey: string;
     }>;
     getPublicProfile(id: string): Promise<{
         id: string;

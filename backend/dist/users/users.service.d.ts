@@ -64,4 +64,10 @@ export declare class UsersService {
     reviewVerification(verificationId: string, reviewDto: ReviewVerificationDto, adminId: string): Promise<UserVerification>;
     getPendingVerifications(): Promise<UserVerification[]>;
     getUserVerification(userId: string): Promise<UserVerification | null>;
+    updatePublicKey(userId: string, publicKey: string): Promise<{
+        message: string;
+    }>;
+    getPublicKey(userId: string): Promise<{
+        publicKey: string;
+    }>;
 }

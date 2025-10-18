@@ -38,4 +38,8 @@ __decorate([
     (0, class_validator_1.IsIn)(['text', 'image']),
     __metadata("design:type", String)
 ], CreateMessageDto.prototype, "messageType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateMessageDto.prototype, "isEncrypted", void 0);
 //# sourceMappingURL=create-message.dto.js.map

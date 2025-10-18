@@ -5,11 +5,13 @@ import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
+import { useMessages } from '../../context/MessagesContext';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { unreadCount } = useMessages();
   const navigate = useNavigate();
   const location = useLocation();
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -90,13 +92,18 @@ export const Navbar: React.FC = () => {
                 </Link>
                 <Link 
                   to="/messages" 
-                  className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
+                  className={`relative px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/messages' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                   }`}
                 >
                   Messages
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}
@@ -288,7 +295,7 @@ export const Navbar: React.FC = () => {
                 <Link 
                   to="/messages" 
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all duration-200 ${
+                  className={`relative flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/messages' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
@@ -296,6 +303,11 @@ export const Navbar: React.FC = () => {
                 >
                   <Mail className="h-5 w-5" />
                   Messages
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center ml-auto">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
                 <Link 
                   to="/bookings" 

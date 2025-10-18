@@ -2,11 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { adsService, Ad } from '../services/adsService';
+import { bookingsService } from '../services/bookingsService';
+import { favoritesService } from '../services/favoritesService';
 import { api } from '../services/api';
-import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, User, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Users as UsersIcon, Send } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, User, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ClickableAvatar } from '../components/ui/ClickableAvatar';
+import { ShareAdModal } from '../components/ui/ShareAdModal';
 
 interface Review {
   id: string;
@@ -37,29 +40,50 @@ const AnnonceDetailPage: React.FC = () => {
   const [bookingData, setBookingData] = useState({
     startDate: '',
     endDate: '',
-    guests: 1,
     message: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (id) {
       const fetchAd = async () => {
         try {
           setLoading(true);
-          const [adData, ratingData, reviewsData] = await Promise.all([
+          const promises = [
             adsService.getAdById(id),
             api.get(`/reviews/ad/${id}/rating`),
             api.get(`/reviews/ad/${id}`)
-          ]);
-          setAd(adData);
+          ];
+          
+          const [adData, ratingData, reviewsData] = await Promise.all(promises);
+          
+          const actualAdData = (adData as any).data || adData;
+          setAd(actualAdData);
           setRating({
-            averageRating: ratingData.data.averageRating || 0,
-            totalReviews: ratingData.data.totalReviews || 0
+            averageRating: (ratingData as any).data.averageRating || 0,
+            totalReviews: (ratingData as any).data.totalReviews || 0
           });
-          setReviews(reviewsData.data || []);
-          if (adData.photos && adData.photos.length > 0) {
-            setSelectedImage(adData.photos[0]);
+          setReviews((reviewsData as any).data || []);
+          
+          // Vérifier les favoris seulement si l'utilisateur est connecté
+          if (user) {
+            try {
+              const favoriteData = await favoritesService.isFavorite(id);
+              setIsFavorite(favoriteData.isFavorite || false);
+            } catch (error) {
+              console.error('Erreur lors de la vérification du favori:', error);
+              setIsFavorite(false);
+            }
+          }
+          
+          if (actualAdData.photos && actualAdData.photos.length > 0) {
+            setSelectedImage(actualAdData.photos[0]);
           }
         } catch (err) {
           setError('Impossible de charger les détails de l\'annonce.');
@@ -70,14 +94,179 @@ const AnnonceDetailPage: React.FC = () => {
       };
       fetchAd();
     }
-  }, [id]);
+  }, [id, user]);
+
+  // Calculer le prix total quand les dates changent
+  useEffect(() => {
+    if (bookingData.startDate && bookingData.endDate && ad) {
+      const price = calculateTotalPrice();
+      setTotalPrice(price);
+    } else {
+      setTotalPrice(0);
+    }
+  }, [bookingData.startDate, bookingData.endDate, ad]);
+
+  // Vérifier la disponibilité quand les dates changent
+  useEffect(() => {
+    if (bookingData.startDate && bookingData.endDate && (ad as any)?.allowBooking) {
+      const timeoutId = setTimeout(() => {
+        checkAvailability();
+      }, 500); // Délai pour éviter trop d'appels API
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setIsAvailable(true);
+    }
+  }, [bookingData.startDate, bookingData.endDate, id, (ad as any)?.allowBooking]);
 
   // Vérifier si l'utilisateur peut ajouter un avis
   const canAddReview = () => {
     if (!user || !ad) return false;
-    if (ad.user.id === user.id) return false; // Propriétaire ne peut pas évaluer
+    if (ad.user.id === user.id) return false; // Propriétaire ne peut pas évaluer sa propre annonce
     const userReviewsCount = reviews.filter(review => review.user?.id === user.id).length;
-    return userReviewsCount < 2; // Maximum 2 avis par utilisateur
+    return userReviewsCount === 0; // Un seul avis par utilisateur par annonce
+  };
+
+  // Calculer le prix total
+  const calculateTotalPrice = () => {
+    if (!bookingData.startDate || !bookingData.endDate || !ad) return 0;
+    
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
+    const timeDiff = end.getTime() - start.getTime();
+    
+    switch ((ad as any).paymentMode) {
+      case 'hourly':
+        return Math.ceil(timeDiff / (1000 * 60 * 60)) * parseFloat(ad.price.toString());
+      case 'daily':
+        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) * parseFloat(ad.price.toString());
+      case 'weekly':
+        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)) * parseFloat(ad.price.toString());
+      case 'monthly':
+        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 30)) * parseFloat(ad.price.toString());
+      case 'fixed':
+      default:
+        return parseFloat(ad.price.toString());
+    }
+  };
+
+  // Valider les dates
+  const validateDates = () => {
+    if (!bookingData.startDate || !bookingData.endDate) {
+      showToast('error', 'Veuillez sélectionner les dates');
+      return false;
+    }
+
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
+    
+    if (start >= end) {
+      showToast('error', 'La date de fin doit être après la date de début');
+      return false;
+    }
+    
+    if (start < new Date()) {
+      showToast('error', 'La date de début ne peut pas être dans le passé');
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Vérifier la disponibilité
+  const checkAvailability = async () => {
+    if (!bookingData.startDate || !bookingData.endDate || !id) return;
+    
+    try {
+      setAvailabilityLoading(true);
+      const availability = await bookingsService.checkAvailability(
+        id, 
+        bookingData.startDate, 
+        bookingData.endDate
+      );
+      setIsAvailable(availability.isAvailable);
+      if (!availability.isAvailable) {
+        showToast('error', 'Ces dates ne sont pas disponibles');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification de disponibilité:', error);
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  // Obtenir le libellé du mode de paiement
+  const getPaymentModeLabel = (paymentMode: string) => {
+    switch (paymentMode) {
+      case 'monthly': return 'par mois';
+      case 'daily': return 'par jour';
+      case 'weekly': return 'par semaine';
+      case 'hourly': return 'par heure';
+      case 'fixed': return 'prix fixe';
+      default: return 'par mois';
+    }
+  };
+
+  // Gérer les favoris
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      showToast('error', 'Vous devez être connecté pour ajouter aux favoris');
+      return;
+    }
+    
+    try {
+      setFavoriteLoading(true);
+      if (isFavorite) {
+        await favoritesService.removeFromFavorites(id!);
+        setIsFavorite(false);
+        showToast('success', 'Retiré des favoris');
+      } else {
+        await favoritesService.addToFavorites(id!);
+        setIsFavorite(true);
+        showToast('success', 'Ajouté aux favoris');
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Erreur lors de la gestion des favoris';
+      showToast('error', errorMessage);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  // Ouvrir la messagerie
+  const handleOpenMessage = async () => {
+    if (!user) {
+      showToast('error', 'Vous devez être connecté pour envoyer un message');
+      return;
+    }
+    if (ad?.user.id === user.id) {
+      showToast('error', 'Vous ne pouvez pas vous envoyer un message');
+      return;
+    }
+    
+    try {
+      // Créer ou récupérer la conversation avec le propriétaire
+      const response = await api.post('/messages/conversation', {
+        receiverId: ad?.user.id,
+        adId: id
+      });
+      
+      // Rediriger vers la page de messagerie avec la conversation créée
+      navigate(`/messages?conversationId=${response.data.conversationId}`);
+    } catch (error: any) {
+      console.error('Erreur lors de la création de la conversation:', error);
+      // Fallback: rediriger vers la page de messagerie avec les paramètres
+      navigate(`/messages?adId=${id}&userId=${ad?.user.id}`);
+    }
+  };
+
+  // Appeler le propriétaire
+  const handleCallOwner = () => {
+    if (!(ad?.user as any).phone) {
+      showToast('error', 'Numéro de téléphone non disponible');
+      return;
+    }
+    window.open(`tel:${(ad?.user as any)?.phone || ''}`, '_self');
   };
 
   const handleSubmitReview = async () => {
@@ -118,21 +307,24 @@ const AnnonceDetailPage: React.FC = () => {
       return;
     }
     
-    if (!bookingData.startDate || !bookingData.endDate) {
-      showToast('error', 'Veuillez sélectionner les dates');
+    if (!validateDates()) return;
+    
+    if (!isAvailable) {
+      showToast('error', 'Ces dates ne sont pas disponibles');
       return;
     }
     
     try {
       setBookingLoading(true);
-      await api.post('/bookings', {
-        adId: id,
+      await bookingsService.createBooking({
+        adId: id!,
         startDate: bookingData.startDate,
         endDate: bookingData.endDate,
         message: bookingData.message
       });
       showToast('success', 'Demande de réservation envoyée !');
-      setBookingData({ startDate: '', endDate: '', guests: 1, message: '' });
+      setBookingData({ startDate: '', endDate: '', message: '' });
+      setTotalPrice(0);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de la réservation';
       showToast('error', errorMessage);
@@ -152,6 +344,8 @@ const AnnonceDetailPage: React.FC = () => {
   if (!ad) {
     return <div className="text-center mt-10">Annonce non trouvée.</div>;
   }
+
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-white min-h-screen">
@@ -173,8 +367,14 @@ const AnnonceDetailPage: React.FC = () => {
             >
               <ArrowLeft className="h-5 w-5 text-white" />
             </button>
-            <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
-              <Heart className="h-5 w-5 text-white" />
+            <button 
+              onClick={handleFavoriteToggle}
+              disabled={favoriteLoading}
+              className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all"
+            >
+              <Heart className={`h-5 w-5 transition-colors ${
+                isFavorite ? 'fill-red-500 text-red-500' : 'text-white'
+              }`} />
             </button>
           </div>
           
@@ -273,9 +473,22 @@ const AnnonceDetailPage: React.FC = () => {
             <p className="font-semibold text-gray-900">{ad.user?.firstName || 'Utilisateur'} {ad.user?.lastName || ''}</p>
             <p className="text-sm text-gray-500">Propriétaire</p>
           </div>
-          <button className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <MessageCircle className="h-5 w-5 text-white" />
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleOpenMessage}
+              className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
+            >
+              <MessageCircle className="h-5 w-5 text-white" />
+            </button>
+            {(ad.user as any)?.phone && (
+              <button 
+                onClick={handleCallOwner}
+                className="w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center transition-colors"
+              >
+                <Phone className="h-5 w-5 text-white" />
+              </button>
+            )}
+          </div>
         </div>
 
           {/* Section Avis */}
@@ -294,7 +507,7 @@ const AnnonceDetailPage: React.FC = () => {
               <div className="text-sm text-gray-500">
                 {!user ? 'Connectez-vous pour laisser un avis' : 
                  ad?.user.id === user.id ? 'Vous ne pouvez pas évaluer votre propre annonce' :
-                 'Vous avez atteint la limite de 2 avis par annonce'}
+                 'Vous avez déjà laissé un avis pour cette annonce'}
               </div>
             )}
           </div>
@@ -411,20 +624,122 @@ const AnnonceDetailPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Section réservation mobile */}
+        <div className="bg-white rounded-t-3xl p-6 mt-6">
+          {(ad as any).allowBooking ? (
+            <>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Réserver ce logement</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <Calendar className="h-4 w-4 inline mr-1" />
+                      Arrivée
+                    </label>
+                    <input
+                      type="date"
+                      min={today}
+                      value={bookingData.startDate}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <Calendar className="h-4 w-4 inline mr-1" />
+                      Départ
+                    </label>
+                    <input
+                      type="date"
+                      min={bookingData.startDate || today}
+                      value={bookingData.endDate}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message (optionnel)
+                  </label>
+                  <textarea
+                    value={bookingData.message}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="Présentez-vous au propriétaire..."
+                    className="w-full p-2 border border-gray-300 rounded-lg resize-none h-16 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                
+                {/* Indicateur de disponibilité */}
+                {bookingData.startDate && bookingData.endDate && (
+                  <div className="mt-4">
+                    {availabilityLoading ? (
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                        <span className="text-sm">Vérification de la disponibilité...</span>
+                      </div>
+                    ) : (
+                      <div className={`flex items-center gap-2 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                        <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <span className="text-sm font-medium">
+                          {isAvailable ? 'Disponible' : 'Non disponible'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Réservation non disponible</h3>
+              <p className="text-gray-600 text-sm mb-4">Cette annonce n'accepte pas les réservations en ligne.</p>
+              <p className="text-gray-600 text-sm">Contactez directement le propriétaire pour plus d'informations.</p>
+            </div>
+          )}
+        </div>
       </div>
 
         {/* Footer fixe avec prix et bouton */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {parseInt(ad.price.toString()).toLocaleString()} FCFA
-              </p>
-              <p className="text-sm text-gray-500">Par mois</p>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {parseInt(ad.price.toString()).toLocaleString()} FCFA
+                </p>
+                <p className="text-sm text-gray-500">{getPaymentModeLabel((ad as any).paymentMode)}</p>
+                {totalPrice > 0 && (
+                  <p className="text-lg font-semibold text-blue-600 mt-1">
+                    Total: {totalPrice.toLocaleString()} FCFA
+                  </p>
+                )}
+              </div>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors">
-              Réserver
-            </button>
+            {(ad as any).allowBooking ? (
+              <button 
+                onClick={handleBooking}
+                disabled={bookingLoading || !bookingData.startDate || !bookingData.endDate || !isAvailable || availabilityLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {bookingLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  'Réserver'
+                )}
+              </button>
+            ) : (
+              <button 
+                className="bg-gray-400 text-white px-8 py-3 rounded-xl font-semibold cursor-not-allowed flex items-center justify-center gap-2"
+                disabled
+              >
+                <MessageCircle className="h-5 w-5" />
+                Contacter le propriétaire
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -443,10 +758,21 @@ const AnnonceDetailPage: React.FC = () => {
                 <span className="font-medium">Retour</span>
               </button>
               <div className="flex items-center gap-2">
-                <button className="p-3 hover:bg-gray-100 rounded-full transition-colors group">
-                  <Heart className="h-5 w-5 text-gray-600 group-hover:text-red-500 transition-colors" />
+                <button 
+                  onClick={handleFavoriteToggle}
+                  disabled={favoriteLoading}
+                  className="p-3 hover:bg-gray-100 rounded-full transition-colors group"
+                >
+                  <Heart className={`h-5 w-5 transition-colors ${
+                    isFavorite 
+                      ? 'fill-red-500 text-red-500' 
+                      : 'text-gray-600 group-hover:text-red-500'
+                  }`} />
                 </button>
-                <button className="p-3 hover:bg-gray-100 rounded-full transition-colors">
+                <button 
+                  onClick={() => setShowShareModal(true)}
+                  className="p-3 hover:bg-gray-100 rounded-full transition-colors"
+                >
                   <Share2 className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
@@ -551,9 +877,9 @@ const AnnonceDetailPage: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-gray-900">
-                      {parseInt(ad.price.toString()).toLocaleString()}
+                      {parseInt(ad.price.toString()).toLocaleString()} FCFA
                     </div>
-                    <div className="text-gray-600">FCFA / mois</div>
+                    <div className="text-gray-600">{getPaymentModeLabel((ad as any).paymentMode)}</div>
                   </div>
                 </div>
 
@@ -588,7 +914,7 @@ const AnnonceDetailPage: React.FC = () => {
                   
                   {/* Informations hôte */}
                   <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Hébergé par</h3>
+                    {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Hébergé par</h3> */}
                     <div className="flex items-center gap-4">
                       <ClickableAvatar
                         avatarUrl={ad.user?.profilePicture}
@@ -599,12 +925,26 @@ const AnnonceDetailPage: React.FC = () => {
                         <h4 className="font-semibold text-gray-900">
                           {ad.user?.firstName || 'Utilisateur'} {ad.user?.lastName || ''}
                         </h4>
-                        <p className="text-gray-600 text-sm">Hôte depuis 2020</p>
+                        {/* <p className="text-gray-600 text-sm">Hôte depuis 2020</p> */}
                       </div>
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4" />
-                        Contacter
-                      </button>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={handleOpenMessage}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          Message
+                        </button>
+                        {(ad.user as any)?.phone && (
+                          <button 
+                            onClick={handleCallOwner}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                          >
+                            <Phone className="h-4 w-4" />
+                            Appeler
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -613,8 +953,8 @@ const AnnonceDetailPage: React.FC = () => {
               {/* Avis */}
               <div className="bg-white rounded-3xl p-8 shadow-lg">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900">Avis des voyageurs</h2>
-                  {canAddReview() && (
+                  <h2 className="text-2xl font-bold text-gray-900">Avis</h2>
+                  {canAddReview() ? (
                     <button 
                       onClick={() => setShowAddReview(!showAddReview)}
                       className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -622,6 +962,12 @@ const AnnonceDetailPage: React.FC = () => {
                       <Plus className="h-5 w-5" />
                       Ajouter un avis
                     </button>
+                  ) : (
+                    <div className="text-sm text-gray-500">
+                      {!user ? 'Connectez-vous pour laisser un avis' : 
+                       ad?.user.id === user.id ? 'Vous ne pouvez pas évaluer votre propre annonce' :
+                       'Vous avez déjà laissé un avis pour cette annonce'}
+                    </div>
                   )}
                 </div>
                 
@@ -732,85 +1078,108 @@ const AnnonceDetailPage: React.FC = () => {
                   <div className="text-3xl font-bold text-gray-900 mb-2">
                     {parseInt(ad.price.toString()).toLocaleString()} FCFA
                   </div>
-                  <div className="text-gray-600">par mois</div>
+                  <div className="text-gray-600">{getPaymentModeLabel((ad as any)?.paymentMode || 'monthly')}</div>
+                  {totalPrice > 0 && (
+                    <div className="text-xl font-semibold text-blue-600 mt-2">
+                      Total: {totalPrice.toLocaleString()} FCFA
+                    </div>
+                  )}
                 </div>
 
-                {/* Formulaire de réservation */}
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+                {/* Section réservation */}
+                {(ad as any).allowBooking ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Calendar className="h-4 w-4 inline mr-1" />
+                          Arrivée
+                        </label>
+                        <input
+                          type="date"
+                          min={today}
+                          value={bookingData.startDate}
+                          onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Calendar className="h-4 w-4 inline mr-1" />
+                          Départ
+                        </label>
+                        <input
+                          type="date"
+                          min={bookingData.startDate || today}
+                          value={bookingData.endDate}
+                          onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Calendar className="h-4 w-4 inline mr-1" />
-                        Arrivée
+                        Message (optionnel)
                       </label>
-                      <input
-                        type="date"
-                        value={bookingData.startDate}
-                        onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      <textarea
+                        value={bookingData.message}
+                        onChange={(e) => setBookingData(prev => ({ ...prev, message: e.target.value }))}
+                        placeholder="Présentez-vous au propriétaire..."
+                        className="w-full p-3 border border-gray-300 rounded-xl resize-none h-24 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Calendar className="h-4 w-4 inline mr-1" />
-                        Départ
-                      </label>
-                      <input
-                        type="date"
-                        value={bookingData.endDate}
-                        onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <UsersIcon className="h-4 w-4 inline mr-1" />
-                      Nombre d'invités
-                    </label>
-                    <select
-                      value={bookingData.guests}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, guests: parseInt(e.target.value) }))}
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {[1,2,3,4,5,6,7,8].map(num => (
-                        <option key={num} value={num}>{num} invité{num > 1 ? 's' : ''}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Message (optionnel)
-                    </label>
-                    <textarea
-                      value={bookingData.message}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, message: e.target.value }))}
-                      placeholder="Présentez-vous au propriétaire..."
-                      className="w-full p-3 border border-gray-300 rounded-xl resize-none h-24 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  
-                  <button 
-                    onClick={handleBooking}
-                    disabled={bookingLoading || !bookingData.startDate || !bookingData.endDate}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    {bookingLoading ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    ) : (
-                      <>
-                        <Send className="h-5 w-5" />
-                        Demander une réservation
-                      </>
+                    
+                    {/* Indicateur de disponibilité */}
+                    {bookingData.startDate && bookingData.endDate && (
+                      <div className="mb-4">
+                        {availabilityLoading ? (
+                          <div className="flex items-center gap-2 text-gray-500 justify-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                            <span className="text-sm">Vérification de la disponibilité...</span>
+                          </div>
+                        ) : (
+                          <div className={`flex items-center gap-2 justify-center ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            <span className="text-sm font-medium">
+                              {isAvailable ? 'Disponible pour ces dates' : 'Non disponible pour ces dates'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </button>
-                  
-                  <div className="text-center text-sm text-gray-500">
-                    Vous ne serez pas débité pour le moment
+                    
+                    <button 
+                      onClick={handleBooking}
+                      disabled={bookingLoading || !bookingData.startDate || !bookingData.endDate || !isAvailable || availabilityLoading}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      {bookingLoading ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      ) : (
+                        <>
+                          <Send className="h-5 w-5" />
+                          Demander une réservation
+                        </>
+                      )}
+                    </button>
+                    
+                    <div className="text-center text-sm text-gray-500">
+                      Vous ne serez pas débité pour le moment
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <AlertCircle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">Réservation non disponible</h3>
+                    <p className="text-gray-600 mb-4">Cette annonce n'accepte pas les réservations en ligne.</p>
+                    <p className="text-gray-600 text-sm mb-6">Contactez directement le propriétaire pour plus d'informations.</p>
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 mx-auto">
+                      <MessageCircle className="h-5 w-5" />
+                      Contacter le propriétaire
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -818,6 +1187,14 @@ const AnnonceDetailPage: React.FC = () => {
 
 
       </div>
+      
+      {/* Modal de partage */}
+      <ShareAdModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        adUrl={window.location.href}
+        adTitle={ad?.title || ''}
+      />
     </div>
   );
 };

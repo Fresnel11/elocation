@@ -16,4 +16,11 @@ export declare class MessagesController {
     getUnreadCount(req: any): Promise<{
         unreadCount: number;
     }>;
+    createOrGetConversation(req: any, body: {
+        receiverId: string;
+        adId?: string;
+    }): Promise<{
+        conversationId: string;
+        conversation: import("./entities/conversation.entity").Conversation;
+    }>;
 }

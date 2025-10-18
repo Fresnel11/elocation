@@ -382,6 +382,20 @@ let UsersService = class UsersService {
             where: { userId }
         });
     }
+    async updatePublicKey(userId, publicKey) {
+        await this.userRepository.update(userId, { publicKey });
+        return { message: 'Clé publique mise à jour avec succès' };
+    }
+    async getPublicKey(userId) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            select: ['id', 'publicKey']
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Utilisateur non trouvé');
+        }
+        return { publicKey: user.publicKey };
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
