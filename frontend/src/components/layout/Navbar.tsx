@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Mail, MapPin, Calendar, Heart, Download, BarChart3, Info, Phone, HelpCircle, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Calendar, Mail, Heart, Info, Phone, HelpCircle, LogIn, UserPlus } from 'lucide-react';
 import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
                 >
                   Demandes
                 </Link>
-                <Link 
+                {/* <Link 
                   to="/messages" 
                   className={`relative px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
                     location.pathname === '/messages' 
@@ -104,7 +104,7 @@ export const Navbar: React.FC = () => {
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
-                </Link>
+                </Link> */}
               </>
             )}
             {user && (

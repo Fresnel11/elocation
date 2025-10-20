@@ -5,11 +5,13 @@ import { adsService, Ad } from '../services/adsService';
 import { bookingsService } from '../services/bookingsService';
 import { favoritesService } from '../services/favoritesService';
 import { api } from '../services/api';
-import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, User, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle, Play } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ClickableAvatar } from '../components/ui/ClickableAvatar';
 import { ShareAdModal } from '../components/ui/ShareAdModal';
+
+const API_BASE_URL = 'http://localhost:3000';
 
 interface Review {
   id: string;
@@ -32,7 +34,7 @@ const AnnonceDetailPage: React.FC = () => {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<{url: string; type: 'image' | 'video'} | null>(null);
   const [rating, setRating] = useState({ averageRating: 0, totalReviews: 0 });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showAddReview, setShowAddReview] = useState(false);
@@ -64,7 +66,14 @@ const AnnonceDetailPage: React.FC = () => {
           const [adData, ratingData, reviewsData] = await Promise.all(promises);
           
           const actualAdData = (adData as any).data || adData;
-          setAd(actualAdData);
+          const adWithVideos = {
+            ...actualAdData,
+            videos: actualAdData?.videos || []
+          };
+          console.log('Données de l\'annonce reçues:', adWithVideos);
+          console.log('Photos disponibles:', adWithVideos.photos);
+          console.log('Vidéos disponibles:', adWithVideos.videos);
+          setAd(adWithVideos);
           setRating({
             averageRating: (ratingData as any).data.averageRating || 0,
             totalReviews: (ratingData as any).data.totalReviews || 0
@@ -82,8 +91,18 @@ const AnnonceDetailPage: React.FC = () => {
             }
           }
           
+          const normalizePath = (path: string) => path.replace(/^\/+/, '');
+          const buildMediaUrl = (path: string) => path.startsWith('http') ? path : `${API_BASE_URL}/${normalizePath(path)}`;
+
           if (actualAdData.photos && actualAdData.photos.length > 0) {
-            setSelectedImage(actualAdData.photos[0]);
+            const photoUrl = buildMediaUrl(actualAdData.photos[0]);
+            setSelectedMedia({url: photoUrl, type: 'image'});
+          } else if (actualAdData.videos && actualAdData.videos.length > 0) {
+            const videoUrl = buildMediaUrl(actualAdData.videos[0]);
+            setSelectedMedia({url: videoUrl, type: 'video'});
+          } else {
+            console.log('Aucun média disponible dans l\'annonce');
+            setSelectedMedia({url: 'https://via.placeholder.com/600x400', type: 'image'});
           }
         } catch (err) {
           setError('Impossible de charger les détails de l\'annonce.');
@@ -272,8 +291,6 @@ const AnnonceDetailPage: React.FC = () => {
   const handleSubmitReview = async () => {
     if (!newReview.rating || !newReview.comment.trim()) return;
     
-
-    
     try {
       await api.post(`/reviews`, {
         adId: id,
@@ -351,13 +368,37 @@ const AnnonceDetailPage: React.FC = () => {
     <div className="bg-white min-h-screen">
       {/* Mobile Layout */}
       <div className="lg:hidden">
+      {(() => {
+  console.log('État actuel de selectedMedia:', selectedMedia);
+  console.log('Médias disponibles dans l\'annonce:', {
+    photos: ad?.photos,
+    videos: ad?.videos
+  });
+  return null;
+})()}
         {/* Image principale avec overlay */}
         <div className="relative h-96">
-          <img 
-            src={selectedImage || ad.photos?.[0] || 'https://via.placeholder.com/600x400'} 
-            alt={ad.title} 
-            className="w-full h-full object-cover"
-          />
+          {selectedMedia ? (
+            selectedMedia.type === 'image' ? (
+              <img 
+                src={selectedMedia.url} 
+                alt={ad.title} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <video
+                src={selectedMedia.url}
+                controls
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : (
+            <img 
+              src={'https://via.placeholder.com/600x400'} 
+              alt={ad.title} 
+              className="w-full h-full object-cover"
+            />
+          )}
           
           {/* Header avec boutons */}
           <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent">
@@ -382,17 +423,40 @@ const AnnonceDetailPage: React.FC = () => {
           {ad.photos && ad.photos.length > 1 && (
             <div className="absolute bottom-4 left-4 right-4">
               <div className="flex space-x-2 overflow-x-auto">
-                {ad.photos.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image}
-                    alt={`Miniature ${index + 1}`}
-                    className={`w-16 h-12 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 ${
-                      selectedImage === image ? 'border-white' : 'border-white/30'
-                    }`}
-                    onClick={() => setSelectedImage(image)}
-                  />
-                ))}
+                {ad.photos?.map((url, index) => {
+                  const mediaUrl = url.startsWith('http') ? url : `${API_BASE_URL}/${url.replace(/^\/+/, '')}`;
+                  return (
+                    <img
+                      key={`photo-${index}`}
+                      src={mediaUrl}
+                      alt={`Miniature ${index + 1}`}
+                      className={`w-16 h-12 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 ${
+                        selectedMedia?.url === mediaUrl ? 'border-white' : 'border-white/30'
+                      }`}
+                      onClick={() => setSelectedMedia({url: mediaUrl, type: 'image'})}
+                    />
+                  );
+                })}
+                {ad.videos?.map((url, index) => {
+                  const mediaUrl = url.startsWith('http') ? url : `${API_BASE_URL}/${url.replace(/^\/+/, '')}`;
+                  return (
+                    <div
+                      key={`video-${index}`}
+                      className={`w-16 h-12 relative rounded-lg cursor-pointer border-2 flex-shrink-0 ${
+                        selectedMedia?.url === mediaUrl ? 'border-white' : 'border-white/30'
+                      }`}
+                      onClick={() => setSelectedMedia({url: mediaUrl, type: 'video'})}
+                    >
+                      <video
+                        src={mediaUrl}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <Play className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -791,16 +855,17 @@ const AnnonceDetailPage: React.FC = () => {
                   {/* Image principale */}
                   <div className="col-span-3 row-span-2 relative group">
                     <img 
-                      src={selectedImage || ad.photos[0]} 
+                      src={selectedMedia?.url || (ad.photos[0].startsWith('http') ? ad.photos[0] : `${API_BASE_URL}/${ad.photos[0].replace(/^\/+/, '')}`)} 
                       alt={ad.title} 
                       className="w-full h-full object-cover rounded-2xl"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-2xl" />
                     <button
                       onClick={() => {
-                        const currentIndex = ad.photos.indexOf(selectedImage || ad.photos[0]);
+                        const currentIndex = ad.photos.indexOf(selectedMedia?.url || ad.photos[0]);
                         const prevIndex = currentIndex === 0 ? ad.photos.length - 1 : currentIndex - 1;
-                        setSelectedImage(ad.photos[prevIndex]);
+                        const mediaUrl = ad.photos[prevIndex].startsWith('http') ? ad.photos[prevIndex] : `${API_BASE_URL}/${ad.photos[prevIndex].replace(/^\/+/, '')}`;
+                        setSelectedMedia({url: mediaUrl, type: 'image'});
                       }}
                       className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg opacity-0 group-hover:opacity-100"
                     >
@@ -808,9 +873,10 @@ const AnnonceDetailPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => {
-                        const currentIndex = ad.photos.indexOf(selectedImage || ad.photos[0]);
+                        const currentIndex = ad.photos.indexOf(selectedMedia?.url || ad.photos[0]);
                         const nextIndex = currentIndex === ad.photos.length - 1 ? 0 : currentIndex + 1;
-                        setSelectedImage(ad.photos[nextIndex]);
+                        const mediaUrl = ad.photos[nextIndex].startsWith('http') ? ad.photos[nextIndex] : `${API_BASE_URL}/${ad.photos[nextIndex].replace(/^\/+/, '')}`;
+                        setSelectedMedia({url: mediaUrl, type: 'image'});
                       }}
                       className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg opacity-0 group-hover:opacity-100"
                     >
@@ -820,27 +886,30 @@ const AnnonceDetailPage: React.FC = () => {
                   
                   {/* Miniatures */}
                   <div className="col-span-1 space-y-2">
-                    {ad.photos.slice(1, 5).map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImage(image)}
-                        className={`w-full h-[147px] rounded-xl overflow-hidden transition-all hover:scale-105 ${
-                          selectedImage === image ? 'ring-2 ring-blue-500' : ''
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={`Photo ${index + 2}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
+                    {ad.photos.slice(1, 5).map((image, index) => {
+                      const mediaUrl = image.startsWith('http') ? image : `${API_BASE_URL}/${image.replace(/^\/+/, '')}`;
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedMedia({url: mediaUrl, type: 'image'})}
+                          className={`w-full h-[147px] rounded-xl overflow-hidden transition-all hover:scale-105 ${
+                            selectedMedia?.url === mediaUrl ? 'ring-2 ring-blue-500' : ''
+                          }`}
+                        >
+                          <img
+                            src={mediaUrl}
+                            alt={`Photo ${index + 2}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
                 <div className="h-[600px]">
                   <img 
-                    src={ad.photos?.[0] || 'https://via.placeholder.com/600x400'} 
+                    src={ad.photos?.[0] ? (ad.photos[0].startsWith('http') ? ad.photos[0] : `${API_BASE_URL}/${ad.photos[0].replace(/^\/+/, '')}`) : 'https://via.placeholder.com/600x400'} 
                     alt={ad.title} 
                     className="w-full h-full object-cover rounded-2xl"
                   />
@@ -914,7 +983,6 @@ const AnnonceDetailPage: React.FC = () => {
                   
                   {/* Informations hôte */}
                   <div className="border-t border-gray-200 pt-6">
-                    {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Hébergé par</h3> */}
                     <div className="flex items-center gap-4">
                       <ClickableAvatar
                         avatarUrl={ad.user?.profilePicture}
@@ -925,7 +993,6 @@ const AnnonceDetailPage: React.FC = () => {
                         <h4 className="font-semibold text-gray-900">
                           {ad.user?.firstName || 'Utilisateur'} {ad.user?.lastName || ''}
                         </h4>
-                        {/* <p className="text-gray-600 text-sm">Hôte depuis 2020</p> */}
                       </div>
                       <div className="flex gap-3">
                         <button 
