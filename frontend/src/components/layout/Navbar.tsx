@@ -5,12 +5,14 @@ import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
+// TODO: Messagerie - Import temporaire pour éviter les erreurs
 import { useMessages } from '../../context/MessagesContext';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  // TODO: Messagerie - Hook temporaire (retourne toujours 0)
   const { unreadCount } = useMessages();
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,6 +92,7 @@ export const Navbar: React.FC = () => {
                 >
                   Demandes
                 </Link>
+                {/* TODO: Messagerie - À implémenter plus tard */}
                 {/* <Link 
                   to="/messages" 
                   className={`relative px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ${
@@ -292,7 +295,8 @@ export const Navbar: React.FC = () => {
                   <MessageSquare className="h-5 w-5" />
                   Demandes
                 </Link>
-                <Link 
+                {/* TODO: Messagerie - À implémenter plus tard */}
+                {/* <Link 
                   to="/messages" 
                   onClick={() => setIsMenuOpen(false)}
                   className={`relative flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all duration-200 ${
@@ -308,7 +312,7 @@ export const Navbar: React.FC = () => {
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
-                </Link>
+                </Link> */}
                 <Link 
                   to="/bookings" 
                   onClick={() => setIsMenuOpen(false)}

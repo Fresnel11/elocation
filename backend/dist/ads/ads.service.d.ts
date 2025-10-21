@@ -38,4 +38,5 @@ export declare class AdsService {
     uploadPhotos(id: string, photos: string[], user: User): Promise<Ad>;
     private checkSearchAlerts;
     private invalidateAdsCache;
+    debugCount(): Promise<number>;
 }

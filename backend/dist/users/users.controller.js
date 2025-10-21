@@ -47,6 +47,12 @@ let UsersController = class UsersController {
         console.log('============================');
         return this.usersService.updateProfile(req.user.id, updateProfileDto);
     }
+    async exportUserData(req) {
+        console.log('Route export-data appelée pour l\'utilisateur:', req.user.id);
+        const data = await this.usersService.exportUserData(req.user.id);
+        console.log('Données exportées:', Object.keys(data));
+        return data;
+    }
     async getProfile(req) {
         const user = await this.usersService.findOne(req.user.id);
         return Object.assign(Object.assign({}, user.profile), { phone: user.phone });
@@ -198,6 +204,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, update_profile_dto_1.UpdateProfileDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Get)('export-data'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Exporter toutes les données de l\'utilisateur' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "exportUserData", null);
 __decorate([
     (0, common_1.Get)('profile'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

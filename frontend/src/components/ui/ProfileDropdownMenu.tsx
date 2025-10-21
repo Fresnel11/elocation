@@ -27,7 +27,38 @@ export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { showToast } = useToast();
 
+  const handleExportData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/users/export-data', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mes-donnees-elocation-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        showToast('success', 'Données exportées avec succès');
+      } else {
+        showToast('error', 'Erreur lors de l\'exportation des données');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'exportation:', error);
+      showToast('error', 'Erreur lors de l\'exportation des données');
+    }
+    onClose();
+  };
 
   // useEffect supprimé pour éviter la fermeture automatique du menu
 
@@ -35,9 +66,8 @@ export const ProfileDropdownMenu: React.FC<ProfileDropdownMenuProps> = ({
 
   const ownerMenuItems = [
     { icon: Settings, label: 'Paramètres du compte', onClick: () => navigate('/settings') },
-    { icon: Shield, label: 'Confidentialité', onClick: () => navigate('/settings') },
     { icon: BarChart3, label: 'Statistiques du profil', onClick: () => navigate('/analytics') },
-    { icon: Download, label: 'Exporter les données', onClick: () => alert('Fonctionnalité bientôt disponible') },
+    { icon: Download, label: 'Exporter les données', onClick: () => handleExportData() },
     { icon: LogOut, label: 'Se déconnecter', onClick: () => { logout(); navigate('/'); }, danger: true }
   ];
 

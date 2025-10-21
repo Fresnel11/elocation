@@ -32,6 +32,10 @@ let AdsController = class AdsController {
     create(createAdDto, req) {
         return this.adsService.create(createAdDto, req.user);
     }
+    async debugCount() {
+        const total = await this.adsService.debugCount();
+        return { total, message: `${total} annonces en base de données` };
+    }
     findAll(searchAdsDto, userCity, req) {
         var _a;
         const userId = (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id;
@@ -110,6 +114,16 @@ __decorate([
     __metadata("design:paramtypes", [create_ad_dto_1.CreateAdDto, Object]),
     __metadata("design:returntype", void 0)
 ], AdsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('debug/count'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Debug - Compter les annonces',
+        description: 'Endpoint de debug pour vérifier le nombre d\'annonces en base.'
+    }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdsController.prototype, "debugCount", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({

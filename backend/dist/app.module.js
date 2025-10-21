@@ -49,6 +49,7 @@ const analytics_module_1 = require("./analytics/analytics.module");
 const contact_module_1 = require("./contact/contact.module");
 const recommendations_module_1 = require("./recommendations/recommendations.module");
 const ab_testing_module_1 = require("./ab-testing/ab-testing.module");
+const moneroo_module_1 = require("./moneroo/moneroo.module");
 let AppModule = class AppModule {
     constructor(jwtService, messagesService, webSocketServerService, notificationsGateway) {
         this.jwtService = jwtService;
@@ -115,6 +116,7 @@ exports.AppModule = AppModule = __decorate([
             contact_module_1.ContactModule,
             recommendations_module_1.RecommendationsModule,
             ab_testing_module_1.ABTestingModule,
+            moneroo_module_1.MonerooModule,
         ],
         providers: [jwt_1.JwtService, websocket_server_1.WebSocketServerService, notifications_gateway_1.NotificationsGateway],
     }),

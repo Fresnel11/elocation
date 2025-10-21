@@ -396,6 +396,40 @@ let UsersService = class UsersService {
         }
         return { publicKey: user.publicKey };
     }
+    async exportUserData(userId) {
+        var _a;
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ['ads', 'profile']
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Utilisateur non trouvé');
+        }
+        const exportData = {
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                phone: user.phone,
+                whatsappNumber: user.whatsappNumber,
+                createdAt: user.createdAt,
+                lastLogin: user.lastLogin,
+                isVerified: user.isVerified
+            },
+            profile: user.profile,
+            ads: ((_a = user.ads) === null || _a === void 0 ? void 0 : _a.map(ad => ({
+                id: ad.id,
+                title: ad.title,
+                description: ad.description,
+                price: ad.price,
+                location: ad.location,
+                createdAt: ad.createdAt
+            }))) || [],
+            exportedAt: new Date().toISOString()
+        };
+        return exportData;
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

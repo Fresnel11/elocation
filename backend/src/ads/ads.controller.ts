@@ -86,6 +86,16 @@ export class AdsController {
     return this.adsService.create(createAdDto, req.user);
   }
 
+  @Get('debug/count')
+  @ApiOperation({ 
+    summary: 'Debug - Compter les annonces',
+    description: 'Endpoint de debug pour vérifier le nombre d\'annonces en base.'
+  })
+  async debugCount() {
+    const total = await this.adsService.debugCount();
+    return { total, message: `${total} annonces en base de données` };
+  }
+
   @Get()
   @ApiOperation({ 
     summary: 'Récupérer toutes les annonces avec filtres',

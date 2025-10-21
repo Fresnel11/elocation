@@ -274,21 +274,19 @@ Description améliorée (max 100 mots):`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (files.length === 0) {
+      error('Erreur', 'Au moins une image ou vidéo est requise pour publier une annonce');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      const adData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 1,
-        area: parseInt(formData.area) || 0,
-        subCategoryId: formData.subCategoryId || undefined,
-        photos: uploadedMedia.photos,
-        video: uploadedMedia.video
-      };
-
       // Upload des fichiers d'abord
+      let photos: string[] = [];
+      let video: string | undefined;
+      
       if (files.length > 0) {
         const formDataFiles = new FormData();
         files.forEach(file => formDataFiles.append('files', file));
@@ -297,14 +295,27 @@ Description améliorée (max 100 mots):`;
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         
-        adData.photos = uploadResponse.data.photos || [];
-        adData.video = uploadResponse.data.video;
+        photos = uploadResponse.data.photos || [];
+        video = uploadResponse.data.video;
       }
+      
+      // Créer l'annonce avec les URLs des fichiers uploadés
+      const adData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        bedrooms: parseInt(formData.bedrooms) || 0,
+        bathrooms: parseInt(formData.bathrooms) || 1,
+        area: parseInt(formData.area) || 0,
+        subCategoryId: formData.subCategoryId || undefined,
+        photos,
+        video
+      };
       
       await api.post('/ads', adData);
       success('Annonce publiée !', 'Votre annonce a été publiée avec succès.');
       navigate('/ads');
     } catch (err: any) {
+      console.error('Erreur publication:', err);
       error('Erreur', err.response?.data?.message || 'Une erreur est survenue lors de la publication.');
     } finally {
       setLoading(false);
@@ -365,12 +376,15 @@ Description améliorée (max 100 mots):`;
               <button
                 type="button"
                 onClick={enhanceDescription}
-                disabled={(formData.description || '').toString().trim().length < 10 || enhancing}
+                disabled={!/^[A-ZÀ-ÿ].*[.!?]/.test((formData.description || '').toString().trim()) || enhancing}
                 className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {enhancing ? '✨ Amélioration...' : '✨ Améliorer avec IA'}
               </button>
             </div>
+            <p className="text-xs text-blue-600 mb-2">
+              💡 Pour utiliser l'amélioration IA, écrivez d'abord une phrase complète qui commence par une majuscule et se termine par un point.
+            </p>
             <textarea
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}

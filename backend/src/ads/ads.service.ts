@@ -91,7 +91,10 @@ export class AdsService {
       .leftJoinAndSelect('ad.user', 'user')
       .leftJoinAndSelect('ad.category', 'category')
       .leftJoinAndSelect('ad.subCategory', 'subCategory')
-      .where('ad.isActive = :isActive', { isActive: true });
+      .where('ad.isActive = :isActive AND ad.isAvailable = :isAvailable', { 
+        isActive: true, 
+        isAvailable: true 
+      });
 
     if (search) {
       queryBuilder.andWhere(
@@ -160,6 +163,15 @@ export class AdsService {
     queryBuilder.skip(skip).take(limit);
 
     const [ads, total] = await queryBuilder.getManyAndCount();
+
+    console.log(`[AdsService] Récupération: ${ads.length} annonces sur ${total} total`);
+    console.log(`[AdsService] Première annonce:`, ads[0] ? {
+      id: ads[0].id,
+      title: ads[0].title,
+      photos: ads[0].photos,
+      isActive: ads[0].isActive,
+      isAvailable: ads[0].isAvailable
+    } : 'Aucune annonce');
 
     const result = {
       ads,
@@ -309,5 +321,11 @@ export class AdsService {
     // Dans une vraie implémentation Redis, on utiliserait SCAN avec pattern
     // Ici on clear tout le cache pour simplifier
     // await this.cacheService.clear();
+  }
+
+  async debugCount(): Promise<number> {
+    const count = await this.adRepository.count();
+    console.log(`[AdsService] Total annonces en base: ${count}`);
+    return count;
   }
 }

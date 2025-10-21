@@ -42,6 +42,18 @@ let BookingsController = class BookingsController {
     update(id, updateBookingDto, req) {
         return this.bookingsService.update(id, updateBookingDto, req.user);
     }
+    acceptBooking(id, req) {
+        return this.bookingsService.acceptBooking(id, req.user.id);
+    }
+    rejectBooking(id, reason, req) {
+        return this.bookingsService.rejectBooking(id, req.user.id, reason);
+    }
+    releaseFunds(id) {
+        return this.bookingsService.releaseFundsToOwner(id);
+    }
+    processExpiredBookings() {
+        return this.bookingsService.processExpiredBookings();
+    }
 };
 exports.BookingsController = BookingsController;
 __decorate([
@@ -148,6 +160,78 @@ __decorate([
     __metadata("design:paramtypes", [String, update_booking_dto_1.UpdateBookingDto, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Patch)(':id/accept'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Accepter une demande de réservation',
+        description: 'Accepte une demande de réservation en attente'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID de la réservation' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Réservation acceptée avec succès' }),
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Réservation ne peut pas être acceptée' }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Token JWT invalide' }),
+    (0, swagger_1.ApiForbiddenResponse)({ description: 'Seul le propriétaire peut accepter' }),
+    (0, swagger_1.ApiNotFoundResponse)({ description: 'Réservation non trouvée' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "acceptBooking", null);
+__decorate([
+    (0, common_1.Patch)(':id/reject'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Refuser une demande de réservation',
+        description: 'Refuse une demande de réservation en attente'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID de la réservation' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Réservation refusée avec succès' }),
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Réservation ne peut pas être refusée' }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Token JWT invalide' }),
+    (0, swagger_1.ApiForbiddenResponse)({ description: 'Seul le propriétaire peut refuser' }),
+    (0, swagger_1.ApiNotFoundResponse)({ description: 'Réservation non trouvée' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('reason')),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "rejectBooking", null);
+__decorate([
+    (0, common_1.Post)(':id/release-funds'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Libérer les fonds au propriétaire',
+        description: 'Libère les fonds au propriétaire après le début de la réservation'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID de la réservation' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Fonds libérés avec succès' }),
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Réservation non éligible ou fonds déjà libérés' }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Token JWT invalide' }),
+    (0, swagger_1.ApiNotFoundResponse)({ description: 'Réservation non trouvée' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "releaseFunds", null);
+__decorate([
+    (0, common_1.Get)('admin/expired'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Traiter les réservations expirées',
+        description: 'Marque comme expirées les réservations en attente depuis plus de 24h'
+    }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Réservations expirées traitées avec succès' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "processExpiredBookings", null);
 exports.BookingsController = BookingsController = __decorate([
     (0, swagger_1.ApiTags)('Réservations'),
     (0, common_1.Controller)('bookings'),

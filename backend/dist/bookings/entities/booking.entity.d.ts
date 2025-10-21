@@ -2,6 +2,7 @@ import { User } from '../../users/entities/user.entity';
 import { Ad } from '../../ads/entities/ad.entity';
 export declare enum BookingStatus {
     PENDING = "pending",
+    ACCEPTED = "accepted",
     CONFIRMED = "confirmed",
     CANCELLED = "cancelled",
     COMPLETED = "completed",
@@ -19,6 +20,11 @@ export declare class Booking {
     status: BookingStatus;
     message: string;
     cancellationReason: string;
+    paymentId: string;
+    payoutId: string;
+    paidAt: Date;
+    fundsReleased: boolean;
+    fundsReleasedAt: Date;
     createdAt: Date;
     updatedAt: Date;
 }

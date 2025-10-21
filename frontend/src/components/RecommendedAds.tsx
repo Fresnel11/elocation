@@ -56,9 +56,18 @@ export const RecommendedAds: React.FC<RecommendedAdsProps> = ({ limit = 6, class
           >
             <div className="relative h-32">
               <img
-                src={ad.photos[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'}
+                src={ad.photos && ad.photos.length > 0 
+                  ? (ad.photos[0].startsWith('http') 
+                      ? ad.photos[0] 
+                      : `http://localhost:3000${ad.photos[0]}`
+                    )
+                  : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+                }
                 alt={ad.title}
                 className="w-full h-full object-cover rounded-t-lg"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop';
+                }}
               />
               <div className="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded text-xs">
                 {parseInt(ad.price.toString()).toLocaleString()} FCFA
