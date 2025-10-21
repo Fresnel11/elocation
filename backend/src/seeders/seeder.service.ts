@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RoleSeeder } from './role.seeder';
 import { CategorySeeder } from './category.seeder';
 import { SubCategorySeeder } from './subcategory.seeder';
@@ -9,7 +9,7 @@ import { PermissionSeeder } from './permission.seeder';
 import { RolePermissionSeeder } from './role-permission.seeder';
 
 @Injectable()
-export class SeederService implements OnModuleInit {
+export class SeederService {
   constructor(
     private readonly roleSeeder: RoleSeeder,
     private readonly categorySeeder: CategorySeeder,
@@ -21,8 +21,9 @@ export class SeederService implements OnModuleInit {
     private readonly rolePermissionSeeder: RolePermissionSeeder,
   ) {}
 
-  async onModuleInit() {
-    // Force l'exécution des seeders
+  // Méthode publique pour initialiser les données de base (sans les annonces)
+  async initializeBaseData() {
+    console.log('🚀 Initialisation des données de base...');
     await this.seedRoles();
     await this.seedPermissions();
     await this.seedRolePermissions();
@@ -30,7 +31,15 @@ export class SeederService implements OnModuleInit {
     await this.cleanupSubCategories();
     await this.seedSubCategories();
     await this.seedUsers();
+    console.log('✅ Données de base initialisées avec succès');
+  }
+
+  // Méthode publique pour initialiser TOUTES les données (y compris annonces fictives)
+  async initializeAllData() {
+    console.log('🚀 Initialisation complète des données...');
+    await this.initializeBaseData();
     await this.seedAds();
+    console.log('✅ Toutes les données initialisées avec succès');
   }
 
   private async seedRoles() {

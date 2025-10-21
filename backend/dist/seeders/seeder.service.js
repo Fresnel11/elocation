@@ -30,7 +30,8 @@ let SeederService = class SeederService {
         this.permissionSeeder = permissionSeeder;
         this.rolePermissionSeeder = rolePermissionSeeder;
     }
-    async onModuleInit() {
+    async initializeBaseData() {
+        console.log('🚀 Initialisation des données de base...');
         await this.seedRoles();
         await this.seedPermissions();
         await this.seedRolePermissions();
@@ -38,7 +39,13 @@ let SeederService = class SeederService {
         await this.cleanupSubCategories();
         await this.seedSubCategories();
         await this.seedUsers();
+        console.log('✅ Données de base initialisées avec succès');
+    }
+    async initializeAllData() {
+        console.log('🚀 Initialisation complète des données...');
+        await this.initializeBaseData();
         await this.seedAds();
+        console.log('✅ Toutes les données initialisées avec succès');
     }
     async seedRoles() {
         try {

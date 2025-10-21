@@ -5,11 +5,13 @@ import { adsService, Ad } from '../services/adsService';
 import { bookingsService } from '../services/bookingsService';
 import { favoritesService } from '../services/favoritesService';
 import { api } from '../services/api';
-import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, User, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle, Play, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ClickableAvatar } from '../components/ui/ClickableAvatar';
 import { ShareAdModal } from '../components/ui/ShareAdModal';
+
+const API_BASE_URL = 'http://localhost:3000';
 
 interface Review {
   id: string;
@@ -32,7 +34,7 @@ const AnnonceDetailPage: React.FC = () => {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<{url: string; type: 'image' | 'video'} | null>(null);
   const [rating, setRating] = useState({ averageRating: 0, totalReviews: 0 });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showAddReview, setShowAddReview] = useState(false);
@@ -49,6 +51,8 @@ const AnnonceDetailPage: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showBookingSection, setShowBookingSection] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -64,7 +68,14 @@ const AnnonceDetailPage: React.FC = () => {
           const [adData, ratingData, reviewsData] = await Promise.all(promises);
           
           const actualAdData = (adData as any).data || adData;
-          setAd(actualAdData);
+          const adWithVideos = {
+            ...actualAdData,
+            videos: actualAdData?.videos || []
+          };
+          console.log('Données de l\'annonce reçues:', adWithVideos);
+          console.log('Photos disponibles:', adWithVideos.photos);
+          console.log('Vidéos disponibles:', adWithVideos.videos);
+          setAd(adWithVideos);
           setRating({
             averageRating: (ratingData as any).data.averageRating || 0,
             totalReviews: (ratingData as any).data.totalReviews || 0
@@ -82,8 +93,18 @@ const AnnonceDetailPage: React.FC = () => {
             }
           }
           
+          const normalizePath = (path: string) => path.replace(/^\/+/, '');
+          const buildMediaUrl = (path: string) => path.startsWith('http') ? path : `${API_BASE_URL}/${normalizePath(path)}`;
+
           if (actualAdData.photos && actualAdData.photos.length > 0) {
-            setSelectedImage(actualAdData.photos[0]);
+            const photoUrl = buildMediaUrl(actualAdData.photos[0]);
+            setSelectedMedia({url: photoUrl, type: 'image'});
+          } else if (actualAdData.video) {
+            const videoUrl = buildMediaUrl(actualAdData.video);
+            setSelectedMedia({url: videoUrl, type: 'video'});
+          } else {
+            console.log('Aucun média disponible dans l\'annonce');
+            setSelectedMedia({url: 'https://via.placeholder.com/600x400', type: 'image'});
           }
         } catch (err) {
           setError('Impossible de charger les détails de l\'annonce.');
@@ -137,13 +158,18 @@ const AnnonceDetailPage: React.FC = () => {
     
     switch ((ad as any).paymentMode) {
       case 'hourly':
-        return Math.ceil(timeDiff / (1000 * 60 * 60)) * parseFloat(ad.price.toString());
+        const hours = Math.ceil(timeDiff / (1000 * 60 * 60));
+        return hours * parseFloat(ad.price.toString());
       case 'daily':
-        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) * parseFloat(ad.price.toString());
+        const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        console.log(`Calcul: ${days} jours × ${ad.price} = ${days * parseFloat(ad.price.toString())}`);
+        return days * parseFloat(ad.price.toString());
       case 'weekly':
-        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)) * parseFloat(ad.price.toString());
+        const weeks = Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7));
+        return weeks * parseFloat(ad.price.toString());
       case 'monthly':
-        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 30)) * parseFloat(ad.price.toString());
+        const months = Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 30));
+        return months * parseFloat(ad.price.toString());
       case 'fixed':
       default:
         return parseFloat(ad.price.toString());
@@ -233,32 +259,33 @@ const AnnonceDetailPage: React.FC = () => {
     }
   };
 
+  // TODO: Messagerie - À implémenter plus tard
   // Ouvrir la messagerie
-  const handleOpenMessage = async () => {
-    if (!user) {
-      showToast('error', 'Vous devez être connecté pour envoyer un message');
-      return;
-    }
-    if (ad?.user.id === user.id) {
-      showToast('error', 'Vous ne pouvez pas vous envoyer un message');
-      return;
-    }
-    
-    try {
-      // Créer ou récupérer la conversation avec le propriétaire
-      const response = await api.post('/messages/conversation', {
-        receiverId: ad?.user.id,
-        adId: id
-      });
-      
-      // Rediriger vers la page de messagerie avec la conversation créée
-      navigate(`/messages?conversationId=${response.data.conversationId}`);
-    } catch (error: any) {
-      console.error('Erreur lors de la création de la conversation:', error);
-      // Fallback: rediriger vers la page de messagerie avec les paramètres
-      navigate(`/messages?adId=${id}&userId=${ad?.user.id}`);
-    }
-  };
+  // const handleOpenMessage = async () => {
+  //   if (!user) {
+  //     showToast('error', 'Vous devez être connecté pour envoyer un message');
+  //     return;
+  //   }
+  //   if (ad?.user.id === user.id) {
+  //     showToast('error', 'Vous ne pouvez pas vous envoyer un message');
+  //     return;
+  //   }
+  //   
+  //   try {
+  //     // Créer ou récupérer la conversation avec le propriétaire
+  //     const response = await api.post('/messages/conversation', {
+  //       receiverId: ad?.user.id,
+  //       adId: id
+  //     });
+  //     
+  //     // Rediriger vers la page de messagerie avec la conversation créée
+  //     navigate(`/messages?conversationId=${response.data.conversationId}`);
+  //   } catch (error: any) {
+  //     console.error('Erreur lors de la création de la conversation:', error);
+  //     // Fallback: rediriger vers la page de messagerie avec les paramètres
+  //     navigate(`/messages?adId=${id}&userId=${ad?.user.id}`);
+  //   }
+  // };
 
   // Appeler le propriétaire
   const handleCallOwner = () => {
@@ -269,10 +296,18 @@ const AnnonceDetailPage: React.FC = () => {
     window.open(`tel:${(ad?.user as any)?.phone || ''}`, '_self');
   };
 
+  // Contacter via WhatsApp
+  const handleWhatsAppContact = () => {
+    if (!(ad?.user as any).phone) {
+      showToast('error', 'Numéro de téléphone non disponible');
+      return;
+    }
+    const phone = (ad?.user as any).phone.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${phone}`, '_blank');
+  };
+
   const handleSubmitReview = async () => {
     if (!newReview.rating || !newReview.comment.trim()) return;
-    
-
     
     try {
       await api.post(`/reviews`, {
@@ -351,13 +386,37 @@ const AnnonceDetailPage: React.FC = () => {
     <div className="bg-white min-h-screen">
       {/* Mobile Layout */}
       <div className="lg:hidden">
+      {(() => {
+  console.log('État actuel de selectedMedia:', selectedMedia);
+  console.log('Médias disponibles dans l\'annonce:', {
+    photos: ad?.photos,
+    videos: ad?.videos
+  });
+  return null;
+})()}
         {/* Image principale avec overlay */}
         <div className="relative h-96">
-          <img 
-            src={selectedImage || ad.photos?.[0] || 'https://via.placeholder.com/600x400'} 
-            alt={ad.title} 
-            className="w-full h-full object-cover"
-          />
+          {selectedMedia ? (
+            selectedMedia.type === 'image' ? (
+              <img 
+                src={selectedMedia.url} 
+                alt={ad.title} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <video
+                src={selectedMedia.url}
+                controls
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : (
+            <img 
+              src={'https://via.placeholder.com/600x400'} 
+              alt={ad.title} 
+              className="w-full h-full object-cover"
+            />
+          )}
           
           {/* Header avec boutons */}
           <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent">
@@ -377,29 +436,51 @@ const AnnonceDetailPage: React.FC = () => {
               }`} />
             </button>
           </div>
-          
-          {/* Miniatures des images */}
-          {ad.photos && ad.photos.length > 1 && (
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex space-x-2 overflow-x-auto">
-                {ad.photos.map((image, index) => (
+        </div>
+        
+        {/* Miniatures des médias en bas */}
+        {((ad.photos && ad.photos.length > 1) || (ad as any).video) && (
+          <div className="px-6 py-4 bg-white">
+            <div className="flex space-x-2 overflow-x-auto">
+              {ad.photos?.map((url, index) => {
+                const mediaUrl = url.startsWith('http') ? url : `${API_BASE_URL}/${url.replace(/^\/+/, '')}`;
+                return (
                   <img
-                    key={index}
-                    src={image}
+                    key={`photo-${index}`}
+                    src={mediaUrl}
                     alt={`Miniature ${index + 1}`}
                     className={`w-16 h-12 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 ${
-                      selectedImage === image ? 'border-white' : 'border-white/30'
+                      selectedMedia?.url === mediaUrl ? 'border-blue-500' : 'border-gray-300'
                     }`}
-                    onClick={() => setSelectedImage(image)}
+                    onClick={() => setSelectedMedia({url: mediaUrl, type: 'image'})}
                   />
-                ))}
-              </div>
+                );
+              })}
+              {(ad as any).video && (
+                <div
+                  className={`w-16 h-12 relative rounded-lg cursor-pointer border-2 flex-shrink-0 ${
+                    selectedMedia?.type === 'video' ? 'border-blue-500' : 'border-gray-300'
+                  }`}
+                  onClick={() => {
+                    const videoUrl = (ad as any).video.startsWith('http') ? (ad as any).video : `${API_BASE_URL}/${(ad as any).video.replace(/^\/+/, '')}`;
+                    setSelectedMedia({url: videoUrl, type: 'video'});
+                  }}
+                >
+                  <video
+                    src={(ad as any).video.startsWith('http') ? (ad as any).video : `${API_BASE_URL}/${(ad as any).video.replace(/^\/+/, '')}`}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                    <Play className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Contenu principal mobile */}
-        <div className="bg-white rounded-t-3xl -mt-12 relative z-10 px-6 pt-2 pb-24">
+        <div className="bg-white rounded-t-3xl mt-0 relative z-0 px-6 pt-2 pb-24">
           {/* Titre et rating */}
           <div className="mb-3">
             <h1 className="text-2xl font-bold text-gray-900 mb-1">{ad.title}</h1>
@@ -448,11 +529,27 @@ const AnnonceDetailPage: React.FC = () => {
           {/* Section Details */}
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Details</h3>
-          <p className="text-gray-600 leading-relaxed">
-            {ad.description || "The prestige of one of Polo Alto's most sought-after neighborhoods takes center stage in this magnificent home that..."}
-            <span className="text-blue-600 font-medium cursor-pointer"> Read more</span>
-          </p>
-        </div>
+            <p className="text-gray-600 leading-relaxed">
+              {(() => {
+                const description = ad.description || "The prestige of one of Polo Alto's most sought-after neighborhoods takes center stage in this magnificent home that...";
+                const isLong = description.length > 150;
+                
+                if (!isLong) return description;
+                
+                return (
+                  <>
+                    {showFullDescription ? description : `${description.substring(0, 150)}...`}
+                    <span 
+                      className="text-blue-600 font-medium cursor-pointer ml-1"
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                    >
+                      {showFullDescription ? ' Lire moins' : ' Lire plus'}
+                    </span>
+                  </>
+                );
+              })()} 
+            </p>
+          </div>
 
           {/* Localisation */}
           <div className="mb-4">
@@ -474,25 +571,149 @@ const AnnonceDetailPage: React.FC = () => {
             <p className="text-sm text-gray-500">Propriétaire</p>
           </div>
           <div className="flex gap-2">
-            <button 
+            {/* TODO: Messagerie - À implémenter plus tard */}
+            {/* <button 
               onClick={handleOpenMessage}
               className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
             >
               <MessageCircle className="h-5 w-5 text-white" />
-            </button>
+            </button> */}
             {(ad.user as any)?.phone && (
-              <button 
-                onClick={handleCallOwner}
-                className="w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center transition-colors"
-              >
-                <Phone className="h-5 w-5 text-white" />
-              </button>
+              <>
+                <button 
+                  onClick={handleCallOwner}
+                  className="w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <Phone className="h-5 w-5 text-white" />
+                </button>
+                <button 
+                  onClick={handleWhatsAppContact}
+                  className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                  </svg>
+                </button>
+              </>
             )}
           </div>
         </div>
 
+        {/* Bouton pour ouvrir la section réservation mobile */}
+        {(ad as any).allowBooking && !showBookingSection && (
+          <div className="bg-white rounded-t-3xl p-6 mt-6">
+            <button 
+              onClick={() => setShowBookingSection(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <Calendar className="h-5 w-5" />
+              Faire une réservation
+            </button>
+          </div>
+        )}
+
+        {/* Section réservation mobile */}
+        {showBookingSection && (
+          <div className="bg-white rounded-t-3xl p-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Réserver ce logement</h3>
+              <button 
+                onClick={() => setShowBookingSection(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Calendar className="h-4 w-4 inline mr-1" />
+                    Arrivée
+                  </label>
+                  <input
+                    type="date"
+                    min={today}
+                    value={bookingData.startDate}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Calendar className="h-4 w-4 inline mr-1" />
+                    Départ
+                  </label>
+                  <input
+                    type="date"
+                    min={bookingData.startDate || today}
+                    value={bookingData.endDate}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Message (optionnel)
+                </label>
+                <textarea
+                  value={bookingData.message}
+                  onChange={(e) => setBookingData(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Présentez-vous au propriétaire..."
+                  className="w-full p-2 border border-gray-300 rounded-lg resize-none h-16 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Indicateur de disponibilité */}
+              {bookingData.startDate && bookingData.endDate && (
+                <div className="mt-4">
+                  {availabilityLoading ? (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                      <span className="text-sm">Vérification de la disponibilité...</span>
+                    </div>
+                  ) : (
+                    <div className={`flex items-center gap-2 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className="text-sm font-medium">
+                        {isAvailable ? 'Disponible' : 'Non disponible'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <button 
+                onClick={handleBooking}
+                disabled={bookingLoading || !bookingData.startDate || !bookingData.endDate || !isAvailable || availabilityLoading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
+              >
+                {bookingLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  'Réserver'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Message pour annonces sans réservation */}
+        {!(ad as any).allowBooking && (
+          <div className="bg-white rounded-t-3xl p-6 mt-6">
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Réservation non disponible</h3>
+              <p className="text-gray-600 text-sm mb-4">Cette annonce n'accepte pas les réservations en ligne.</p>
+              <p className="text-gray-600 text-sm">Contactez directement le propriétaire pour plus d'informations.</p>
+            </div>
+          </div>
+        )}
+
           {/* Section Avis */}
-          <div className="mb-6">
+          <div className="mb-6 bg-white rounded-t-3xl p-6 mt-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Avis ({rating.totalReviews})</h3>
             {canAddReview() ? (
@@ -624,83 +845,6 @@ const AnnonceDetailPage: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Section réservation mobile */}
-        <div className="bg-white rounded-t-3xl p-6 mt-6">
-          {(ad as any).allowBooking ? (
-            <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Réserver ce logement</h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      <Calendar className="h-4 w-4 inline mr-1" />
-                      Arrivée
-                    </label>
-                    <input
-                      type="date"
-                      min={today}
-                      value={bookingData.startDate}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      <Calendar className="h-4 w-4 inline mr-1" />
-                      Départ
-                    </label>
-                    <input
-                      type="date"
-                      min={bookingData.startDate || today}
-                      value={bookingData.endDate}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Message (optionnel)
-                  </label>
-                  <textarea
-                    value={bookingData.message}
-                    onChange={(e) => setBookingData(prev => ({ ...prev, message: e.target.value }))}
-                    placeholder="Présentez-vous au propriétaire..."
-                    className="w-full p-2 border border-gray-300 rounded-lg resize-none h-16 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                
-                {/* Indicateur de disponibilité */}
-                {bookingData.startDate && bookingData.endDate && (
-                  <div className="mt-4">
-                    {availabilityLoading ? (
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-                        <span className="text-sm">Vérification de la disponibilité...</span>
-                      </div>
-                    ) : (
-                      <div className={`flex items-center gap-2 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                        <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        <span className="text-sm font-medium">
-                          {isAvailable ? 'Disponible' : 'Non disponible'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Réservation non disponible</h3>
-              <p className="text-gray-600 text-sm mb-4">Cette annonce n'accepte pas les réservations en ligne.</p>
-              <p className="text-gray-600 text-sm">Contactez directement le propriétaire pour plus d'informations.</p>
-            </div>
-          )}
-        </div>
       </div>
 
         {/* Footer fixe avec prix et bouton */}
@@ -713,30 +857,32 @@ const AnnonceDetailPage: React.FC = () => {
                 </p>
                 <p className="text-sm text-gray-500">{getPaymentModeLabel((ad as any).paymentMode)}</p>
                 {totalPrice > 0 && (
-                  <p className="text-lg font-semibold text-blue-600 mt-1">
-                    Total: {totalPrice.toLocaleString()} FCFA
-                  </p>
+                  <div className="mt-2">
+                    <p className="text-lg font-semibold text-blue-600">
+                      Total: {totalPrice.toLocaleString()} FCFA
+                    </p>
+                    <p className="text-sm font-medium text-green-600">
+                      Dépôt requis: {Math.round(totalPrice * 0.2).toLocaleString()} FCFA (20%)
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
             {(ad as any).allowBooking ? (
               <button 
-                onClick={handleBooking}
-                disabled={bookingLoading || !bookingData.startDate || !bookingData.endDate || !isAvailable || availabilityLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={() => setShowBookingSection(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                {bookingLoading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  'Réserver'
-                )}
+                <Calendar className="h-5 w-5" />
+                Faire une réservation
               </button>
             ) : (
+              /* TODO: Messagerie - À implémenter plus tard */
               <button 
                 className="bg-gray-400 text-white px-8 py-3 rounded-xl font-semibold cursor-not-allowed flex items-center justify-center gap-2"
                 disabled
               >
-                <MessageCircle className="h-5 w-5" />
+                {/* <MessageCircle className="h-5 w-5" /> */}
                 Contacter le propriétaire
               </button>
             )}
@@ -785,65 +931,63 @@ const AnnonceDetailPage: React.FC = () => {
           <div className="grid grid-cols-12 gap-12">
             {/* Section principale - 8 colonnes */}
             <div className="col-span-8 space-y-8">
-              {/* Galerie d'images moderne */}
-              {ad.photos && ad.photos.length > 1 ? (
-                <div className="grid grid-cols-4 gap-2 h-[600px]">
-                  {/* Image principale */}
-                  <div className="col-span-3 row-span-2 relative group">
-                    <img 
-                      src={selectedImage || ad.photos[0]} 
-                      alt={ad.title} 
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-2xl" />
-                    <button
-                      onClick={() => {
-                        const currentIndex = ad.photos.indexOf(selectedImage || ad.photos[0]);
-                        const prevIndex = currentIndex === 0 ? ad.photos.length - 1 : currentIndex - 1;
-                        setSelectedImage(ad.photos[prevIndex]);
-                      }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg opacity-0 group-hover:opacity-100"
-                    >
-                      <ChevronLeft className="h-6 w-6 text-gray-700" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        const currentIndex = ad.photos.indexOf(selectedImage || ad.photos[0]);
-                        const nextIndex = currentIndex === ad.photos.length - 1 ? 0 : currentIndex + 1;
-                        setSelectedImage(ad.photos[nextIndex]);
-                      }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg opacity-0 group-hover:opacity-100"
-                    >
-                      <ChevronRight className="h-6 w-6 text-gray-700" />
-                    </button>
-                  </div>
-                  
-                  {/* Miniatures */}
-                  <div className="col-span-1 space-y-2">
-                    {ad.photos.slice(1, 5).map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImage(image)}
-                        className={`w-full h-[147px] rounded-xl overflow-hidden transition-all hover:scale-105 ${
-                          selectedImage === image ? 'ring-2 ring-blue-500' : ''
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={`Photo ${index + 2}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-[600px]">
+              {/* Média principal */}
+              <div className="h-[600px] mb-4">
+                {selectedMedia?.type === 'video' ? (
+                  <video
+                    src={selectedMedia.url}
+                    controls
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                ) : (
                   <img 
-                    src={ad.photos?.[0] || 'https://via.placeholder.com/600x400'} 
+                    src={selectedMedia?.url || (ad.photos?.[0] ? (ad.photos[0].startsWith('http') ? ad.photos[0] : `${API_BASE_URL}/${ad.photos[0].replace(/^\/+/, '')}`) : 'https://via.placeholder.com/600x400')} 
                     alt={ad.title} 
                     className="w-full h-full object-cover rounded-2xl"
                   />
+                )}
+              </div>
+              
+              {/* Miniatures en bas */}
+              {((ad.photos && ad.photos.length > 1) || (ad as any).video) && (
+                <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
+                  {ad.photos?.map((image, index) => {
+                    const mediaUrl = image.startsWith('http') ? image : `${API_BASE_URL}/${image.replace(/^\/+/, '')}`;
+                    return (
+                      <button
+                        key={`photo-${index}`}
+                        onClick={() => setSelectedMedia({url: mediaUrl, type: 'image'})}
+                        className={`w-20 h-16 rounded-lg overflow-hidden transition-all hover:scale-105 flex-shrink-0 ${
+                          selectedMedia?.url === mediaUrl ? 'ring-2 ring-blue-500' : ''
+                        }`}
+                      >
+                        <img
+                          src={mediaUrl}
+                          alt={`Photo ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    );
+                  })}
+                  {(ad as any).video && (
+                    <button
+                      onClick={() => {
+                        const videoUrl = (ad as any).video.startsWith('http') ? (ad as any).video : `${API_BASE_URL}/${(ad as any).video.replace(/^\/+/, '')}`;
+                        setSelectedMedia({url: videoUrl, type: 'video'});
+                      }}
+                      className={`w-20 h-16 rounded-lg overflow-hidden transition-all hover:scale-105 relative flex-shrink-0 ${
+                        selectedMedia?.type === 'video' ? 'ring-2 ring-blue-500' : ''
+                      }`}
+                    >
+                      <video
+                        src={(ad as any).video.startsWith('http') ? (ad as any).video : `${API_BASE_URL}/${(ad as any).video.replace(/^\/+/, '')}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                        <Play className="w-4 h-4 text-white" />
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -914,7 +1058,6 @@ const AnnonceDetailPage: React.FC = () => {
                   
                   {/* Informations hôte */}
                   <div className="border-t border-gray-200 pt-6">
-                    {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">Hébergé par</h3> */}
                     <div className="flex items-center gap-4">
                       <ClickableAvatar
                         avatarUrl={ad.user?.profilePicture}
@@ -925,23 +1068,25 @@ const AnnonceDetailPage: React.FC = () => {
                         <h4 className="font-semibold text-gray-900">
                           {ad.user?.firstName || 'Utilisateur'} {ad.user?.lastName || ''}
                         </h4>
-                        {/* <p className="text-gray-600 text-sm">Hôte depuis 2020</p> */}
                       </div>
                       <div className="flex gap-3">
-                        <button 
+                        {/* TODO: Messagerie - À implémenter plus tard */}
+                        {/* <button 
                           onClick={handleOpenMessage}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
                         >
                           <MessageCircle className="h-4 w-4" />
                           Message
-                        </button>
+                        </button> */}
                         {(ad.user as any)?.phone && (
                           <button 
-                            onClick={handleCallOwner}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                            onClick={handleWhatsAppContact}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
                           >
-                            <Phone className="h-4 w-4" />
-                            Appeler
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                            </svg>
+                            WhatsApp
                           </button>
                         )}
                       </div>
@@ -1080,8 +1225,13 @@ const AnnonceDetailPage: React.FC = () => {
                   </div>
                   <div className="text-gray-600">{getPaymentModeLabel((ad as any)?.paymentMode || 'monthly')}</div>
                   {totalPrice > 0 && (
-                    <div className="text-xl font-semibold text-blue-600 mt-2">
-                      Total: {totalPrice.toLocaleString()} FCFA
+                    <div className="mt-3">
+                      <div className="text-xl font-semibold text-blue-600">
+                        Total: {totalPrice.toLocaleString()} FCFA
+                      </div>
+                      <div className="text-lg font-medium text-green-600 mt-1">
+                        Dépôt requis: {Math.round(totalPrice * 0.2).toLocaleString()} FCFA (20%)
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1165,7 +1315,8 @@ const AnnonceDetailPage: React.FC = () => {
                     </button>
                     
                     <div className="text-center text-sm text-gray-500">
-                      Vous ne serez pas débité pour le moment
+                      <p>Vous ne serez pas débité pour le moment</p>
+                      <p className="mt-1">Un dépôt de 20% sera demandé à la confirmation</p>
                     </div>
                   </div>
                 ) : (
@@ -1174,8 +1325,9 @@ const AnnonceDetailPage: React.FC = () => {
                     <h3 className="text-xl font-semibold text-gray-900 mb-3">Réservation non disponible</h3>
                     <p className="text-gray-600 mb-4">Cette annonce n'accepte pas les réservations en ligne.</p>
                     <p className="text-gray-600 text-sm mb-6">Contactez directement le propriétaire pour plus d'informations.</p>
+                    {/* TODO: Messagerie - À implémenter plus tard */}
                     <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 mx-auto">
-                      <MessageCircle className="h-5 w-5" />
+                      {/* <MessageCircle className="h-5 w-5" /> */}
                       Contacter le propriétaire
                     </button>
                   </div>

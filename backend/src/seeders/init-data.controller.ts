@@ -1,41 +1,64 @@
 import { Controller, Post } from '@nestjs/common';
-import { CategorySeeder } from './category.seeder';
-import { SubCategorySeeder } from './subcategory.seeder';
+import { SeederService } from './seeder.service';
 import { UpdateCoordinatesSeeder } from './update-coordinates.seeder';
-import { UserSeeder } from './user.seeder';
-import { RoleSeeder } from './role.seeder';
+import { AdSeeder } from './ad.seeder';
 
 @Controller('init')
 export class InitDataController {
   constructor(
-    private readonly categorySeeder: CategorySeeder,
-    private readonly subCategorySeeder: SubCategorySeeder,
+    private readonly seederService: SeederService,
     private readonly updateCoordinatesSeeder: UpdateCoordinatesSeeder,
-    private readonly userSeeder: UserSeeder,
-    private readonly roleSeeder: RoleSeeder,
+    private readonly adSeeder: AdSeeder,
   ) {}
 
-  @Post('seed')
-  async seedData() {
+  @Post('base-data')
+  async initBaseData() {
     try {
-      await this.roleSeeder.seed();
-      await this.categorySeeder.seed();
-      await this.subCategorySeeder.seed();
-      await this.userSeeder.seed();
-      return { message: 'Données initialisées avec succès' };
+      await this.seederService.initializeBaseData();
+      return { 
+        success: true, 
+        message: 'Données de base initialisées avec succès (rôles, catégories, utilisateurs)' 
+      };
     } catch (error) {
-      return { error: 'Erreur lors de l\'initialisation', details: (error as Error).message };
+      return { 
+        success: false, 
+        error: 'Erreur lors de l\'initialisation des données de base', 
+        details: (error as Error).message 
+      };
     }
   }
 
-  @Post('seed-admin')
-  async seedAdmin() {
+  @Post('all-data')
+  async initAllData() {
     try {
-      await this.roleSeeder.seed();
-      await this.userSeeder.seed();
-      return { message: 'Super admin créé avec succès' };
+      await this.seederService.initializeAllData();
+      return { 
+        success: true, 
+        message: 'Toutes les données initialisées avec succès (y compris annonces fictives)' 
+      };
     } catch (error) {
-      return { error: 'Erreur lors de la création du super admin', details: (error as Error).message };
+      return { 
+        success: false, 
+        error: 'Erreur lors de l\'initialisation complète', 
+        details: (error as Error).message 
+      };
+    }
+  }
+
+  @Post('demo-ads')
+  async seedDemoAds() {
+    try {
+      await this.adSeeder.seed();
+      return { 
+        success: true, 
+        message: 'Annonces de démonstration créées avec succès' 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'Erreur lors de la création des annonces de démonstration', 
+        details: (error as Error).message 
+      };
     }
   }
 
@@ -43,9 +66,16 @@ export class InitDataController {
   async updateCoordinates() {
     try {
       await this.updateCoordinatesSeeder.updateCoordinates();
-      return { message: 'Coordonnées mises à jour avec succès' };
+      return { 
+        success: true, 
+        message: 'Coordonnées mises à jour avec succès' 
+      };
     } catch (error) {
-      return { error: 'Erreur lors de la mise à jour', details: (error as Error).message };
+      return { 
+        success: false, 
+        error: 'Erreur lors de la mise à jour des coordonnées', 
+        details: (error as Error).message 
+      };
     }
   }
 }

@@ -19,6 +19,7 @@ export interface LoginData {
 }
 
 export interface User {
+  profilePicture: any;
   id: string;
   email: string | null;
   firstName: string;

@@ -11,64 +11,99 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InitDataController = void 0;
 const common_1 = require("@nestjs/common");
-const category_seeder_1 = require("./category.seeder");
-const subcategory_seeder_1 = require("./subcategory.seeder");
+const seeder_service_1 = require("./seeder.service");
 const update_coordinates_seeder_1 = require("./update-coordinates.seeder");
-const user_seeder_1 = require("./user.seeder");
-const role_seeder_1 = require("./role.seeder");
+const ad_seeder_1 = require("./ad.seeder");
 let InitDataController = class InitDataController {
-    constructor(categorySeeder, subCategorySeeder, updateCoordinatesSeeder, userSeeder, roleSeeder) {
-        this.categorySeeder = categorySeeder;
-        this.subCategorySeeder = subCategorySeeder;
+    constructor(seederService, updateCoordinatesSeeder, adSeeder) {
+        this.seederService = seederService;
         this.updateCoordinatesSeeder = updateCoordinatesSeeder;
-        this.userSeeder = userSeeder;
-        this.roleSeeder = roleSeeder;
+        this.adSeeder = adSeeder;
     }
-    async seedData() {
+    async initBaseData() {
         try {
-            await this.roleSeeder.seed();
-            await this.categorySeeder.seed();
-            await this.subCategorySeeder.seed();
-            await this.userSeeder.seed();
-            return { message: 'Données initialisées avec succès' };
+            await this.seederService.initializeBaseData();
+            return {
+                success: true,
+                message: 'Données de base initialisées avec succès (rôles, catégories, utilisateurs)'
+            };
         }
         catch (error) {
-            return { error: 'Erreur lors de l\'initialisation', details: error.message };
+            return {
+                success: false,
+                error: 'Erreur lors de l\'initialisation des données de base',
+                details: error.message
+            };
         }
     }
-    async seedAdmin() {
+    async initAllData() {
         try {
-            await this.roleSeeder.seed();
-            await this.userSeeder.seed();
-            return { message: 'Super admin créé avec succès' };
+            await this.seederService.initializeAllData();
+            return {
+                success: true,
+                message: 'Toutes les données initialisées avec succès (y compris annonces fictives)'
+            };
         }
         catch (error) {
-            return { error: 'Erreur lors de la création du super admin', details: error.message };
+            return {
+                success: false,
+                error: 'Erreur lors de l\'initialisation complète',
+                details: error.message
+            };
+        }
+    }
+    async seedDemoAds() {
+        try {
+            await this.adSeeder.seed();
+            return {
+                success: true,
+                message: 'Annonces de démonstration créées avec succès'
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Erreur lors de la création des annonces de démonstration',
+                details: error.message
+            };
         }
     }
     async updateCoordinates() {
         try {
             await this.updateCoordinatesSeeder.updateCoordinates();
-            return { message: 'Coordonnées mises à jour avec succès' };
+            return {
+                success: true,
+                message: 'Coordonnées mises à jour avec succès'
+            };
         }
         catch (error) {
-            return { error: 'Erreur lors de la mise à jour', details: error.message };
+            return {
+                success: false,
+                error: 'Erreur lors de la mise à jour des coordonnées',
+                details: error.message
+            };
         }
     }
 };
 exports.InitDataController = InitDataController;
 __decorate([
-    (0, common_1.Post)('seed'),
+    (0, common_1.Post)('base-data'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], InitDataController.prototype, "seedData", null);
+], InitDataController.prototype, "initBaseData", null);
 __decorate([
-    (0, common_1.Post)('seed-admin'),
+    (0, common_1.Post)('all-data'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], InitDataController.prototype, "seedAdmin", null);
+], InitDataController.prototype, "initAllData", null);
+__decorate([
+    (0, common_1.Post)('demo-ads'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], InitDataController.prototype, "seedDemoAds", null);
 __decorate([
     (0, common_1.Post)('update-coordinates'),
     __metadata("design:type", Function),
@@ -77,10 +112,8 @@ __decorate([
 ], InitDataController.prototype, "updateCoordinates", null);
 exports.InitDataController = InitDataController = __decorate([
     (0, common_1.Controller)('init'),
-    __metadata("design:paramtypes", [category_seeder_1.CategorySeeder,
-        subcategory_seeder_1.SubCategorySeeder,
+    __metadata("design:paramtypes", [seeder_service_1.SeederService,
         update_coordinates_seeder_1.UpdateCoordinatesSeeder,
-        user_seeder_1.UserSeeder,
-        role_seeder_1.RoleSeeder])
+        ad_seeder_1.AdSeeder])
 ], InitDataController);
 //# sourceMappingURL=init-data.controller.js.map

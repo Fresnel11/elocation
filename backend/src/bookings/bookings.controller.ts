@@ -125,4 +125,66 @@ export class BookingsController {
   ) {
     return this.bookingsService.update(id, updateBookingDto, req.user);
   }
+
+  @Patch(':id/accept')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Accepter une demande de réservation',
+    description: 'Accepte une demande de réservation en attente'
+  })
+  @ApiParam({ name: 'id', description: 'ID de la réservation' })
+  @ApiOkResponse({ description: 'Réservation acceptée avec succès' })
+  @ApiBadRequestResponse({ description: 'Réservation ne peut pas être acceptée' })
+  @ApiUnauthorizedResponse({ description: 'Token JWT invalide' })
+  @ApiForbiddenResponse({ description: 'Seul le propriétaire peut accepter' })
+  @ApiNotFoundResponse({ description: 'Réservation non trouvée' })
+  acceptBooking(@Param('id') id: string, @Request() req) {
+    return this.bookingsService.acceptBooking(id, req.user.id);
+  }
+
+  @Patch(':id/reject')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Refuser une demande de réservation',
+    description: 'Refuse une demande de réservation en attente'
+  })
+  @ApiParam({ name: 'id', description: 'ID de la réservation' })
+  @ApiOkResponse({ description: 'Réservation refusée avec succès' })
+  @ApiBadRequestResponse({ description: 'Réservation ne peut pas être refusée' })
+  @ApiUnauthorizedResponse({ description: 'Token JWT invalide' })
+  @ApiForbiddenResponse({ description: 'Seul le propriétaire peut refuser' })
+  @ApiNotFoundResponse({ description: 'Réservation non trouvée' })
+  rejectBooking(@Param('id') id: string, @Body('reason') reason: string, @Request() req) {
+    return this.bookingsService.rejectBooking(id, req.user.id, reason);
+  }
+
+  @Post(':id/release-funds')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Libérer les fonds au propriétaire',
+    description: 'Libère les fonds au propriétaire après le début de la réservation'
+  })
+  @ApiParam({ name: 'id', description: 'ID de la réservation' })
+  @ApiOkResponse({ description: 'Fonds libérés avec succès' })
+  @ApiBadRequestResponse({ description: 'Réservation non éligible ou fonds déjà libérés' })
+  @ApiUnauthorizedResponse({ description: 'Token JWT invalide' })
+  @ApiNotFoundResponse({ description: 'Réservation non trouvée' })
+  releaseFunds(@Param('id') id: string) {
+    return this.bookingsService.releaseFundsToOwner(id);
+  }
+
+  @Get('admin/expired')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Traiter les réservations expirées',
+    description: 'Marque comme expirées les réservations en attente depuis plus de 24h'
+  })
+  @ApiOkResponse({ description: 'Réservations expirées traitées avec succès' })
+  processExpiredBookings() {
+    return this.bookingsService.processExpiredBookings();
+  }
 }

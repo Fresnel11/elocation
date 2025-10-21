@@ -15,6 +15,7 @@ const bookings_cron_1 = require("./bookings.cron");
 const booking_entity_1 = require("./entities/booking.entity");
 const ads_module_1 = require("../ads/ads.module");
 const notifications_module_1 = require("../notifications/notifications.module");
+const moneroo_module_1 = require("../moneroo/moneroo.module");
 let BookingsModule = class BookingsModule {
 };
 exports.BookingsModule = BookingsModule;
@@ -24,6 +25,7 @@ exports.BookingsModule = BookingsModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([booking_entity_1.Booking]),
             ads_module_1.AdsModule,
             notifications_module_1.NotificationsModule,
+            moneroo_module_1.MonerooModule,
         ],
         controllers: [bookings_controller_1.BookingsController],
         providers: [bookings_service_1.BookingsService, bookings_cron_1.BookingsCronService],

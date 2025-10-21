@@ -22,6 +22,29 @@ export declare class UsersController {
         };
     }>;
     updateProfile(req: any, updateProfileDto: UpdateProfileDto): Promise<import("./entities/user-profile.entity").UserProfile>;
+    exportUserData(req: any): Promise<{
+        user: {
+            id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            phone: string;
+            whatsappNumber: string;
+            createdAt: Date;
+            lastLogin: Date;
+            isVerified: boolean;
+        };
+        profile: import("./entities/user-profile.entity").UserProfile;
+        ads: {
+            id: string;
+            title: string;
+            description: string;
+            price: number;
+            location: string;
+            createdAt: Date;
+        }[];
+        exportedAt: string;
+    }>;
     getProfile(req: any): Promise<{
         phone: string;
         id: string;

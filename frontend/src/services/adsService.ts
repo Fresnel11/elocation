@@ -9,6 +9,7 @@ export interface Ad {
   price: number;
   location: string;
   photos: string[];
+  videos: string[]; // Ajout de la propriété videos
   bedrooms: number;
   bathrooms: number;
   area: number;

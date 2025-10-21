@@ -67,4 +67,21 @@ export class RequestsService {
 
     return updatedRequest;
   }
+
+  async remove(id: string, userId: string): Promise<void> {
+    const request = await this.requestRepository.findOne({
+      where: { id },
+      relations: ['user']
+    });
+
+    if (!request) {
+      throw new NotFoundException('Demande introuvable');
+    }
+
+    if (request.userId !== userId) {
+      throw new ForbiddenException('Vous n\'avez pas l\'autorisation de supprimer cette demande');
+    }
+
+    await this.requestRepository.remove(request);
+  }
 }

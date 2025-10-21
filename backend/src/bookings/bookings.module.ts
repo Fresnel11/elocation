@@ -6,12 +6,14 @@ import { BookingsCronService } from './bookings.cron';
 import { Booking } from './entities/booking.entity';
 import { AdsModule } from '../ads/ads.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MonerooModule } from '../moneroo/moneroo.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booking]),
     AdsModule,
     NotificationsModule,
+    MonerooModule,
   ],
   controllers: [BookingsController],
   providers: [BookingsService, BookingsCronService],

@@ -7,4 +7,5 @@ export declare class RequestsController {
     findAll(): Promise<import("./entities/request.entity").Request[]>;
     findOne(id: string): Promise<import("./entities/request.entity").Request>;
     update(id: string, updateRequestDto: CreateRequestDto, req: any): Promise<import("./entities/request.entity").Request>;
+    remove(id: string, req: any): Promise<void>;
 }

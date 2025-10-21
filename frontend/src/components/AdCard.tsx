@@ -17,9 +17,15 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick }) => {
       <div className="relative overflow-visible">
         {ad.photos && ad.photos.length > 0 && (
           <img 
-            src={ad.photos[0]} 
+            src={ad.photos[0].startsWith('http') 
+              ? ad.photos[0] 
+              : `http://localhost:3000${ad.photos[0]}`
+            }
             alt={ad.title}
             className="w-full h-48 object-cover rounded-t-lg"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop';
+            }}
           />
         )}
         <div className="absolute top-3 right-3 z-10">

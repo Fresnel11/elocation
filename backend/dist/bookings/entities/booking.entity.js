@@ -16,6 +16,7 @@ const ad_entity_1 = require("../../ads/entities/ad.entity");
 var BookingStatus;
 (function (BookingStatus) {
     BookingStatus["PENDING"] = "pending";
+    BookingStatus["ACCEPTED"] = "accepted";
     BookingStatus["CONFIRMED"] = "confirmed";
     BookingStatus["CANCELLED"] = "cancelled";
     BookingStatus["COMPLETED"] = "completed";
@@ -72,6 +73,26 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", String)
 ], Booking.prototype, "cancellationReason", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Booking.prototype, "paymentId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], Booking.prototype, "payoutId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'datetime', nullable: true }),
+    __metadata("design:type", Date)
+], Booking.prototype, "paidAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Booking.prototype, "fundsReleased", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'datetime', nullable: true }),
+    __metadata("design:type", Date)
+], Booking.prototype, "fundsReleasedAt", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Phone, Mail, Star, Grid, List, MessageCircle, Settings, Edit, Share2, MoreVertical, Heart, Eye } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Phone, Mail, Star, Grid, List, MessageCircle, Settings, Edit, Share2, MoreVertical, Heart, Eye, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { AdCardSkeletonGrid } from '../components/ui/AdCardSkeleton';
@@ -17,6 +17,7 @@ import { QRCodeModal } from '../components/ui/QRCodeModal';
 import { ProfileDropdownMenu } from '../components/ui/ProfileDropdownMenu';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 interface User {
   id: string;
@@ -89,15 +90,24 @@ export const UserProfilePage: React.FC = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ads' | 'bookings'>('ads');
+  const [activeTab, setActiveTab] = useState<'ads' | 'bookings' | 'requests'>('ads');
+  const [userRequests, setUserRequests] = useState([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
   const { user: currentUser, updateUser } = useAuth();
+  const { showToast } = useToast();
+
+  const isOwner = currentUser?.id === userId;
 
   useEffect(() => {
     if (userId) {
       fetchUserProfile();
       fetchUserAds();
+      if (isOwner) {
+        fetchUserRequests();
+      }
     }
-  }, [userId]);
+  }, [userId, isOwner]);
 
   const fetchUserProfile = async () => {
     try {
@@ -148,6 +158,50 @@ export const UserProfilePage: React.FC = () => {
     }
   };
 
+  const fetchUserRequests = async () => {
+    try {
+      setRequestsLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/requests', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Filtrer les demandes pour ne garder que celles de l'utilisateur connecté
+        const userOwnRequests = data.filter((request: any) => request.userId === userId);
+        setUserRequests(userOwnRequests);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des demandes:', error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  const handleDeleteRequest = async (requestId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/requests/${requestId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        setUserRequests(prev => prev.filter((req: any) => req.id !== requestId));
+        setDeleteRequestId(null);
+        showToast('success', 'Demande supprimée avec succès');
+      } else {
+        showToast('error', 'Erreur lors de la suppression de la demande');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      showToast('error', 'Erreur lors de la suppression de la demande');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
@@ -193,8 +247,6 @@ export const UserProfilePage: React.FC = () => {
       window.open(`https://wa.me/${user.whatsappNumber.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
     }
   };
-
-  const isOwner = currentUser?.id === userId;
 
   if (loading) {
     return (
@@ -370,16 +422,28 @@ export const UserProfilePage: React.FC = () => {
                   Annonces ({userAds.length})
                 </button>
                 {isOwner && (
-                  <button
-                    onClick={() => setActiveTab('bookings')}
-                    className={`px-6 py-3 font-medium border-b-2 transition-colors ${
-                      activeTab === 'bookings'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Réservations
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setActiveTab('bookings')}
+                      className={`px-6 py-3 font-medium border-b-2 transition-colors ${
+                        activeTab === 'bookings'
+                          ? 'border-blue-600 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Réservations
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('requests')}
+                      className={`px-6 py-3 font-medium border-b-2 transition-colors ${
+                        activeTab === 'requests'
+                          ? 'border-blue-600 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Demandes ({userRequests.length})
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -471,6 +535,92 @@ export const UserProfilePage: React.FC = () => {
                   <p className="text-gray-600">
                     Vos réservations apparaîtront ici.
                   </p>
+                </div>
+              )}
+              
+              {activeTab === 'requests' && isOwner && (
+                <div>
+                  {requestsLoading ? (
+                    <div className="grid grid-cols-1 gap-6">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="bg-white rounded-xl h-32 animate-pulse border border-gray-100"></div>
+                      ))}
+                    </div>
+                  ) : userRequests.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <MessageCircle className="h-10 w-10 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-medium text-gray-900 mb-3">
+                        Aucune demande
+                      </h3>
+                      <p className="text-gray-600">
+                        Vous n'avez pas encore créé de demande.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {userRequests.map((request: any) => (
+                        <div 
+                          key={request.id}
+                          className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 
+                              className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600"
+                              onClick={() => navigate(`/requests/${request.id}`)}
+                            >
+                              {request.title}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {request.category.name}
+                              </span>
+                              <button
+                                onClick={() => navigate(`/requests?edit=${request.id}`)}
+                                className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                title="Modifier"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteRequestId(request.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <p 
+                            className="text-gray-600 mb-3 line-clamp-2 cursor-pointer"
+                            onClick={() => navigate(`/requests/${request.id}`)}
+                          >
+                            {request.description}
+                          </p>
+                          <div 
+                            className="flex items-center justify-between text-sm text-gray-500 cursor-pointer"
+                            onClick={() => navigate(`/requests/${request.id}`)}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                <span>{request.location}</span>
+                              </div>
+                              {request.maxBudget && (
+                                <span className="font-semibold text-green-600">
+                                  {Math.round(request.maxBudget).toLocaleString()} FCFA
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs">
+                              {new Date(request.createdAt).toLocaleDateString('fr-FR')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -628,16 +778,28 @@ export const UserProfilePage: React.FC = () => {
                 Annonces ({userAds.length})
               </button>
               {isOwner && (
-                <button
-                  onClick={() => setActiveTab('bookings')}
-                  className={`flex-1 py-3 text-center font-medium border-b-2 transition-colors ${
-                    activeTab === 'bookings'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500'
-                  }`}
-                >
-                  Réservations
-                </button>
+                <>
+                  <button
+                    onClick={() => setActiveTab('bookings')}
+                    className={`flex-1 py-3 text-center font-medium border-b-2 transition-colors ${
+                      activeTab === 'bookings'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500'
+                    }`}
+                  >
+                    Réservations
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('requests')}
+                    className={`flex-1 py-3 text-center font-medium border-b-2 transition-colors ${
+                      activeTab === 'requests'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500'
+                    }`}
+                  >
+                    Demandes ({userRequests.length})
+                  </button>
+                </>
               )}
             </div>
                 
@@ -738,6 +900,90 @@ export const UserProfilePage: React.FC = () => {
                 </div>
               </div>
             )}
+            
+            {activeTab === 'requests' && isOwner && (
+              <div className="space-y-4">
+                {requestsLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-gray-100 rounded-xl h-24 animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : userRequests.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Aucune demande
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Vous n'avez pas encore créé de demande.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userRequests.map((request: any) => (
+                      <div 
+                        key={request.id}
+                        className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 
+                            className="font-semibold text-gray-900 text-sm line-clamp-1 flex-1 cursor-pointer hover:text-blue-600"
+                            onClick={() => navigate(`/requests/${request.id}`)}
+                          >
+                            {request.title}
+                          </h3>
+                          <div className="flex items-center gap-1 ml-2">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                              {request.category.name}
+                            </span>
+                            <button
+                              onClick={() => navigate(`/requests?edit=${request.id}`)}
+                              className="p-1 text-orange-600 hover:bg-orange-50 rounded"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteRequestId(request.id)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <p 
+                          className="text-gray-600 text-sm mb-3 line-clamp-2 cursor-pointer"
+                          onClick={() => navigate(`/requests/${request.id}`)}
+                        >
+                          {request.description}
+                        </p>
+                        <div 
+                          className="flex items-center justify-between text-xs text-gray-500 cursor-pointer"
+                          onClick={() => navigate(`/requests/${request.id}`)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{request.location}</span>
+                            </div>
+                            {request.maxBudget && (
+                              <span className="font-semibold text-green-600">
+                                {Math.round(request.maxBudget).toLocaleString()} FCFA
+                              </span>
+                            )}
+                          </div>
+                          <span>
+                            {new Date(request.createdAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -790,6 +1036,30 @@ export const UserProfilePage: React.FC = () => {
         profileUrl={`${window.location.origin}/user/${user.id}`}
         userName={`${user.firstName} ${user.lastName}`}
       />
+      
+      {/* Modal de confirmation de suppression */}
+      {deleteRequestId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Supprimer la demande</h3>
+            <p className="text-gray-600 mb-6">Êtes-vous sûr de vouloir supprimer cette demande ? Cette action est irréversible.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteRequestId(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDeleteRequest(deleteRequestId)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

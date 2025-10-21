@@ -22,7 +22,8 @@ import { UserProfilePage } from './pages/UserProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RequestsPage } from './pages/RequestsPage';
 import { RequestDetailPage } from './pages/RequestDetailPage';
-import { MessagesPage } from './pages/MessagesPage';
+// TODO: Messagerie - À implémenter plus tard
+// import { MessagesPage } from './pages/MessagesPage';
 import { BookingsPage } from './pages/BookingsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -55,6 +56,7 @@ import { AdminRoute } from './components/admin/AdminRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
+// TODO: Messagerie - Import temporaire pour éviter les erreurs
 import { MessagesProvider } from './context/MessagesContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { HelpButton } from './components/ui/HelpButton';
@@ -71,7 +73,8 @@ import AnalyticsPage from './pages/AnalyticsPage';
 function AppContent() {
   const location = useLocation();
   const { user } = useAuth();
-  const hideFooter = location.pathname === '/messages' || location.pathname.startsWith('/admin') || !!user;
+  // TODO: Messagerie - Retirer '/messages' quand implémenté
+  const hideFooter = /* location.pathname === '/messages' || */ location.pathname.startsWith('/admin') || !!user;
   const isAdminRoute = location.pathname.startsWith('/admin');
   
   return (
@@ -90,7 +93,8 @@ function AppContent() {
           <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
           <Route path="/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
           <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
-          <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+          {/* TODO: Messagerie - À implémenter plus tard */}
+          {/* <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} /> */}
           <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
           <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
@@ -150,6 +154,7 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         <NotificationProvider>
+          {/* TODO: Messagerie - Provider temporaire pour éviter les erreurs */}
           <MessagesProvider>
             <AppContent />
           </MessagesProvider>

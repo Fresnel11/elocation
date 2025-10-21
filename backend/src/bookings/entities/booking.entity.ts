@@ -4,6 +4,7 @@ import { Ad } from '../../ads/entities/ad.entity';
 
 export enum BookingStatus {
   PENDING = 'pending',
+  ACCEPTED = 'accepted',
   CONFIRMED = 'confirmed',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
@@ -48,6 +49,21 @@ export class Booking {
 
   @Column({ type: 'text', nullable: true })
   cancellationReason: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  paymentId: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  payoutId: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  paidAt: Date;
+
+  @Column({ type: 'boolean', default: false })
+  fundsReleased: boolean;
+
+  @Column({ type: 'datetime', nullable: true })
+  fundsReleasedAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

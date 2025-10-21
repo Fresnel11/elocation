@@ -112,6 +112,17 @@ export class UsersController {
     return this.usersService.updateProfile(req.user.id, updateProfileDto);
   }
 
+  @Get('export-data')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Exporter toutes les données de l\'utilisateur' })
+  async exportUserData(@Request() req) {
+    console.log('Route export-data appelée pour l\'utilisateur:', req.user.id);
+    const data = await this.usersService.exportUserData(req.user.id);
+    console.log('Données exportées:', Object.keys(data));
+    return data;
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

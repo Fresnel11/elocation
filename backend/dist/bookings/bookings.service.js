@@ -16,14 +16,17 @@ exports.BookingsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const schedule_1 = require("@nestjs/schedule");
 const booking_entity_1 = require("./entities/booking.entity");
 const ads_service_1 = require("../ads/ads.service");
 const notifications_service_1 = require("../notifications/notifications.service");
+const moneroo_service_1 = require("../moneroo/moneroo.service");
 let BookingsService = class BookingsService {
-    constructor(bookingRepository, adsService, notificationsService) {
+    constructor(bookingRepository, adsService, notificationsService, monerooService) {
         this.bookingRepository = bookingRepository;
         this.adsService = adsService;
         this.notificationsService = notificationsService;
+        this.monerooService = monerooService;
     }
     async create(createBookingDto, user) {
         const { adId, startDate, endDate, message, deposit } = createBookingDto;
@@ -45,11 +48,15 @@ let BookingsService = class BookingsService {
         const conflictingBookings = await this.bookingRepository.find({
             where: {
                 ad: { id: adId },
-                status: booking_entity_1.BookingStatus.CONFIRMED,
+                status: (0, typeorm_2.In)([booking_entity_1.BookingStatus.PENDING, booking_entity_1.BookingStatus.ACCEPTED, booking_entity_1.BookingStatus.CONFIRMED]),
                 startDate: (0, typeorm_2.Between)(start, end),
             },
         });
         if (conflictingBookings.length > 0) {
+            const pendingBookings = conflictingBookings.filter(b => b.status === booking_entity_1.BookingStatus.PENDING);
+            if (pendingBookings.length > 0) {
+                throw new common_1.BadRequestException('Ces dates sont déjà en cours de demande par un autre utilisateur.');
+            }
             throw new common_1.BadRequestException('Ces dates ne sont pas disponibles');
         }
         let totalPrice;
@@ -182,23 +189,160 @@ let BookingsService = class BookingsService {
     async getAdAvailability(adId, startDate, endDate) {
         const query = this.bookingRepository.createQueryBuilder('booking')
             .where('booking.adId = :adId', { adId })
-            .andWhere('booking.status = :status', { status: booking_entity_1.BookingStatus.CONFIRMED });
+            .andWhere('booking.status IN (:...statuses)', {
+            statuses: [booking_entity_1.BookingStatus.PENDING, booking_entity_1.BookingStatus.ACCEPTED, booking_entity_1.BookingStatus.CONFIRMED]
+        });
         if (startDate && endDate) {
             query.andWhere('(booking.startDate BETWEEN :startDate AND :endDate OR booking.endDate BETWEEN :startDate AND :endDate)', { startDate, endDate });
         }
         const bookings = await query.getMany();
+        const pendingBookings = bookings.filter(b => b.status === booking_entity_1.BookingStatus.PENDING);
         return {
             isAvailable: bookings.length === 0,
             conflictingBookings: bookings,
+            pendingRequests: pendingBookings.length,
+            message: pendingBookings.length > 0 ?
+                `${pendingBookings.length} demande(s) en attente sur ces dates` : null
         };
+    }
+    async acceptBooking(bookingId, userId) {
+        const booking = await this.findOne(bookingId);
+        if (booking.owner.id !== userId) {
+            throw new common_1.ForbiddenException('Seul le propriétaire peut accepter une réservation');
+        }
+        if (booking.status !== booking_entity_1.BookingStatus.PENDING) {
+            throw new common_1.BadRequestException('Cette réservation ne peut plus être acceptée');
+        }
+        booking.status = booking_entity_1.BookingStatus.ACCEPTED;
+        const updatedBooking = await this.bookingRepository.save(booking);
+        try {
+            const paymentData = await this.monerooService.initializePayment(booking.deposit, 'XOF', {
+                bookingId: booking.id,
+                adId: booking.ad.id,
+                tenantId: booking.tenant.id,
+                ownerId: booking.owner.id,
+            });
+            await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
+                bookingId: booking.id,
+                adId: booking.ad.id,
+                adTitle: booking.ad.title,
+                paymentUrl: paymentData.payment_url,
+            });
+            return { booking: updatedBooking, paymentUrl: paymentData.payment_url };
+        }
+        catch (error) {
+            console.error('Erreur lors de la création du paiement Moneroo:', error);
+            await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
+                bookingId: booking.id,
+                adId: booking.ad.id,
+                adTitle: booking.ad.title,
+            });
+            return { booking: updatedBooking };
+        }
+    }
+    async rejectBooking(bookingId, userId, reason) {
+        const booking = await this.findOne(bookingId);
+        if (booking.owner.id !== userId) {
+            throw new common_1.ForbiddenException('Seul le propriétaire peut refuser une réservation');
+        }
+        if (booking.status !== booking_entity_1.BookingStatus.PENDING) {
+            throw new common_1.BadRequestException('Cette réservation ne peut plus être refusée');
+        }
+        booking.status = booking_entity_1.BookingStatus.CANCELLED;
+        booking.cancellationReason = reason || 'Refusée par le propriétaire';
+        const updatedBooking = await this.bookingRepository.save(booking);
+        await this.notificationsService.notifyBookingCancelled(booking.tenant.id, {
+            bookingId: booking.id,
+            adId: booking.ad.id,
+            adTitle: booking.ad.title,
+        }, reason);
+        return updatedBooking;
+    }
+    async processExpiredBookings() {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+        const expiredBookings = await this.bookingRepository.find({
+            where: {
+                status: booking_entity_1.BookingStatus.PENDING,
+                createdAt: (0, typeorm_2.LessThan)(twentyFourHoursAgo)
+            }
+        });
+        for (const booking of expiredBookings) {
+            booking.status = booking_entity_1.BookingStatus.EXPIRED;
+            booking.cancellationReason = 'Expirée - Pas de réponse du propriétaire dans les 24h';
+            await this.bookingRepository.save(booking);
+            await this.notificationsService.notifyBookingCancelled(booking.tenant.id, {
+                bookingId: booking.id,
+                adId: booking.ad.id,
+                adTitle: booking.ad.title,
+            }, 'Expirée - Pas de réponse du propriétaire dans les 24h');
+        }
+        console.log(`[BookingsService] ${expiredBookings.length} réservations expirées traitées`);
+        return { processed: expiredBookings.length };
+    }
+    async confirmPayment(bookingId, paymentData) {
+        const booking = await this.findOne(bookingId);
+        if (booking.status !== booking_entity_1.BookingStatus.ACCEPTED) {
+            throw new common_1.BadRequestException('Cette réservation n\'est pas en attente de paiement');
+        }
+        booking.status = booking_entity_1.BookingStatus.CONFIRMED;
+        booking.paymentId = paymentData.payment_id;
+        booking.paidAt = new Date();
+        const updatedBooking = await this.bookingRepository.save(booking);
+        await this.notificationsService.notifyBookingConfirmed(booking.owner.id, {
+            bookingId: booking.id,
+            adId: booking.ad.id,
+            adTitle: booking.ad.title,
+            message: 'Le paiement a été effectué, la réservation est confirmée',
+        });
+        return updatedBooking;
+    }
+    async releaseFundsToOwner(bookingId) {
+        const booking = await this.findOne(bookingId);
+        if (booking.status !== booking_entity_1.BookingStatus.CONFIRMED) {
+            throw new common_1.BadRequestException('Cette réservation n\'est pas confirmée');
+        }
+        if (booking.fundsReleased) {
+            throw new common_1.BadRequestException('Les fonds ont déjà été libérés');
+        }
+        const now = new Date();
+        const startDate = new Date(booking.startDate);
+        if (startDate > now) {
+            throw new common_1.BadRequestException('Les fonds ne peuvent être libérés qu\'après le début de la réservation');
+        }
+        try {
+            const serviceFeesRate = 0.05;
+            const amountToRelease = booking.deposit * (1 - serviceFeesRate);
+            const payoutData = await this.monerooService.initializePayout(amountToRelease, {
+                phone: booking.owner.phone,
+                email: booking.owner.email,
+                name: `${booking.owner.firstName} ${booking.owner.lastName}`,
+            });
+            booking.fundsReleased = true;
+            booking.fundsReleasedAt = new Date();
+            booking.payoutId = payoutData.payout_id;
+            await this.bookingRepository.save(booking);
+            return payoutData;
+        }
+        catch (error) {
+            console.error('Erreur lors de la libération des fonds:', error);
+            throw new common_1.BadRequestException('Erreur lors de la libération des fonds');
+        }
     }
 };
 exports.BookingsService = BookingsService;
+__decorate([
+    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_HOUR),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BookingsService.prototype, "processExpiredBookings", null);
 exports.BookingsService = BookingsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(booking_entity_1.Booking)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         ads_service_1.AdsService,
-        notifications_service_1.NotificationsService])
+        notifications_service_1.NotificationsService,
+        moneroo_service_1.MonerooService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map

@@ -36,6 +36,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { ContactModule } from './contact/contact.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { ABTestingModule } from './ab-testing/ab-testing.module';
+import { MonerooModule } from './moneroo/moneroo.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { ABTestingModule } from './ab-testing/ab-testing.module';
     ContactModule,
     RecommendationsModule,
     ABTestingModule,
+    MonerooModule,
   ],
   providers: [JwtService, WebSocketServerService, NotificationsGateway],
 })

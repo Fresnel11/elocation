@@ -70,4 +70,27 @@ export declare class UsersService {
     getPublicKey(userId: string): Promise<{
         publicKey: string;
     }>;
+    exportUserData(userId: string): Promise<{
+        user: {
+            id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            phone: string;
+            whatsappNumber: string;
+            createdAt: Date;
+            lastLogin: Date;
+            isVerified: boolean;
+        };
+        profile: UserProfile;
+        ads: {
+            id: string;
+            title: string;
+            description: string;
+            price: number;
+            location: string;
+            createdAt: Date;
+        }[];
+        exportedAt: string;
+    }>;
 }

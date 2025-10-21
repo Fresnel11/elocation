@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, MapPin, Clock, MessageCircle, User, Filter, Eye, Edit } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { CreateRequestModal } from '../components/ui/CreateRequestModal';
 import { RespondToRequestModal } from '../components/ui/RespondToRequestModal';
+import { ClickableAvatar } from '../components/ui/ClickableAvatar';
 
 interface Request {
   id: string;
@@ -22,6 +23,7 @@ interface Request {
     id: string;
     firstName: string;
     lastName: string;
+    profilePicture?: string;
   };
   userId: string;
   category: {
@@ -213,15 +215,18 @@ export const RequestsPage: React.FC = () => {
                   {/* Footer */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-100 gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm font-semibold">
-                          {request.user.firstName[0]}
-                        </span>
-                      </div>
+                      <ClickableAvatar
+                        avatarUrl={request.user.profilePicture}
+                        userName={`${request.user.firstName} ${request.user.lastName}`}
+                        size="sm"
+                      />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <Link 
+                          to={`/user/${request.user.id}`}
+                          className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer truncate block"
+                        >
                           {request.user.firstName} {request.user.lastName}
-                        </p>
+                        </Link>
                         <p className="text-xs text-gray-500">Demandeur</p>
                       </div>
                       <div className="flex items-center gap-1 text-gray-500 sm:hidden">

@@ -280,9 +280,8 @@ Description améliorée (max 100 mots):`;
     e.preventDefault();
     e.stopPropagation();
     
-    if (loading) return; // Éviter les soumissions multiples
+    if (loading) return;
     
-    // Validation des fichiers avant soumission
     if (files.length === 0) {
       error('Erreur', 'Au moins une image ou vidéo est requise pour publier une annonce');
       return;
@@ -291,6 +290,23 @@ Description améliorée (max 100 mots):`;
     setLoading(true);
 
     try {
+      // Upload des fichiers d'abord
+      let photos: string[] = [];
+      let video: string | undefined;
+      
+      if (files.length > 0) {
+        const formDataFiles = new FormData();
+        files.forEach(file => formDataFiles.append('files', file));
+        
+        const uploadResponse = await api.post('/upload/files', formDataFiles, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        photos = uploadResponse.data.photos || [];
+        video = uploadResponse.data.video;
+      }
+      
+      // Créer l'annonce avec les URLs des fichiers uploadés
       const adData = {
         ...formData,
         price: parseFloat(formData.price),
@@ -300,22 +316,9 @@ Description améliorée (max 100 mots):`;
         year: parseInt(formData.year) || undefined,
         mileage: parseInt(formData.mileage) || undefined,
         subCategoryId: formData.subCategoryId || undefined,
-        photos: uploadedMedia.photos,
-        video: uploadedMedia.video
+        photos,
+        video
       };
-
-      // Upload des fichiers d'abord
-      if (files.length > 0) {
-        const formDataFiles = new FormData();
-        files.forEach(file => formDataFiles.append('files', file));
-        
-        const uploadResponse = await api.post('/upload/files', formDataFiles, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        
-        adData.photos = uploadResponse.data.photos || [];
-        adData.video = uploadResponse.data.video;
-      }
       
       await api.post('/ads', adData);
       success('Annonce publiée !', 'Votre annonce a été publiée avec succès.');
@@ -323,6 +326,7 @@ Description améliorée (max 100 mots):`;
       onClose();
       resetForm();
     } catch (err: any) {
+      console.error('Erreur publication:', err);
       error('Erreur', err.response?.data?.message || 'Une erreur est survenue lors de la publication.');
     } finally {
       setLoading(false);
@@ -407,6 +411,9 @@ Description améliorée (max 100 mots):`;
                   {enhancing ? '✨ Amélioration...' : '✨ Améliorer avec IA'}
                 </button>
               </div>
+              <p className="text-xs text-blue-600 mb-2">
+                💡 Pour utiliser l'amélioration IA, écrivez d'abord une phrase complète qui commence par une majuscule et se termine par un point.
+              </p>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
@@ -725,10 +732,9 @@ Description améliorée (max 100 mots):`;
 
             {/* Rôle de publication */}
             <Select
-              label="Vous publiez en tant que *"
+              label="Vous publiez en tant que"
               options={[
                 { value: 'owner', label: 'Propriétaire' },
-                { value: 'tenant', label: 'Locataire' },
                 { value: 'middleman', label: 'Démarcheur/Intermédiaire' }
               ]}
               value={formData.publisherRole}

@@ -8,4 +8,5 @@ export declare class RequestsService {
     findAll(): Promise<Request[]>;
     findOne(id: string): Promise<Request>;
     update(id: string, updateRequestDto: CreateRequestDto, userId: string): Promise<Request>;
+    remove(id: string, userId: string): Promise<void>;
 }

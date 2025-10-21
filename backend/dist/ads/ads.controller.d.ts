@@ -7,6 +7,10 @@ export declare class AdsController {
     private readonly adsService;
     constructor(adsService: AdsService);
     create(createAdDto: CreateAdDto, req: any): Promise<import("./entities/ad.entity").Ad>;
+    debugCount(): Promise<{
+        total: number;
+        message: string;
+    }>;
     findAll(searchAdsDto: SearchAdsDto, userCity?: string, req?: any): Promise<unknown>;
     findUserAds(userId: string, paginationDto: PaginationDto): Promise<{
         ads: import("./entities/ad.entity").Ad[];
