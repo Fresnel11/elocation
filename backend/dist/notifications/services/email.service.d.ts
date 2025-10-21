@@ -5,4 +5,5 @@ export declare class EmailService {
     sendNewAdMatchEmail(userEmail: string, userName: string, ads: any[]): Promise<void>;
     sendBookingReminderEmail(userEmail: string, userName: string, booking: any): Promise<void>;
     sendBookingStatusChangeEmail(userEmail: string, userName: string, booking: any): Promise<void>;
+    sendBookingConfirmationEmail(userEmail: string, userName: string, booking: any, paymentLink: string): Promise<void>;
 }

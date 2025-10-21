@@ -97,7 +97,23 @@ let NotificationsService = class NotificationsService {
         return this.createNotification(ownerId, notification_entity_1.NotificationType.BOOKING_REQUEST, 'Nouvelle demande de réservation', `${bookingData.tenantName} souhaite réserver "${bookingData.adTitle}"`, { bookingId: bookingData.bookingId, adId: bookingData.adId });
     }
     async notifyBookingConfirmed(tenantId, bookingData) {
-        return this.createNotification(tenantId, notification_entity_1.NotificationType.BOOKING_CONFIRMED, 'Réservation confirmée', `Votre demande pour "${bookingData.adTitle}" a été acceptée`, { bookingId: bookingData.bookingId, adId: bookingData.adId });
+        const notification = await this.createNotification(tenantId, notification_entity_1.NotificationType.BOOKING_CONFIRMED, 'Réservation confirmée', `Votre demande pour "${bookingData.adTitle}" a été acceptée`, {
+            bookingId: bookingData.bookingId,
+            adId: bookingData.adId,
+            paymentRequired: true,
+            paymentLink: bookingData.paymentLink
+        });
+        if (bookingData.userEmail && bookingData.userName && bookingData.paymentLink) {
+            const emailBookingData = {
+                ad: { title: bookingData.adTitle },
+                startDate: bookingData.startDate,
+                endDate: bookingData.endDate,
+                totalAmount: bookingData.totalAmount,
+                securityDeposit: bookingData.securityDeposit
+            };
+            await this.emailService.sendBookingConfirmationEmail(bookingData.userEmail, bookingData.userName, emailBookingData, bookingData.paymentLink);
+        }
+        return notification;
     }
     async notifyBookingCancelled(userId, bookingData, reason) {
         return this.createNotification(userId, notification_entity_1.NotificationType.BOOKING_CANCELLED, 'Réservation annulée', `La réservation pour "${bookingData.adTitle}" a été annulée${reason ? `: ${reason}` : ''}`, { bookingId: bookingData.bookingId, adId: bookingData.adId, reason });

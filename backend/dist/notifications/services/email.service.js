@@ -80,6 +80,40 @@ let EmailService = class EmailService {
     `;
         await this.sendEmail(userEmail, 'Mise à jour de réservation', html);
     }
+    async sendBookingConfirmationEmail(userEmail, userName, booking, paymentLink) {
+        const html = `
+      <h2>Réservation confirmée !</h2>
+      <p>Bonjour ${userName},</p>
+      <p>Votre demande de réservation pour "${booking.ad.title}" a été acceptée par le propriétaire.</p>
+      
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0;">Détails de la réservation</h3>
+        <p><strong>Dates :</strong> ${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}</p>
+        <p><strong>Montant total :</strong> ${booking.totalAmount} FCFA</p>
+        <p><strong>Dépôt de garantie :</strong> ${booking.securityDeposit} FCFA</p>
+      </div>
+
+      <p>Pour finaliser votre réservation, veuillez effectuer le paiement du dépôt de garantie en cliquant sur le bouton ci-dessous :</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${paymentLink}" 
+           style="background-color: #4CAF50; 
+                  color: white; 
+                  padding: 12px 24px; 
+                  text-decoration: none; 
+                  border-radius: 4px; 
+                  font-weight: bold;
+                  display: inline-block;">
+          Payer le dépôt de garantie
+        </a>
+      </div>
+
+      <p>Ce lien de paiement est valable 24 heures. Passé ce délai, la réservation sera automatiquement annulée.</p>
+      
+      <p>Cordialement,<br>L'équipe eLocation Bénin</p>
+    `;
+        await this.sendEmail(userEmail, 'Votre réservation a été acceptée !', html);
+    }
 };
 exports.EmailService = EmailService;
 exports.EmailService = EmailService = __decorate([

@@ -131,13 +131,38 @@ export class NotificationsService {
   }
 
   async notifyBookingConfirmed(tenantId: string, bookingData: any) {
-    return this.createNotification(
+    // Envoyer la notification en temps réel
+    const notification = await this.createNotification(
       tenantId,
       NotificationType.BOOKING_CONFIRMED,
       'Réservation confirmée',
       `Votre demande pour "${bookingData.adTitle}" a été acceptée`,
-      { bookingId: bookingData.bookingId, adId: bookingData.adId }
+      { 
+        bookingId: bookingData.bookingId, 
+        adId: bookingData.adId,
+        paymentRequired: true,
+        paymentLink: bookingData.paymentLink
+      }
     );
+
+    // Envoyer un email de confirmation avec le lien de paiement
+    if (bookingData.userEmail && bookingData.userName && bookingData.paymentLink) {
+      const emailBookingData = {
+        ad: { title: bookingData.adTitle },
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        totalAmount: bookingData.totalAmount,
+        securityDeposit: bookingData.securityDeposit
+      };
+      await this.emailService.sendBookingConfirmationEmail(
+        bookingData.userEmail,
+        bookingData.userName,
+        emailBookingData,
+        bookingData.paymentLink
+      );
+    }
+
+    return notification;
   }
 
   async notifyBookingCancelled(userId: string, bookingData: any, reason?: string) {

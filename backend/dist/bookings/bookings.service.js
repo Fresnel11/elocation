@@ -153,6 +153,7 @@ let BookingsService = class BookingsService {
     async findOne(id) {
         const booking = await this.bookingRepository.findOne({
             where: { id },
+            relations: ['ad', 'tenant', 'owner'],
         });
         if (!booking) {
             throw new common_1.NotFoundException('Réservation non trouvée');
@@ -164,16 +165,29 @@ let BookingsService = class BookingsService {
         if (booking.owner.id !== user.id && booking.tenant.id !== user.id) {
             throw new common_1.ForbiddenException('Vous n\'êtes pas autorisé à modifier cette réservation');
         }
-        if (updateBookingDto.status === booking_entity_1.BookingStatus.CONFIRMED && booking.owner.id !== user.id) {
-            throw new common_1.ForbiddenException('Seul le propriétaire peut confirmer une réservation');
+        if (updateBookingDto.status === booking_entity_1.BookingStatus.CONFIRMED) {
+            if (booking.owner.id !== user.id) {
+                throw new common_1.ForbiddenException('Seul le propriétaire peut confirmer une réservation');
+            }
+            if (booking.status !== booking_entity_1.BookingStatus.ACCEPTED || !booking.paymentId) {
+                throw new common_1.BadRequestException('La réservation doit être acceptée et payée avant d\'être confirmée');
+            }
         }
         Object.assign(booking, updateBookingDto);
         const updatedBooking = await this.bookingRepository.save(booking);
         if (updateBookingDto.status === booking_entity_1.BookingStatus.CONFIRMED) {
+            const paymentLink = `${process.env.FRONTEND_URL}/paiement/${booking.id}?type=deposit`;
             await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
                 bookingId: booking.id,
                 adId: booking.ad.id,
                 adTitle: booking.ad.title,
+                userEmail: booking.tenant.email,
+                userName: booking.tenant.firstName || 'Utilisateur',
+                paymentLink: paymentLink,
+                startDate: booking.startDate,
+                endDate: booking.endDate,
+                totalAmount: booking.totalPrice,
+                securityDeposit: booking.deposit
             });
         }
         else if (updateBookingDto.status === booking_entity_1.BookingStatus.CANCELLED) {
@@ -211,7 +225,7 @@ let BookingsService = class BookingsService {
             throw new common_1.ForbiddenException('Seul le propriétaire peut accepter une réservation');
         }
         if (booking.status !== booking_entity_1.BookingStatus.PENDING) {
-            throw new common_1.BadRequestException('Cette réservation ne peut plus être acceptée');
+            throw new common_1.BadRequestException(`Cette réservation est déjà ${booking.status.toLowerCase()}`);
         }
         booking.status = booking_entity_1.BookingStatus.ACCEPTED;
         const updatedBooking = await this.bookingRepository.save(booking);
