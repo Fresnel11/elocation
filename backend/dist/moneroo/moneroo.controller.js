@@ -25,7 +25,19 @@ let MonerooController = class MonerooController {
     }
     async createPayment(createPaymentDto) {
         const { amount, currency, metadata } = createPaymentDto;
-        return await this.monerooService.initializePayment(amount, currency, metadata);
+        const paymentData = {
+            amount,
+            currency,
+            description: (metadata === null || metadata === void 0 ? void 0 : metadata.description) || 'Payment',
+            customer: (metadata === null || metadata === void 0 ? void 0 : metadata.customer) || {
+                email: 'customer@example.com',
+                firstName: 'Customer',
+                lastName: 'Name'
+            },
+            returnUrl: (metadata === null || metadata === void 0 ? void 0 : metadata.returnUrl) || `${process.env.FRONTEND_URL}/payment/return`,
+            metadata
+        };
+        return await this.monerooService.initializePayment(paymentData);
     }
     async webhook(req, res) {
         var _a;
@@ -49,6 +61,30 @@ let MonerooController = class MonerooController {
     async releaseFunds(payoutDto) {
         const { amount, recipient } = payoutDto;
         return await this.monerooService.initializePayout(amount, recipient);
+    }
+    async verifyPayment(paymentId) {
+        return await this.monerooService.verifyPayment(paymentId);
+    }
+    async paymentReturn(query, res) {
+        const { paymentId, paymentStatus, bookingId } = query;
+        try {
+            if (paymentStatus === 'success' && paymentId) {
+                const verification = await this.monerooService.verifyPayment(paymentId);
+                if (verification.status === 'success' && bookingId) {
+                    await this.bookingsService.confirmPayment(bookingId, {
+                        payment_id: paymentId,
+                        amount: verification.amount,
+                        currency: verification.currency,
+                    });
+                    return res.redirect(`${process.env.FRONTEND_URL}/booking/${bookingId}?payment=success`);
+                }
+            }
+            return res.redirect(`${process.env.FRONTEND_URL}/booking/${bookingId}?payment=failed`);
+        }
+        catch (error) {
+            console.error('Erreur lors du retour de paiement:', error);
+            return res.redirect(`${process.env.FRONTEND_URL}/booking/${bookingId}?payment=error`);
+        }
     }
 };
 exports.MonerooController = MonerooController;
@@ -74,6 +110,21 @@ __decorate([
     __metadata("design:paramtypes", [payout_dto_1.PayoutDto]),
     __metadata("design:returntype", Promise)
 ], MonerooController.prototype, "releaseFunds", null);
+__decorate([
+    (0, common_1.Get)('verify/:paymentId'),
+    __param(0, (0, common_1.Param)('paymentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MonerooController.prototype, "verifyPayment", null);
+__decorate([
+    (0, common_1.Get)('payment/return'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], MonerooController.prototype, "paymentReturn", null);
 exports.MonerooController = MonerooController = __decorate([
     (0, common_1.Controller)('moneroo'),
     __metadata("design:paramtypes", [moneroo_service_1.MonerooService,

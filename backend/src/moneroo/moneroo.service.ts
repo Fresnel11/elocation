@@ -15,19 +15,50 @@ export class MonerooService {
     this.apiKey = this.configService.get<string>('MONEROO_API_KEY');
   }
 
-  async initializePayment(amount: number, currency: string, metadata: any) {
+  async initializePayment(paymentData: {
+    amount: number;
+    currency: string;
+    description: string;
+    customer: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone?: string;
+    };
+    returnUrl: string;
+    metadata: any;
+  }) {
     try {
       const response = await this.httpService.axiosRef.post(
         `${this.baseUrl}/payments/initialize`,
         {
-          amount,
-          currency,
-          metadata,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          description: paymentData.description,
+          customer: paymentData.customer,
+          return_url: paymentData.returnUrl,
+          metadata: paymentData.metadata,
         },
         {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      throw new HttpException(error.response?.data || error.message, error.response?.status || 500);
+    }
+  }
+
+  async verifyPayment(paymentId: string) {
+    try {
+      const response = await this.httpService.axiosRef.get(
+        `${this.baseUrl}/payments/${paymentId}/verify`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
           },
         },
       );

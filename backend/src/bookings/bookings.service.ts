@@ -273,16 +273,24 @@ export class BookingsService {
     
     // Créer le paiement Moneroo
     try {
-      const paymentData = await this.monerooService.initializePayment(
-        booking.deposit,
-        'XOF',
-        {
+      const paymentData = await this.monerooService.initializePayment({
+        amount: booking.deposit,
+        currency: 'XOF',
+        description: `Dépôt de garantie - ${booking.ad.title}`,
+        customer: {
+          email: booking.tenant.email,
+          firstName: booking.tenant.firstName,
+          lastName: booking.tenant.lastName,
+          phone: booking.tenant.phone,
+        },
+        returnUrl: `${process.env.FRONTEND_URL}/payment/return?bookingId=${booking.id}`,
+        metadata: {
           bookingId: booking.id,
           adId: booking.ad.id,
           tenantId: booking.tenant.id,
           ownerId: booking.owner.id,
-        }
-      );
+        },
+      });
       
       // Notifier le locataire avec le lien de paiement
       await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {

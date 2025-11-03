@@ -69,6 +69,8 @@ import AdminVerificationPage from './pages/AdminVerificationPage';
 import OfflineIndicator from './components/OfflineIndicator';
 import OfflineAdsPage from './pages/OfflineAdsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import PaymentPage from './pages/PaymentPage';
+import PaymentReturnPage from './pages/PaymentReturnPage';
 
 function AppContent() {
   const location = useLocation();
@@ -96,6 +98,8 @@ function AppContent() {
           {/* TODO: Messagerie - À implémenter plus tard */}
           {/* <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} /> */}
           <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
+          <Route path="/payment/:bookingId" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+          <Route path="/payment/return" element={<PaymentReturnPage />} />
           <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/offline-ads" element={<ProtectedRoute><OfflineAdsPage /></ProtectedRoute>} />

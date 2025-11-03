@@ -9,4 +9,6 @@ export declare class MonerooController {
     createPayment(createPaymentDto: CreatePaymentDto): Promise<any>;
     webhook(req: any, res: any): Promise<any>;
     releaseFunds(payoutDto: PayoutDto): Promise<any>;
+    verifyPayment(paymentId: string): Promise<any>;
+    paymentReturn(query: any, res: any): Promise<any>;
 }

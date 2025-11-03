@@ -336,6 +336,17 @@ export const BookingsPage: React.FC = () => {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 mt-3">
+                    {/* Bouton de paiement pour les réservations acceptées */}
+                    {selectedTab === 'tenant' && booking.status === 'accepted' && (
+                      <Button
+                        size="sm"
+                        onClick={() => window.location.href = `/payment/${booking.id}`}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 flex-1 md:flex-none"
+                      >
+                        <CreditCard className="h-3 w-3 mr-1" />
+                        Payer le dépôt
+                      </Button>
+                    )}
 
                     {selectedTab === 'owner' && booking.status === 'pending' && (
                       <>
