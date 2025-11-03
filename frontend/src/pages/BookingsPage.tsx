@@ -13,6 +13,11 @@ const statusConfig = {
     color: 'bg-yellow-100 text-yellow-800', 
     icon: Clock 
   },
+  accepted: { 
+    label: 'Acceptée', 
+    color: 'bg-blue-100 text-blue-800', 
+    icon: CheckCircle 
+  },
   confirmed: { 
     label: 'Confirmée', 
     color: 'bg-green-100 text-green-800', 
@@ -331,16 +336,7 @@ export const BookingsPage: React.FC = () => {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {selectedTab === 'tenant' && booking.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleStatusUpdate(booking.id, 'cancelled', 'Annulé par le demandeur')}
-                        className="text-red-600 border-red-200 hover:bg-red-50 text-xs px-3 py-1 flex-1 md:flex-none"
-                      >
-                        Annuler
-                      </Button>
-                    )}
+
                     {selectedTab === 'owner' && booking.status === 'pending' && (
                       <>
                         <Button
@@ -354,7 +350,18 @@ export const BookingsPage: React.FC = () => {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleStatusUpdate(booking.id, 'confirmed')}
+                          onClick={async () => {
+                            setActionLoading(booking.id);
+                            try {
+                              await bookingsService.acceptBooking(booking.id);
+                              showToast('success', 'Réservation acceptée');
+                              fetchBookings();
+                            } catch (error: any) {
+                              showToast('error', error.response?.data?.message || 'Erreur lors de l\'acceptation');
+                            } finally {
+                              setActionLoading(null);
+                            }
+                          }}
                           disabled={actionLoading === booking.id}
                           className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 flex-1 md:flex-none"
                         >
@@ -401,6 +408,16 @@ export const BookingsPage: React.FC = () => {
           onClose={() => setDetailsModal({ isOpen: false, booking: null })}
           booking={detailsModal.booking}
           userRole={selectedTab}
+          onCancel={async (bookingId: string, reason: string) => {
+            try {
+              await bookingsService.cancelBooking(bookingId, reason);
+              showToast('success', 'Réservation annulée');
+              fetchBookings();
+              setDetailsModal({ isOpen: false, booking: null });
+            } catch (error: any) {
+              showToast('error', error.response?.data?.message || 'Erreur lors de l\'annulation');
+            }
+          }}
         />
       </div>
     </div>

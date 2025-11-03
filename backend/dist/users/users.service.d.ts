@@ -9,16 +9,14 @@ import { ReviewVerificationDto } from './dto/review-verification.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Role } from '../roles/entities/role.entity';
 import { UserVerification } from './entities/user-verification.entity';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
 export declare class UsersService {
     private readonly userRepository;
     private readonly profileRepository;
     private readonly roleRepository;
     private readonly verificationRepository;
-    private readonly notificationsGateway;
     private readonly notificationsService;
-    constructor(userRepository: Repository<User>, profileRepository: Repository<UserProfile>, roleRepository: Repository<Role>, verificationRepository: Repository<UserVerification>, notificationsGateway: NotificationsGateway, notificationsService: NotificationsService);
+    constructor(userRepository: Repository<User>, profileRepository: Repository<UserProfile>, roleRepository: Repository<Role>, verificationRepository: Repository<UserVerification>, notificationsService: NotificationsService);
     create(createUserDto: CreateUserDto): Promise<User>;
     findAll(paginationDto: PaginationDto): Promise<{
         users: User[];

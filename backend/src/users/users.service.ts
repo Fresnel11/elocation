@@ -13,7 +13,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { Role } from '../roles/entities/role.entity';
 import { UserRole } from '../common/enums/user-role.enum';
 import { UserVerification, VerificationStatus } from './entities/user-verification.entity';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
+
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 
@@ -28,7 +28,7 @@ export class UsersService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserVerification)
     private readonly verificationRepository: Repository<UserVerification>,
-    private readonly notificationsGateway: NotificationsGateway,
+
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -356,21 +356,7 @@ export class UsersService {
 
     const savedVerification = await this.verificationRepository.save(verification);
     
-    // Notifier les admins via WebSocket
-    const verificationData = {
-      id: savedVerification.id,
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email
-      },
-      documentType: savedVerification.documentType,
-      createdAt: savedVerification.createdAt
-    };
-    
-    console.log('Envoi notification WebSocket:', verificationData);
-    this.notificationsGateway.notifyAdminsNewVerification(verificationData);
+    // TODO: Notifier les admins via WebSocket
     
     // Créer une notification pour les admins (à implémenter pour les admins)
     // TODO: Créer notification pour tous les admins
@@ -399,12 +385,7 @@ export class UsersService {
 
     const updatedVerification = await this.verificationRepository.save(verification);
     
-    // Notifier l'utilisateur du résultat
-    this.notificationsGateway.notifyVerificationStatus(
-      verification.userId,
-      reviewDto.status,
-      reviewDto.rejectionReason
-    );
+    // TODO: Notifier l'utilisateur du résultat
     
     // Créer une notification pour l'utilisateur
     const statusMessage = reviewDto.status === VerificationStatus.APPROVED 

@@ -30,9 +30,6 @@ let MessagesService = class MessagesService {
         this.adRepository = adRepository;
         this.notificationsService = notificationsService;
     }
-    setWebSocketServer(wsServer) {
-        this.wsServer = wsServer;
-    }
     async sendMessage(senderId, createMessageDto) {
         const { content, receiverId, adId, imageUrl, messageType, isEncrypted } = createMessageDto;
         let ad = null;
@@ -61,9 +58,6 @@ let MessagesService = class MessagesService {
             relations: ['sender', 'receiver', 'ad']
         });
         const conversation = await this.updateConversation(senderId, receiverId, adId || null, content);
-        if (this.wsServer) {
-            this.wsServer.emitNewMessage(messageWithRelations || savedMessage);
-        }
         const sender = await this.userRepository.findOne({ where: { id: senderId } });
         if (sender) {
             const notificationMessage = ad

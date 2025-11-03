@@ -289,7 +289,13 @@ export class BookingsService {
         bookingId: booking.id,
         adId: booking.ad.id,
         adTitle: booking.ad.title,
-        paymentUrl: paymentData.payment_url,
+        userEmail: booking.tenant.email,
+        userName: booking.tenant.firstName || 'Utilisateur',
+        paymentLink: paymentData.payment_url,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalAmount: booking.totalPrice,
+        securityDeposit: booking.deposit
       });
       
       return { booking: updatedBooking, paymentUrl: paymentData.payment_url };
@@ -301,6 +307,12 @@ export class BookingsService {
         bookingId: booking.id,
         adId: booking.ad.id,
         adTitle: booking.ad.title,
+        userEmail: booking.tenant.email,
+        userName: booking.tenant.firstName || 'Utilisateur',
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalAmount: booking.totalPrice,
+        securityDeposit: booking.deposit
       });
       
       return { booking: updatedBooking };

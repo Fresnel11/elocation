@@ -8,11 +8,11 @@ import { User } from '../users/entities/user.entity';
 import { Ad } from '../ads/entities/ad.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
-import { WebSocketServerService } from '../websocket/websocket.server';
+
 
 @Injectable()
 export class MessagesService {
-  private wsServer: WebSocketServerService;
+
 
   constructor(
     @InjectRepository(Message)
@@ -26,9 +26,7 @@ export class MessagesService {
     private notificationsService: NotificationsService,
   ) {}
 
-  setWebSocketServer(wsServer: WebSocketServerService) {
-    this.wsServer = wsServer;
-  }
+
 
   async sendMessage(senderId: string, createMessageDto: CreateMessageDto) {
     const { content, receiverId, adId, imageUrl, messageType, isEncrypted } = createMessageDto;
@@ -70,10 +68,7 @@ export class MessagesService {
     // Créer ou mettre à jour la conversation
     const conversation = await this.updateConversation(senderId, receiverId, adId || null, content);
 
-    // Émettre le message via WebSocket
-    if (this.wsServer) {
-      this.wsServer.emitNewMessage(messageWithRelations || savedMessage);
-    }
+    // TODO: Émettre le message via WebSocket
 
     // Créer une notification pour le destinataire
     const sender = await this.userRepository.findOne({ where: { id: senderId } });

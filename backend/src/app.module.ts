@@ -5,9 +5,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { JwtService } from '@nestjs/jwt';
 import { join } from 'path';
-import { WebSocketServerService } from './websocket/websocket.server';
 import { MessagesService } from './messages/messages.service';
-import { NotificationsGateway } from './notifications/notifications.gateway';
+
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AdsModule } from './ads/ads.module';
@@ -92,18 +91,6 @@ import { MonerooModule } from './moneroo/moneroo.module';
     ABTestingModule,
     MonerooModule,
   ],
-  providers: [JwtService, WebSocketServerService, NotificationsGateway],
+  providers: [JwtService],
 })
-export class AppModule implements OnModuleInit {
-  constructor(
-    private jwtService: JwtService,
-    private messagesService: MessagesService,
-    private webSocketServerService: WebSocketServerService,
-    private notificationsGateway: NotificationsGateway,
-  ) {}
-
-  onModuleInit() {
-    this.messagesService.setWebSocketServer(this.webSocketServerService);
-    this.webSocketServerService.setNotificationsGateway(this.notificationsGateway);
-  }
-}
+export class AppModule {}

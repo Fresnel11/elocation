@@ -1,16 +1,17 @@
 import { JwtService } from '@nestjs/jwt';
-import { NotificationsGateway } from '../notifications/notifications.gateway';
 export declare class WebSocketServerService {
+    private static instance;
     private wss;
     private clients;
     private jwtService;
-    private notificationsGateway;
+    private isInitialized;
     constructor(jwtService: JwtService);
-    setNotificationsGateway(notificationsGateway: NotificationsGateway): void;
+    private initializeServer;
     private handleConnection;
     private handleMessage;
     sendToUser(userId: string, data: any): void;
     broadcast(data: any): void;
     emitNewMessage(message: any): void;
     emitUnreadCountUpdate(userId: string, unreadCount: number): void;
+    sendNotificationToUser(userId: string, notification: any): void;
 }

@@ -7,6 +7,7 @@ const app_module_1 = require("./app.module");
 const fs = require("fs");
 const swagger_1 = require("@nestjs/swagger");
 const path_1 = require("path");
+const ws_1 = require("ws");
 async function bootstrap() {
     if (!fs.existsSync('./uploads')) {
         fs.mkdirSync('./uploads');
@@ -67,8 +68,36 @@ async function bootstrap() {
     });
     const port = configService.get('PORT') || 3000;
     await app.listen(port);
+    const wss = new ws_1.Server({ port: 3001 });
+    const clients = new Map();
+    wss.on('connection', (ws, req) => {
+        console.log('WebSocket client connected');
+        ws.on('message', (message) => {
+            try {
+                const data = JSON.parse(message.toString());
+                if (data.type === 'auth' && data.userId) {
+                    clients.set(data.userId, ws);
+                    console.log(`User ${data.userId} authenticated on WebSocket`);
+                }
+            }
+            catch (error) {
+                console.error('WebSocket message error:', error);
+            }
+        });
+        ws.on('close', () => {
+            for (const [userId, client] of clients.entries()) {
+                if (client === ws) {
+                    clients.delete(userId);
+                    console.log(`User ${userId} disconnected from WebSocket`);
+                    break;
+                }
+            }
+        });
+    });
+    global.wsServer = { clients, wss };
     console.log(`🚀 eLocation API is running on: http://localhost:${port}`);
     console.log(`📘 Swagger UI available at: http://localhost:${port}/api-docs`);
+    console.log(`🔌 WebSocket server running on: ws://localhost:3001`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

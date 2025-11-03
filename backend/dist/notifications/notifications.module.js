@@ -12,7 +12,6 @@ const typeorm_1 = require("@nestjs/typeorm");
 const jwt_1 = require("@nestjs/jwt");
 const notifications_service_1 = require("./notifications.service");
 const notifications_controller_1 = require("./notifications.controller");
-const notifications_gateway_1 = require("./notifications.gateway");
 const notification_entity_1 = require("./entities/notification.entity");
 const notification_preference_entity_1 = require("./entities/notification-preference.entity");
 const search_alert_entity_1 = require("./entities/search-alert.entity");
@@ -36,8 +35,8 @@ exports.NotificationsModule = NotificationsModule = __decorate([
             }),
         ],
         controllers: [notifications_controller_1.NotificationsController],
-        providers: [notifications_service_1.NotificationsService, notifications_gateway_1.NotificationsGateway, email_service_1.EmailService, push_notification_service_1.PushNotificationService, notification_scheduler_service_1.NotificationSchedulerService, notification_cron_service_1.NotificationCronService],
-        exports: [notifications_service_1.NotificationsService, notifications_gateway_1.NotificationsGateway, push_notification_service_1.PushNotificationService],
+        providers: [notifications_service_1.NotificationsService, email_service_1.EmailService, push_notification_service_1.PushNotificationService, notification_scheduler_service_1.NotificationSchedulerService, notification_cron_service_1.NotificationCronService],
+        exports: [notifications_service_1.NotificationsService, push_notification_service_1.PushNotificationService],
     })
 ], NotificationsModule);
 //# sourceMappingURL=notifications.module.js.map

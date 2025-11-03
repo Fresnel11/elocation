@@ -1,12 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification, NotificationType } from './entities/notification.entity';
 import { NotificationPreference } from './entities/notification-preference.entity';
 import { SearchAlert } from './entities/search-alert.entity';
-import { NotificationsGateway } from './notifications.gateway';
 import { User } from '../users/entities/user.entity';
 import { EmailService } from './services/email.service';
+
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CreateSearchAlertDto } from './dto/create-search-alert.dto';
 import { UpdateNotificationPreferenceDto } from './dto/update-notification-preference.dto';
@@ -20,8 +20,8 @@ export class NotificationsService {
     private preferenceRepository: Repository<NotificationPreference>,
     @InjectRepository(SearchAlert)
     private searchAlertRepository: Repository<SearchAlert>,
-    private notificationsGateway: NotificationsGateway,
     private emailService: EmailService,
+
   ) {}
 
   async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
@@ -43,14 +43,7 @@ export class NotificationsService {
     
     // Envoyer la notification en temps réel si activée
     if (!typePreference || typePreference.pushEnabled) {
-      this.notificationsGateway.sendNotificationToUser(userId, {
-        id: savedNotification.id,
-        type: savedNotification.type,
-        title: savedNotification.title,
-        message: savedNotification.message,
-        data: savedNotification.data,
-        createdAt: savedNotification.createdAt,
-      });
+      this.sendWebSocketNotification(userId, savedNotification);
     }
 
     // Envoyer email si activé
@@ -135,8 +128,8 @@ export class NotificationsService {
     const notification = await this.createNotification(
       tenantId,
       NotificationType.BOOKING_CONFIRMED,
-      'Réservation confirmée',
-      `Votre demande pour "${bookingData.adTitle}" a été acceptée`,
+      'Réservation acceptée !',
+      `Votre demande pour "${bookingData.adTitle}" a été acceptée. ${bookingData.paymentLink ? 'Cliquez pour payer.' : ''}`,
       { 
         bookingId: bookingData.bookingId, 
         adId: bookingData.adId,
@@ -228,5 +221,33 @@ export class NotificationsService {
   // Méthode de compatibilité
   async updateNotificationPreferenceLegacy(userId: string, type: string, emailEnabled: boolean, pushEnabled: boolean): Promise<NotificationPreference> {
     return this.updateNotificationPreference(userId, { type: type as any, emailEnabled, pushEnabled });
+  }
+
+  private sendWebSocketNotification(userId: string, notification: Notification) {
+    try {
+      const wsServer = (global as any).wsServer;
+      if (wsServer && wsServer.clients) {
+        const client = wsServer.clients.get(userId);
+        if (client && client.readyState === 1) { // WebSocket.OPEN
+          client.send(JSON.stringify({
+            type: 'notification',
+            data: {
+              id: notification.id,
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              data: notification.data,
+              createdAt: notification.createdAt,
+              read: false
+            }
+          }));
+          console.log(`[NotificationsService] Sent WebSocket notification to user ${userId}`);
+        } else {
+          console.log(`[NotificationsService] User ${userId} not connected to WebSocket`);
+        }
+      }
+    } catch (error) {
+      console.error('[NotificationsService] WebSocket send error:', error);
+    }
   }
 }

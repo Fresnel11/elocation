@@ -8,24 +8,33 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var WebSocketServerService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebSocketServerService = void 0;
 const common_1 = require("@nestjs/common");
 const ws_1 = require("ws");
 const jwt_1 = require("@nestjs/jwt");
 const url = require("url");
-let WebSocketServerService = class WebSocketServerService {
+let WebSocketServerService = WebSocketServerService_1 = class WebSocketServerService {
     constructor(jwtService) {
         this.clients = new Map();
+        this.isInitialized = false;
+        if (WebSocketServerService_1.instance) {
+            return WebSocketServerService_1.instance;
+        }
         this.jwtService = jwtService;
+        this.initializeServer();
+        WebSocketServerService_1.instance = this;
+    }
+    initializeServer() {
+        if (this.isInitialized)
+            return;
         this.wss = new ws_1.WebSocketServer({ port: 3002 });
         this.wss.on('connection', (ws, request) => {
             this.handleConnection(ws, request);
         });
+        this.isInitialized = true;
         console.log('WebSocket server started on port 3002');
-    }
-    setNotificationsGateway(notificationsGateway) {
-        this.notificationsGateway = notificationsGateway;
     }
     handleConnection(ws, request) {
         try {
@@ -64,15 +73,16 @@ let WebSocketServerService = class WebSocketServerService {
     handleMessage(userId, message, ws) {
         switch (message.type) {
             case 'test_notification':
-                if (this.notificationsGateway) {
-                    this.notificationsGateway.sendNotificationToUser(userId, {
+                this.sendToUser(userId, {
+                    type: 'notification',
+                    data: {
                         type: 'test',
                         title: 'Test WebSocket',
                         message: 'WebSocket fonctionne correctement !',
                         timestamp: new Date()
-                    });
-                    ws.send(JSON.stringify({ type: 'test_response', data: { success: true, message: 'Notification envoyée' } }));
-                }
+                    }
+                });
+                ws.send(JSON.stringify({ type: 'test_response', data: { success: true, message: 'Notification envoyée' } }));
                 break;
             default:
                 console.log('Unknown message type:', message.type);
@@ -98,9 +108,16 @@ let WebSocketServerService = class WebSocketServerService {
     emitUnreadCountUpdate(userId, unreadCount) {
         this.sendToUser(userId, { type: 'unread_count_update', data: { unreadCount } });
     }
+    sendNotificationToUser(userId, notification) {
+        console.log(`[WebSocketServer] Sending notification to user ${userId}:`, notification);
+        this.sendToUser(userId, {
+            type: 'notification',
+            data: notification
+        });
+    }
 };
 exports.WebSocketServerService = WebSocketServerService;
-exports.WebSocketServerService = WebSocketServerService = __decorate([
+exports.WebSocketServerService = WebSocketServerService = WebSocketServerService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService])
 ], WebSocketServerService);

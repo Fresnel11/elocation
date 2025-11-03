@@ -19,14 +19,12 @@ const typeorm_2 = require("typeorm");
 const notification_entity_1 = require("./entities/notification.entity");
 const notification_preference_entity_1 = require("./entities/notification-preference.entity");
 const search_alert_entity_1 = require("./entities/search-alert.entity");
-const notifications_gateway_1 = require("./notifications.gateway");
 const email_service_1 = require("./services/email.service");
 let NotificationsService = class NotificationsService {
-    constructor(notificationRepository, preferenceRepository, searchAlertRepository, notificationsGateway, emailService) {
+    constructor(notificationRepository, preferenceRepository, searchAlertRepository, emailService) {
         this.notificationRepository = notificationRepository;
         this.preferenceRepository = preferenceRepository;
         this.searchAlertRepository = searchAlertRepository;
-        this.notificationsGateway = notificationsGateway;
         this.emailService = emailService;
     }
     async create(createNotificationDto) {
@@ -42,14 +40,7 @@ let NotificationsService = class NotificationsService {
         const preferences = await this.getNotificationPreferences(userId);
         const typePreference = preferences.find(p => p.type === type);
         if (!typePreference || typePreference.pushEnabled) {
-            this.notificationsGateway.sendNotificationToUser(userId, {
-                id: savedNotification.id,
-                type: savedNotification.type,
-                title: savedNotification.title,
-                message: savedNotification.message,
-                data: savedNotification.data,
-                createdAt: savedNotification.createdAt,
-            });
+            this.sendWebSocketNotification(userId, savedNotification);
         }
         if (!typePreference || typePreference.emailEnabled) {
         }
@@ -97,7 +88,7 @@ let NotificationsService = class NotificationsService {
         return this.createNotification(ownerId, notification_entity_1.NotificationType.BOOKING_REQUEST, 'Nouvelle demande de réservation', `${bookingData.tenantName} souhaite réserver "${bookingData.adTitle}"`, { bookingId: bookingData.bookingId, adId: bookingData.adId });
     }
     async notifyBookingConfirmed(tenantId, bookingData) {
-        const notification = await this.createNotification(tenantId, notification_entity_1.NotificationType.BOOKING_CONFIRMED, 'Réservation confirmée', `Votre demande pour "${bookingData.adTitle}" a été acceptée`, {
+        const notification = await this.createNotification(tenantId, notification_entity_1.NotificationType.BOOKING_CONFIRMED, 'Réservation acceptée !', `Votre demande pour "${bookingData.adTitle}" a été acceptée. ${bookingData.paymentLink ? 'Cliquez pour payer.' : ''}`, {
             bookingId: bookingData.bookingId,
             adId: bookingData.adId,
             paymentRequired: true,
@@ -160,6 +151,35 @@ let NotificationsService = class NotificationsService {
     async updateNotificationPreferenceLegacy(userId, type, emailEnabled, pushEnabled) {
         return this.updateNotificationPreference(userId, { type: type, emailEnabled, pushEnabled });
     }
+    sendWebSocketNotification(userId, notification) {
+        try {
+            const wsServer = global.wsServer;
+            if (wsServer && wsServer.clients) {
+                const client = wsServer.clients.get(userId);
+                if (client && client.readyState === 1) {
+                    client.send(JSON.stringify({
+                        type: 'notification',
+                        data: {
+                            id: notification.id,
+                            type: notification.type,
+                            title: notification.title,
+                            message: notification.message,
+                            data: notification.data,
+                            createdAt: notification.createdAt,
+                            read: false
+                        }
+                    }));
+                    console.log(`[NotificationsService] Sent WebSocket notification to user ${userId}`);
+                }
+                else {
+                    console.log(`[NotificationsService] User ${userId} not connected to WebSocket`);
+                }
+            }
+        }
+        catch (error) {
+            console.error('[NotificationsService] WebSocket send error:', error);
+        }
+    }
 };
 exports.NotificationsService = NotificationsService;
 exports.NotificationsService = NotificationsService = __decorate([
@@ -170,7 +190,6 @@ exports.NotificationsService = NotificationsService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        notifications_gateway_1.NotificationsGateway,
         email_service_1.EmailService])
 ], NotificationsService);
 //# sourceMappingURL=notifications.service.js.map

@@ -53,6 +53,7 @@ const AnnonceDetailPage: React.FC = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showBookingSection, setShowBookingSection] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -368,6 +369,49 @@ const AnnonceDetailPage: React.FC = () => {
     }
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
+  // Créer la liste complète des médias
+  const allMedia = React.useMemo(() => {
+    const media = [];
+    if (ad?.photos) {
+      ad.photos.forEach(photo => {
+        const url = photo.startsWith('http') ? photo : `${API_BASE_URL}/${photo.replace(/^\/+/, '')}`;
+        media.push({ url, type: 'image' as const });
+      });
+    }
+    if ((ad as any)?.video) {
+      const url = (ad as any).video.startsWith('http') ? (ad as any).video : `${API_BASE_URL}/${(ad as any).video.replace(/^\/+/, '')}`;
+      media.push({ url, type: 'video' as const });
+    }
+    return media;
+  }, [ad]);
+
+  // Mettre à jour l'index quand le média sélectionné change
+  useEffect(() => {
+    if (selectedMedia && allMedia.length > 0) {
+      const index = allMedia.findIndex(media => media.url === selectedMedia.url);
+      if (index !== -1) {
+        setCurrentMediaIndex(index);
+      }
+    }
+  }, [selectedMedia, allMedia]);
+
+  // Navigation entre les médias
+  const navigateMedia = (direction: 'prev' | 'next') => {
+    if (allMedia.length <= 1) return;
+    
+    let newIndex;
+    if (direction === 'prev') {
+      newIndex = currentMediaIndex > 0 ? currentMediaIndex - 1 : allMedia.length - 1;
+    } else {
+      newIndex = currentMediaIndex < allMedia.length - 1 ? currentMediaIndex + 1 : 0;
+    }
+    
+    setCurrentMediaIndex(newIndex);
+    setSelectedMedia(allMedia[newIndex]);
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Chargement...</div>;
   }
@@ -379,8 +423,6 @@ const AnnonceDetailPage: React.FC = () => {
   if (!ad) {
     return <div className="text-center mt-10">Annonce non trouvée.</div>;
   }
-
-  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-white min-h-screen">
@@ -419,7 +461,7 @@ const AnnonceDetailPage: React.FC = () => {
           )}
           
           {/* Header avec boutons */}
-          <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent">
+          <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent z-40">
             <button 
               onClick={() => navigate(-1)} 
               className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
@@ -893,7 +935,7 @@ const AnnonceDetailPage: React.FC = () => {
       {/* Desktop Layout - Design Moderne */}
       <div className="hidden lg:block bg-gray-50 min-h-screen">
         {/* Header minimaliste */}
-        <div className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="bg-white shadow-sm sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-8 py-4">
             <div className="flex items-center justify-between">
               <button 

@@ -7,14 +7,21 @@ class WebSocketService {
   private isConnecting = false;
 
   connect() {
-    if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) {
-      console.log('WebSocket already connected or connecting');
+    // Vérifier tous les états possibles
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      return;
+    }
+    
+    if (this.ws?.readyState === WebSocket.CONNECTING || this.isConnecting) {
+      console.log('WebSocket connection already in progress');
       return;
     }
     
     // Fermer l'ancienne connexion si elle existe
     if (this.ws) {
       this.ws.close();
+      this.ws = null;
     }
 
     const token = localStorage.getItem('token');
@@ -24,14 +31,33 @@ class WebSocketService {
     }
 
     this.isConnecting = true;
-    this.ws = new WebSocket(`ws://localhost:3002?token=${token}`);
-
+    
+    try {
+      this.ws = new WebSocket(`ws://localhost:3001`);
+    } catch (error) {
+      console.error('Failed to create WebSocket:', error);
+      this.isConnecting = false;
+      return;
+    }
+    
+    // Send auth message after connection
     this.ws.onopen = () => {
       console.log('WebSocket connected');
       this.isConnecting = false;
       this.reconnectAttempts = 0;
+      
+      // Extract userId from token
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        this.send('auth', { userId: payload.sub });
+      } catch (error) {
+        console.error('Error parsing token:', error);
+      }
+      
       this.emit('connect');
     };
+
+
 
     this.ws.onmessage = (event) => {
       try {
@@ -42,11 +68,15 @@ class WebSocketService {
       }
     };
 
-    this.ws.onclose = () => {
-      console.log('WebSocket disconnected');
+    this.ws.onclose = (event) => {
+      console.log('WebSocket disconnected', event.code, event.reason);
       this.isConnecting = false;
       this.emit('disconnect');
-      this.attemptReconnect();
+      
+      // Only reconnect if it wasn't a manual disconnect
+      if (event.code !== 1000) {
+        this.attemptReconnect();
+      }
     };
 
     this.ws.onerror = (error) => {
@@ -57,16 +87,22 @@ class WebSocketService {
   }
 
   disconnect() {
+    this.reconnectAttempts = this.maxReconnectAttempts; // Prevent reconnection
     if (this.ws) {
-      this.ws.close();
+      this.ws.close(1000, 'Manual disconnect');
       this.ws = null;
     }
+    this.isConnecting = false;
     this.messageCallbacks.clear();
   }
 
   send(type: string, data?: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ type, data }));
+      if (type === 'auth') {
+        this.ws.send(JSON.stringify({ type, ...data }));
+      } else {
+        this.ws.send(JSON.stringify({ type, data }));
+      }
     } else {
       console.warn('WebSocket not connected');
     }
@@ -107,8 +143,13 @@ class WebSocketService {
       return;
     }
 
+    // Empêcher les reconnexions multiples
+    if (this.isConnecting) {
+      return;
+    }
+
     this.reconnectAttempts++;
-    const delay = this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1);
+    const delay = Math.max(2000, this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1));
     
     setTimeout(() => {
       console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
