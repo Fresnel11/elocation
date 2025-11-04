@@ -352,15 +352,53 @@ const AnnonceDetailPage: React.FC = () => {
     
     try {
       setBookingLoading(true);
-      await bookingsService.createBooking({
+      
+      // Créer la réservation
+      const booking = await bookingsService.createBooking({
         adId: id!,
         startDate: bookingData.startDate,
         endDate: bookingData.endDate,
         message: bookingData.message
       });
-      showToast('success', 'Demande de réservation envoyée !');
-      setBookingData({ startDate: '', endDate: '', message: '' });
-      setTotalPrice(0);
+      
+      // Calculer le dépôt (20% du prix total)
+      const depositAmount = Math.round(totalPrice * 0.2);
+      
+      // Créer le paiement Moneroo immédiatement
+      const paymentResponse = await fetch('http://localhost:3000/moneroo/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          amount: depositAmount,
+          currency: 'XOF',
+          description: `Dépôt de garantie - ${ad.title}`,
+          customer: {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+          },
+          returnUrl: `${window.location.origin}/payment/return?bookingId=${booking.id}`,
+          metadata: {
+            bookingId: booking.id,
+            adId: id,
+            tenantId: user.id,
+            ownerId: ad.user.id,
+          },
+        }),
+      });
+      
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        // Rediriger vers Moneroo
+        window.location.href = paymentData.checkout_url;
+      } else {
+        showToast('error', 'Erreur lors de la création du paiement');
+      }
+      
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de la réservation';
       showToast('error', errorMessage);
@@ -649,7 +687,7 @@ const AnnonceDetailPage: React.FC = () => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <Calendar className="h-5 w-5" />
-              Faire une réservation
+              Réserver et Payer
             </button>
           </div>
         )}
@@ -735,7 +773,7 @@ const AnnonceDetailPage: React.FC = () => {
                 {bookingLoading ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 ) : (
-                  'Réserver'
+                  'Réserver et Payer'
                 )}
               </button>
             </div>
@@ -916,7 +954,7 @@ const AnnonceDetailPage: React.FC = () => {
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
               >
                 <Calendar className="h-5 w-5" />
-                Faire une réservation
+                Réserver et Payer
               </button>
             ) : (
               /* TODO: Messagerie - À implémenter plus tard */
@@ -1351,7 +1389,7 @@ const AnnonceDetailPage: React.FC = () => {
                       ) : (
                         <>
                           <Send className="h-5 w-5" />
-                          Demander une réservation
+                          Réserver et Payer
                         </>
                       )}
                     </button>

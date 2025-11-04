@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import { Loader2, CreditCard, ArrowLeft } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 interface Booking {
   id: string;
@@ -25,6 +25,7 @@ const PaymentPage: React.FC = () => {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchBookingDetails();
@@ -43,12 +44,12 @@ const PaymentPage: React.FC = () => {
         const data = await response.json();
         setBooking(data);
       } else {
-        toast.error('Erreur lors du chargement de la réservation');
+        showToast('error', 'Erreur lors du chargement de la réservation');
         navigate('/bookings');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('Erreur de connexion');
+      showToast('error', 'Erreur de connexion');
       navigate('/bookings');
     } finally {
       setLoading(false);
@@ -82,11 +83,11 @@ const PaymentPage: React.FC = () => {
         // Rediriger vers Moneroo
         window.location.href = paymentData.checkout_url;
       } else {
-        toast.error('Erreur lors de la création du paiement');
+        showToast('error', 'Erreur lors de la création du paiement');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('Erreur de connexion');
+      showToast('error', 'Erreur de connexion');
     } finally {
       setPaymentLoading(false);
     }

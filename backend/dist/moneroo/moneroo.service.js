@@ -27,7 +27,12 @@ let MonerooService = class MonerooService {
                 amount: paymentData.amount,
                 currency: paymentData.currency,
                 description: paymentData.description,
-                customer: paymentData.customer,
+                customer: {
+                    email: paymentData.customer.email,
+                    first_name: paymentData.customer.firstName,
+                    last_name: paymentData.customer.lastName,
+                    phone: paymentData.customer.phone,
+                },
                 return_url: paymentData.returnUrl,
                 metadata: paymentData.metadata,
             }, {
