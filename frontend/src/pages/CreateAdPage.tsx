@@ -36,7 +36,16 @@ export const CreateAdPage: React.FC = () => {
     subCategoryId: '',
     amenities: [] as string[],
     whatsappNumber: '',
-    allowBooking: false
+    allowBooking: false,
+    // Champs véhicules
+    brand: '',
+    model: '',
+    year: '',
+    fuel: '',
+    transmission: '',
+    mileage: '',
+    condition: '',
+    publisherRole: 'owner'
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
@@ -303,9 +312,11 @@ Description améliorée (max 100 mots):`;
       const adData = {
         ...formData,
         price: parseFloat(formData.price),
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 1,
-        area: parseInt(formData.area) || 0,
+        bedrooms: parseInt(formData.bedrooms) || undefined,
+        bathrooms: parseInt(formData.bathrooms) || undefined,
+        area: parseInt(formData.area) || undefined,
+        year: parseInt(formData.year) || undefined,
+        mileage: parseInt(formData.mileage) || undefined,
         subCategoryId: formData.subCategoryId || undefined,
         photos,
         video
@@ -448,30 +459,130 @@ Description améliorée (max 100 mots):`;
             disabled={!formData.categoryId || subCategories.length === 0}
           />
 
-          {/* Détails du bien */}
-          <div className="space-y-4">
-            <Input
-              label="Nombre de chambres"
-              type="number"
-              value={formData.bedrooms}
-              onChange={(e) => handleChange('bedrooms', e.target.value)}
-              placeholder="2"
-            />
-            <Input
-              label="Nombre de salles de bain"
-              type="number"
-              value={formData.bathrooms}
-              onChange={(e) => handleChange('bathrooms', e.target.value)}
-              placeholder="1"
-            />
-            <Input
-              label="Surface (m²)"
-              type="number"
-              value={formData.area}
-              onChange={(e) => handleChange('area', e.target.value)}
-              placeholder="65"
-            />
-          </div>
+          {/* Champs spécifiques selon la catégorie */}
+          {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Détails du bien</h3>
+              <div className="space-y-4">
+                <Input
+                  label="Nombre de chambres"
+                  type="number"
+                  value={formData.bedrooms}
+                  onChange={(e) => handleChange('bedrooms', e.target.value)}
+                  placeholder="2"
+                />
+                <Input
+                  label="Nombre de salles de bain"
+                  type="number"
+                  value={formData.bathrooms}
+                  onChange={(e) => handleChange('bathrooms', e.target.value)}
+                  placeholder="1"
+                />
+                <Input
+                  label="Surface (m²)"
+                  type="number"
+                  value={formData.area}
+                  onChange={(e) => handleChange('area', e.target.value)}
+                  placeholder="65"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Champs spécifiques aux véhicules */}
+          {categories.find(cat => cat.id === formData.categoryId)?.name === 'Véhicules' && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Détails du véhicule</h3>
+              <div className="space-y-4">
+                <Input
+                  label="Marque *"
+                  value={formData.brand}
+                  onChange={(e) => handleChange('brand', e.target.value)}
+                  placeholder="Toyota, Honda..."
+                  required
+                />
+                <Input
+                  label="Modèle *"
+                  value={formData.model}
+                  onChange={(e) => handleChange('model', e.target.value)}
+                  placeholder="Corolla, Civic..."
+                  required
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Année *"
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => handleChange('year', e.target.value)}
+                    placeholder="2020"
+                    required
+                  />
+                  <Select
+                    label="Carburant *"
+                    options={[
+                      { value: '', label: 'Sélectionner' },
+                      { value: 'essence', label: 'Essence' },
+                      { value: 'diesel', label: 'Diesel' },
+                      { value: 'hybride', label: 'Hybride' },
+                      { value: 'electrique', label: 'Électrique' }
+                    ]}
+                    value={formData.fuel}
+                    onChange={(e) => handleChange('fuel', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    label="Transmission *"
+                    options={[
+                      { value: '', label: 'Sélectionner' },
+                      { value: 'manuelle', label: 'Manuelle' },
+                      { value: 'automatique', label: 'Automatique' }
+                    ]}
+                    value={formData.transmission}
+                    onChange={(e) => handleChange('transmission', e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Kilométrage"
+                    type="number"
+                    value={formData.mileage}
+                    onChange={(e) => handleChange('mileage', e.target.value)}
+                    placeholder="50000"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Champs pour autres catégories */}
+          {categories.find(cat => cat.id === formData.categoryId)?.name && 
+           !['Immobilier', 'Véhicules'].includes(categories.find(cat => cat.id === formData.categoryId)?.name || '') && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Détails du produit</h3>
+              <div className="space-y-4">
+                <Input
+                  label="Marque"
+                  value={formData.brand}
+                  onChange={(e) => handleChange('brand', e.target.value)}
+                  placeholder="Marque du produit"
+                />
+                <Select
+                  label="État *"
+                  options={[
+                    { value: '', label: 'Sélectionner' },
+                    { value: 'neuf', label: 'Neuf' },
+                    { value: 'tres-bon', label: 'Très bon état' },
+                    { value: 'bon', label: 'Bon état' },
+                    { value: 'correct', label: 'État correct' }
+                  ]}
+                  value={formData.condition}
+                  onChange={(e) => handleChange('condition', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           {/* Photos et Vidéo */}
           <div>
@@ -587,23 +698,37 @@ Description améliorée (max 100 mots):`;
             )}
           </div>
 
-          {/* Équipements */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Équipements</label>
-            <div className="grid grid-cols-2 gap-3">
-              {amenitiesList.map((amenity) => (
-                <label key={amenity.value} className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
-                  <input
-                    type="checkbox"
-                    checked={formData.amenities.includes(amenity.value)}
-                    onChange={() => handleAmenityToggle(amenity.value)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-3 text-sm text-gray-700">{amenity.label}</span>
-                </label>
-              ))}
+          {/* Équipements - Seulement pour Immobilier */}
+          {categories.find(cat => cat.id === formData.categoryId)?.name === 'Immobilier' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Équipements</label>
+              <div className="grid grid-cols-2 gap-3">
+                {amenitiesList.map((amenity) => (
+                  <label key={amenity.value} className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={formData.amenities.includes(amenity.value)}
+                      onChange={() => handleAmenityToggle(amenity.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-3 text-sm text-gray-700">{amenity.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Rôle de publication */}
+          <Select
+            label="Vous publiez en tant que"
+            options={[
+              { value: 'owner', label: 'Propriétaire' },
+              { value: 'middleman', label: 'Démarcheur/Intermédiaire' }
+            ]}
+            value={formData.publisherRole}
+            onChange={(e) => handleChange('publisherRole', e.target.value)}
+            required
+          />
 
           {/* WhatsApp */}
           <Input

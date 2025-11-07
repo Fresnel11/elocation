@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from './Button';
 import { CreateAdModal } from './CreateAdModal';
+import { useAuth } from '../../context/AuthContext';
 
 interface CreateAdButtonProps {
   onSuccess?: () => void;
@@ -18,6 +19,7 @@ export const CreateAdButton: React.FC<CreateAdButtonProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -30,6 +32,11 @@ export const CreateAdButton: React.FC<CreateAdButtonProps> = ({
   }, []);
 
   const handleClick = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
     if (isMobile) {
       navigate('/create-ad');
     } else {

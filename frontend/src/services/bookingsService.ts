@@ -22,7 +22,7 @@ export interface Booking {
   endDate: string;
   totalPrice: number;
   deposit: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: 'pending' | 'accepted' | 'confirmed' | 'cancelled' | 'completed' | 'expired';
   message?: string;
   cancellationReason?: string;
   createdAt: string;
@@ -64,6 +64,19 @@ export const bookingsService = {
 
   async updateBooking(id: string, data: { status?: string; cancellationReason?: string }): Promise<Booking> {
     const response = await api.patch(`/bookings/${id}`, data);
+    return response.data;
+  },
+
+  async cancelBooking(id: string, reason?: string): Promise<Booking> {
+    const response = await api.patch(`/bookings/${id}`, {
+      status: 'cancelled',
+      cancellationReason: reason
+    });
+    return response.data;
+  },
+
+  async acceptBooking(id: string): Promise<Booking> {
+    const response = await api.patch(`/bookings/${id}/accept`);
     return response.data;
   },
 

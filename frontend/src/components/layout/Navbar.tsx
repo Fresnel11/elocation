@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Calendar, Mail, Heart, Info, Phone, HelpCircle, LogIn, UserPlus } from 'lucide-react';
-import logoImage from '../../assets/e_location_blank.png';
+import { Menu, X, Settings, LogOut, ChevronDown, Home, MessageSquare, User, Calendar, Heart, Info, Phone, HelpCircle, LogIn, UserPlus } from 'lucide-react';
+// import logoImage from '../../assets/e_location_blank.png';
 import { Button } from '../ui/Button';
 import { NotificationBell } from '../ui/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
-// TODO: Messagerie - Import temporaire pour éviter les erreurs
+// TODO: Messagerie - Import temporaire pour évutter les erreurs
 import { useMessages } from '../../context/MessagesContext';
 
 export const Navbar: React.FC = () => {
@@ -61,7 +61,7 @@ export const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link to="/" className="flex items-center group hover:scale-105 transition-all duration-300">
-              <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" />
+              {/* <img src={logoImage} alt="eLocation Bénin" className="h-10 w-10 mr-3" /> */}
               <span className="text-3xl font-bold" style={{color: '#2563eb'}}>
                 eLocation
               </span>
@@ -211,7 +211,7 @@ export const Navbar: React.FC = () => {
 
                   {/* Menu déroulant */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[60]">
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900 truncate">{user.firstName} {user.lastName}</p>
                         <p className="text-xs text-gray-500 truncate" title={user.email || user.phone || undefined}>{user.email || user.phone}</p>

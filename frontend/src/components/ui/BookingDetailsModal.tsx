@@ -8,6 +8,7 @@ interface BookingDetailsModalProps {
   onClose: () => void;
   booking: Booking | null;
   userRole: 'tenant' | 'owner';
+  onCancel?: (bookingId: string, reason: string) => void;
 }
 
 const statusConfig = {
@@ -15,6 +16,11 @@ const statusConfig = {
     label: 'En attente', 
     color: 'bg-yellow-100 text-yellow-800', 
     icon: Clock 
+  },
+  accepted: { 
+    label: 'Acceptée', 
+    color: 'bg-blue-100 text-blue-800', 
+    icon: CheckCircle 
   },
   confirmed: { 
     label: 'Confirmée', 
@@ -42,8 +48,11 @@ export const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({
   isOpen,
   onClose,
   booking,
-  userRole
+  userRole,
+  onCancel
 }) => {
+  const [showCancelForm, setShowCancelForm] = React.useState(false);
+  const [cancelReason, setCancelReason] = React.useState('');
   if (!isOpen || !booking) return null;
 
   const StatusIcon = statusConfig[booking.status].icon;
@@ -189,12 +198,65 @@ export const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({
         </div>
 
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4">
-          <Button
-            onClick={onClose}
-            className="w-full"
-          >
-            Fermer
-          </Button>
+          {/* Formulaire d'annulation */}
+          {showCancelForm && (
+            <div className="mb-4 p-4 bg-red-50 rounded-lg">
+              <h4 className="font-medium text-red-900 mb-2">Annuler la réservation</h4>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Raison de l'annulation (optionnel)"
+                className="w-full p-2 border border-red-300 rounded-lg mb-3"
+                rows={3}
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    if (onCancel && booking) {
+                      onCancel(booking.id, cancelReason);
+                      setShowCancelForm(false);
+                      setCancelReason('');
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Confirmer l'annulation
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowCancelForm(false);
+                    setCancelReason('');
+                  }}
+                  variant="outline"
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex gap-2">
+            {/* Bouton d'annulation pour le demandeur */}
+            {userRole === 'tenant' && 
+             booking && 
+             ['pending', 'accepted'].includes(booking.status) && 
+             !showCancelForm && (
+              <Button
+                onClick={() => setShowCancelForm(true)}
+                className="bg-red-600 hover:bg-red-700 text-white flex-1"
+              >
+                Annuler la réservation
+              </Button>
+            )}
+            
+            <Button
+              onClick={onClose}
+              className={userRole === 'tenant' && booking && ['pending', 'accepted'].includes(booking.status) ? 'flex-1' : 'w-full'}
+              variant={userRole === 'tenant' && booking && ['pending', 'accepted'].includes(booking.status) ? 'outline' : 'default'}
+            >
+              Fermer
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -44,10 +44,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Connexion WebSocket seulement si pas déjà connecté
-    if (!websocketService.isConnected) {
-      websocketService.connect();
-    }
+    // Charger les notifications existantes
+    loadNotifications();
+
+    // Connexion WebSocket avec délai pour éviter les conflits
+    const connectTimeout = setTimeout(() => {
+      if (!websocketService.isConnected) {
+        websocketService.connect();
+      }
+    }, 1000);
 
     const handleConnect = () => {
       console.log('Connected to WebSocket server');
@@ -69,6 +74,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     };
 
     const handleNotification = (notification: Notification) => {
+      console.log('Notification reçue:', notification);
       setNotifications(prev => [notification, ...prev.slice(0, 49)]); // Garder max 50
       setUnreadCount(prev => prev + 1);
       
@@ -101,13 +107,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
 
     return () => {
+      clearTimeout(connectTimeout);
       websocketService.off('connect', handleConnect);
       websocketService.off('connected', handleConnected);
       websocketService.off('disconnect', handleDisconnect);
       websocketService.off('error', handleError);
       websocketService.off('notification', handleNotification);
       websocketService.off('new_verification', handleNewVerification);
-      websocketService.disconnect();
+      // Ne pas déconnecter automatiquement pour éviter les conflits
+      // websocketService.disconnect();
     };
   }, []);
 
@@ -171,6 +179,27 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/notifications', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.data || []);
+        
+        // Compter les non lues
+        const unread = (data.data || []).filter((n: Notification) => !n.read).length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
     }
   };
 

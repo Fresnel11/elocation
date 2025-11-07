@@ -171,6 +171,7 @@ export class BookingsService {
   async findOne(id: string): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
+      relations: ['ad', 'tenant', 'owner'],
     });
 
     if (!booking) {
@@ -188,9 +189,14 @@ export class BookingsService {
       throw new ForbiddenException('Vous n\'êtes pas autorisé à modifier cette réservation');
     }
 
-    // Seul le propriétaire peut confirmer
-    if (updateBookingDto.status === BookingStatus.CONFIRMED && booking.owner.id !== user.id) {
-      throw new ForbiddenException('Seul le propriétaire peut confirmer une réservation');
+    // Seul le propriétaire peut confirmer ET seulement si le paiement a été effectué
+    if (updateBookingDto.status === BookingStatus.CONFIRMED) {
+      if (booking.owner.id !== user.id) {
+        throw new ForbiddenException('Seul le propriétaire peut confirmer une réservation');
+      }
+      if (booking.status !== BookingStatus.ACCEPTED || !booking.paymentId) {
+        throw new BadRequestException('La réservation doit être acceptée et payée avant d\'être confirmée');
+      }
     }
 
     Object.assign(booking, updateBookingDto);
@@ -198,10 +204,20 @@ export class BookingsService {
 
     // Envoyer notifications selon le changement de statut
     if (updateBookingDto.status === BookingStatus.CONFIRMED) {
+      // Générer un lien de paiement pour le dépôt de garantie
+      const paymentLink = `${process.env.FRONTEND_URL}/paiement/${booking.id}?type=deposit`;
+      
       await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
         bookingId: booking.id,
         adId: booking.ad.id,
         adTitle: booking.ad.title,
+        userEmail: booking.tenant.email,
+        userName: booking.tenant.firstName || 'Utilisateur',
+        paymentLink: paymentLink,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalAmount: booking.totalPrice,
+        securityDeposit: booking.deposit
       });
     } else if (updateBookingDto.status === BookingStatus.CANCELLED) {
       const targetUserId = user.id === booking.owner.id ? booking.tenant.id : booking.owner.id;
@@ -249,7 +265,7 @@ export class BookingsService {
     }
     
     if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException('Cette réservation ne peut plus être acceptée');
+      throw new BadRequestException(`Cette réservation est déjà ${booking.status.toLowerCase()}`);
     }
     
     booking.status = BookingStatus.ACCEPTED;
@@ -257,23 +273,37 @@ export class BookingsService {
     
     // Créer le paiement Moneroo
     try {
-      const paymentData = await this.monerooService.initializePayment(
-        booking.deposit,
-        'XOF',
-        {
+      const paymentData = await this.monerooService.initializePayment({
+        amount: booking.deposit,
+        currency: 'XOF',
+        description: `Dépôt de garantie - ${booking.ad.title}`,
+        customer: {
+          email: booking.tenant.email,
+          firstName: booking.tenant.firstName,
+          lastName: booking.tenant.lastName,
+          phone: booking.tenant.phone,
+        },
+        returnUrl: `${process.env.FRONTEND_URL}/payment/return?bookingId=${booking.id}`,
+        metadata: {
           bookingId: booking.id,
           adId: booking.ad.id,
           tenantId: booking.tenant.id,
           ownerId: booking.owner.id,
-        }
-      );
+        },
+      });
       
       // Notifier le locataire avec le lien de paiement
       await this.notificationsService.notifyBookingConfirmed(booking.tenant.id, {
         bookingId: booking.id,
         adId: booking.ad.id,
         adTitle: booking.ad.title,
-        paymentUrl: paymentData.payment_url,
+        userEmail: booking.tenant.email,
+        userName: booking.tenant.firstName || 'Utilisateur',
+        paymentLink: paymentData.payment_url,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalAmount: booking.totalPrice,
+        securityDeposit: booking.deposit
       });
       
       return { booking: updatedBooking, paymentUrl: paymentData.payment_url };
@@ -285,6 +315,12 @@ export class BookingsService {
         bookingId: booking.id,
         adId: booking.ad.id,
         adTitle: booking.ad.title,
+        userEmail: booking.tenant.email,
+        userName: booking.tenant.firstName || 'Utilisateur',
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalAmount: booking.totalPrice,
+        securityDeposit: booking.deposit
       });
       
       return { booking: updatedBooking };

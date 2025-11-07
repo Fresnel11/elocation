@@ -42,7 +42,15 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
         });
     }
     sendNotificationToUser(userId, notification) {
-        this.sendToUser(userId, { type: 'notification', data: notification });
+        console.log(`[NotificationsGateway] Sending notification to user ${userId}:`, notification);
+        const client = this.clients.get(userId);
+        if (client && client.readyState === 1) {
+            client.send(JSON.stringify({ type: 'notification', data: notification }));
+            console.log(`[NotificationsGateway] Notification sent successfully to user ${userId}`);
+        }
+        else {
+            console.log(`[NotificationsGateway] User ${userId} not connected. Available users:`, Array.from(this.clients.keys()));
+        }
     }
     sendBroadcastNotification(notification) {
         this.broadcast({ type: 'broadcast_notification', data: notification });

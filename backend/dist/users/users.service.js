@@ -33,16 +33,14 @@ const user_profile_entity_1 = require("./entities/user-profile.entity");
 const role_entity_1 = require("../roles/entities/role.entity");
 const user_role_enum_1 = require("../common/enums/user-role.enum");
 const user_verification_entity_1 = require("./entities/user-verification.entity");
-const notifications_gateway_1 = require("../notifications/notifications.gateway");
 const notifications_service_1 = require("../notifications/notifications.service");
 const notification_entity_1 = require("../notifications/entities/notification.entity");
 let UsersService = class UsersService {
-    constructor(userRepository, profileRepository, roleRepository, verificationRepository, notificationsGateway, notificationsService) {
+    constructor(userRepository, profileRepository, roleRepository, verificationRepository, notificationsService) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.roleRepository = roleRepository;
         this.verificationRepository = verificationRepository;
-        this.notificationsGateway = notificationsGateway;
         this.notificationsService = notificationsService;
     }
     async create(createUserDto) {
@@ -332,19 +330,6 @@ let UsersService = class UsersService {
         }
         const verification = this.verificationRepository.create(Object.assign(Object.assign({ userId }, submitVerificationDto), { status: user_verification_entity_1.VerificationStatus.PENDING }));
         const savedVerification = await this.verificationRepository.save(verification);
-        const verificationData = {
-            id: savedVerification.id,
-            user: {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email
-            },
-            documentType: savedVerification.documentType,
-            createdAt: savedVerification.createdAt
-        };
-        console.log('Envoi notification WebSocket:', verificationData);
-        this.notificationsGateway.notifyAdminsNewVerification(verificationData);
         return savedVerification;
     }
     async reviewVerification(verificationId, reviewDto, adminId) {
@@ -363,7 +348,6 @@ let UsersService = class UsersService {
             await this.userRepository.update(verification.userId, { isVerified: true });
         }
         const updatedVerification = await this.verificationRepository.save(verification);
-        this.notificationsGateway.notifyVerificationStatus(verification.userId, reviewDto.status, reviewDto.rejectionReason);
         const statusMessage = reviewDto.status === user_verification_entity_1.VerificationStatus.APPROVED
             ? 'Votre identité a été vérifiée avec succès !'
             : `Votre demande de vérification a été rejetée : ${reviewDto.rejectionReason}`;
@@ -442,7 +426,6 @@ exports.UsersService = UsersService = __decorate([
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        notifications_gateway_1.NotificationsGateway,
         notifications_service_1.NotificationsService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

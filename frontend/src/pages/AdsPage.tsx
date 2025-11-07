@@ -17,6 +17,7 @@ import { LocationService } from '../services/locationService';
 import { recommendationsService } from '../services/recommendationsService';
 import { RecommendedAds } from '../components/RecommendedAds';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface AdWithUI extends Ad {
   averageRating?: number;
@@ -36,6 +37,7 @@ const amenityIcons = {
 
 export const AdsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [ads, setAds] = useState<AdWithUI[]>([]);
   const [filteredAds, setFilteredAds] = useState<AdWithUI[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,6 +243,10 @@ export const AdsPage: React.FC = () => {
   };
 
   const openReviewModal = (ad: AdWithUI) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     setReviewModalAd(ad);
     setIsReviewModalOpen(true);
   };

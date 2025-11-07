@@ -5,7 +5,7 @@ import { adsService, Ad } from '../services/adsService';
 import { bookingsService } from '../services/bookingsService';
 import { favoritesService } from '../services/favoritesService';
 import { api } from '../services/api';
-import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle, Play, X } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, Plus, Phone, Share2, Calendar, Send, AlertCircle, Play, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ClickableAvatar } from '../components/ui/ClickableAvatar';
@@ -53,6 +53,7 @@ const AnnonceDetailPage: React.FC = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showBookingSection, setShowBookingSection] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -351,21 +352,102 @@ const AnnonceDetailPage: React.FC = () => {
     
     try {
       setBookingLoading(true);
-      await bookingsService.createBooking({
+      
+      // Créer la réservation
+      const booking = await bookingsService.createBooking({
         adId: id!,
         startDate: bookingData.startDate,
         endDate: bookingData.endDate,
         message: bookingData.message
       });
-      showToast('success', 'Demande de réservation envoyée !');
-      setBookingData({ startDate: '', endDate: '', message: '' });
-      setTotalPrice(0);
+      
+      // Calculer le dépôt (20% du prix total)
+      const depositAmount = Math.round(totalPrice * 0.2);
+      
+      // Créer le paiement Moneroo immédiatement
+      const paymentResponse = await fetch('http://localhost:3000/moneroo/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          amount: depositAmount,
+          currency: 'XOF',
+          description: `Dépôt de garantie - ${ad?.title || 'Annonce'}`,
+          customer: {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+          },
+          returnUrl: `${window.location.origin}/payment/return?bookingId=${booking.id}`,
+          metadata: {
+            bookingId: booking.id,
+            adId: id,
+            tenantId: user.id,
+            ownerId: ad?.user?.id,
+          },
+        }),
+      });
+      
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        // Rediriger vers Moneroo
+        window.location.href = paymentData.checkout_url;
+      } else {
+        showToast('error', 'Erreur lors de la création du paiement');
+      }
+      
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de la réservation';
       showToast('error', errorMessage);
     } finally {
       setBookingLoading(false);
     }
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // Créer la liste complète des médias
+  const allMedia = React.useMemo(() => {
+    const media = [];
+    if (ad?.photos) {
+      ad.photos.forEach(photo => {
+        const url = photo.startsWith('http') ? photo : `${API_BASE_URL}/${photo.replace(/^\/+/, '')}`;
+        media.push({ url, type: 'image' as const });
+      });
+    }
+    if ((ad as any)?.video) {
+      const url = (ad as any).video.startsWith('http') ? (ad as any).video : `${API_BASE_URL}/${(ad as any).video.replace(/^\/+/, '')}`;
+      media.push({ url, type: 'video' as const });
+    }
+    return media;
+  }, [ad]);
+
+  // Mettre à jour l'index quand le média sélectionné change
+  useEffect(() => {
+    if (selectedMedia && allMedia.length > 0) {
+      const index = allMedia.findIndex(media => media.url === selectedMedia.url);
+      if (index !== -1) {
+        setCurrentMediaIndex(index);
+      }
+    }
+  }, [selectedMedia, allMedia]);
+
+  // Navigation entre les médias
+  const navigateMedia = (direction: 'prev' | 'next') => {
+    if (allMedia.length <= 1) return;
+    
+    let newIndex;
+    if (direction === 'prev') {
+      newIndex = currentMediaIndex > 0 ? currentMediaIndex - 1 : allMedia.length - 1;
+    } else {
+      newIndex = currentMediaIndex < allMedia.length - 1 ? currentMediaIndex + 1 : 0;
+    }
+    
+    setCurrentMediaIndex(newIndex);
+    setSelectedMedia(allMedia[newIndex]);
   };
 
   if (loading) {
@@ -379,8 +461,6 @@ const AnnonceDetailPage: React.FC = () => {
   if (!ad) {
     return <div className="text-center mt-10">Annonce non trouvée.</div>;
   }
-
-  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-white min-h-screen">
@@ -419,7 +499,7 @@ const AnnonceDetailPage: React.FC = () => {
           )}
           
           {/* Header avec boutons */}
-          <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent">
+          <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 bg-gradient-to-b from-black/50 to-transparent z-40">
             <button 
               onClick={() => navigate(-1)} 
               className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center"
@@ -607,7 +687,7 @@ const AnnonceDetailPage: React.FC = () => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <Calendar className="h-5 w-5" />
-              Faire une réservation
+              Réserver et Payer
             </button>
           </div>
         )}
@@ -693,7 +773,7 @@ const AnnonceDetailPage: React.FC = () => {
                 {bookingLoading ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 ) : (
-                  'Réserver'
+                  'Réserver et Payer'
                 )}
               </button>
             </div>
@@ -874,7 +954,7 @@ const AnnonceDetailPage: React.FC = () => {
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
               >
                 <Calendar className="h-5 w-5" />
-                Faire une réservation
+                Réserver et Payer
               </button>
             ) : (
               /* TODO: Messagerie - À implémenter plus tard */
@@ -893,7 +973,7 @@ const AnnonceDetailPage: React.FC = () => {
       {/* Desktop Layout - Design Moderne */}
       <div className="hidden lg:block bg-gray-50 min-h-screen">
         {/* Header minimaliste */}
-        <div className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="bg-white shadow-sm sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-8 py-4">
             <div className="flex items-center justify-between">
               <button 
@@ -1309,7 +1389,7 @@ const AnnonceDetailPage: React.FC = () => {
                       ) : (
                         <>
                           <Send className="h-5 w-5" />
-                          Demander une réservation
+                          Réserver et Payer
                         </>
                       )}
                     </button>
