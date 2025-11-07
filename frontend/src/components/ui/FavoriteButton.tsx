@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -14,6 +15,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ adId, className 
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { success, error } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -38,7 +40,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ adId, className 
     e.stopPropagation();
 
     if (!user) {
-      error('Connexion requise', 'Veuillez vous connecter pour ajouter aux favoris');
+      navigate('/login');
       return;
     }
 
@@ -60,7 +62,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ adId, className 
     }
   };
 
-  if (!user) return null;
+  // Afficher le bouton même pour les utilisateurs non connectés
 
   return (
     <button

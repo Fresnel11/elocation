@@ -5,7 +5,7 @@ import { adsService, Ad } from '../services/adsService';
 import { bookingsService } from '../services/bookingsService';
 import { favoritesService } from '../services/favoritesService';
 import { api } from '../services/api';
-import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, MessageCircle, Plus, Phone, Share2, ChevronLeft, ChevronRight, Calendar, Send, AlertCircle, Play, X } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Bed, Bath, Square, MapPin, Plus, Phone, Share2, Calendar, Send, AlertCircle, Play, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ClickableAvatar } from '../components/ui/ClickableAvatar';
@@ -374,7 +374,7 @@ const AnnonceDetailPage: React.FC = () => {
         body: JSON.stringify({
           amount: depositAmount,
           currency: 'XOF',
-          description: `Dépôt de garantie - ${ad.title}`,
+          description: `Dépôt de garantie - ${ad?.title || 'Annonce'}`,
           customer: {
             email: user.email,
             firstName: user.firstName,
@@ -386,7 +386,7 @@ const AnnonceDetailPage: React.FC = () => {
             bookingId: booking.id,
             adId: id,
             tenantId: user.id,
-            ownerId: ad.user.id,
+            ownerId: ad?.user?.id,
           },
         }),
       });

@@ -92,7 +92,7 @@ function AppContent() {
           <Route path="/reset-password-otp" element={<ResetPasswordOtpPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/ads" element={<ProtectedRoute><AdsPage /></ProtectedRoute>} />
+          <Route path="/ads" element={<AdsPage />} />
           <Route path="/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
           <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailPage /></ProtectedRoute>} />
           {/* TODO: Messagerie - À implémenter plus tard */}
